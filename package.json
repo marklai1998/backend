@@ -14,6 +14,7 @@
     "express": "^4.17.1",
     "json-web-token": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
+    "minecraft-server-util": "^5.2.4",
     "mysql": "^2.18.1",
     "nodemon": "^2.0.15"
   }
