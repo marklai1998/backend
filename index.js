@@ -237,7 +237,7 @@ app.get("/api/districts/:name", async (req, res) => {
 
 app.get("/api/network/ping", async (req,res) => {
     minecraftUtil.status('buildtheearth.net', 25565, {
-      timeout: 1000 * 10, // timeout in milliseconds
+      timeout: 1000 * 20, // timeout in milliseconds
       enableSRV: true // SRV record lookup
   })
     .then((result) => {
@@ -257,6 +257,7 @@ app.get("/api/network/ping", async (req,res) => {
           fullName: result.version.name,
           protocol: result.version.protocol,
           name: result.version.name.split(" ")[1],
+          bedrock: "latest"
         },
         players: {
           total: result.players.online,
