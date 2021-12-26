@@ -123,6 +123,7 @@ app.get("/api/network/ping", async (req, res) => {
       enableSRV: true, // SRV record lookup
     })
     .then((result) => {
+      const time = new Date().toLocaleTimeString();
       const lobby = parseInt(
         result.players.sample[2].name
           .replace("§8[§b", "")
@@ -180,6 +181,7 @@ app.get("/api/network/ping", async (req, res) => {
         favicon: result.favicon,
         srvRecord: result.srvRecord,
         error: { name: null, stacktrace: null },
+        time: time,
       };
       res.send(data);
     })
