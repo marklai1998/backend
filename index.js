@@ -203,6 +203,11 @@ app.get("/api/districts/:name", async (req, res) => {
                 }
               }
               builders.sort(dynamicSort("blocks"));
+              var  polylocation = []
+              result1[0].location.split(";").forEach(element => {
+                polylocation.push(element.replace(" ","").split(","));
+              });
+
 
               const response = {
                 id: result1[0].id,
@@ -219,7 +224,7 @@ app.get("/api/districts/:name", async (req, res) => {
                 parent: result1[0].parent,
                 about: result1[0].about,
                 map: result1[0].map,
-                location: result1[0].location,
+                area: polylocation,
               };
               res.send(response);
             }
