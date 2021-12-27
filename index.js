@@ -116,6 +116,48 @@ app.get("/verify", (req, res) => {
     res.send("ok");
   });
 });
+app.get("/api/server/ping", async (req, res) => {
+  db.query(`SELECT value FROM adminsettings WHERE name = 'ips'`, (err, result) => {
+    const ips = JSON.parse(result[0].value)
+
+    const serverName = req.query.server
+    const server = ips[serverName]
+    const serverIp = server.split(":")[0]
+    const serverPort = parseInt(server.split(":")[1])
+    minecraftUtil
+      .status(serverIp, serverPort, {
+        timeout: 1000 * 20,
+        enableSRV: true
+      })
+      .then((result) => {
+        const time = new Date().toLocaleDateString()
+        const data = {
+          online: true,
+          ip: `${serverIp}:${serverPort}`,
+          version: {
+            name: result.version.name,
+            protocol: result.version.protocol
+          },
+          players: {
+            online: result.players.online,
+            max: result.players.max
+          },
+          motd: {
+            raw: result.motd.raw,
+            clean: result.motd.clean,
+            html: result.motd.html
+          },
+          favicon: result.favicon,
+          srvRecord: result.srvRecord,
+          time: time
+        }
+        res.send(data)
+      })
+      .catch((error) => {
+        res.send({ error: { name: "Unexpected Error", stacktrace: error }})
+      })
+  })
+})
 app.get("/api/network/ping", async (req, res) => {
   minecraftUtil
     .status("buildtheearth.net", 25565, {
