@@ -303,7 +303,7 @@ app.get("/api/districts/:name", async (req, res) => {
       if (err) {
         console.log(err);
         res.send(generateError("SQL Error", "sq1", err));
-      } else if (result1[0].id != null) {
+      } else if (result1[0] != null) {
         db.query(
           "SELECT * FROM blocks WHERE district = " + result1[0].id,
           (err, result2) => {
