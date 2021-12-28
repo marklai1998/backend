@@ -116,49 +116,62 @@ app.get("/verify", (req, res) => {
     res.send("ok");
   });
 });
-app.get("/api/server/ping", async (req, res) => {
-  db.query(`SELECT value FROM adminsettings WHERE name = 'ips'`, (err, result) => {
-    const ips = JSON.parse(result[0].value)
+app.get("/api/network/ping/:server", async (req, res) => {
+  db.query(
+    `SELECT value FROM adminsettings WHERE name = 'ips'`,
+    (err, result) => {
+      const ips = JSON.parse(result[0].value);
 
-    const serverName = req.query.server
-    const server = ips[serverName]
-    const serverIp = server.split(":")[0]
-    const serverPort = parseInt(server.split(":")[1])
-    minecraftUtil
-      .status(serverIp, serverPort, {
-        timeout: 1000 * 20,
-        enableSRV: true
-      })
-      .then((result) => {
-        const time = new Date().toLocaleDateString()
-        const data = {
-          online: true,
-          ip: `${serverIp}:${serverPort}`,
-          version: {
-            name: result.version.name,
-            protocol: result.version.protocol
-          },
-          players: {
-            online: result.players.online,
-            max: result.players.max
-          },
-          motd: {
-            raw: result.motd.raw,
-            clean: result.motd.clean,
-            html: result.motd.html
-          },
-          favicon: result.favicon,
-          srvRecord: result.srvRecord,
-          time: time
-        }
-        res.send(data)
-      })
-      .catch((error) => {
-        res.send({ error: { name: "Unexpected Error", stacktrace: error }})
-      })
-  })
-})
-app.get("/api/network/ping", async (req, res) => {
+      const serverName = req.params.server;
+      const server = ips[serverName];
+      const serverIp = server.split(":")[0];
+      const serverPort = parseInt(server.split(":")[1]);
+      minecraftUtil
+        .status(serverIp, serverPort, {
+          timeout: 1000 * 20,
+          enableSRV: true,
+        })
+        .then((result) => {
+          const time = new Date().toLocaleTimeString();
+          const data = {
+            online: true,
+            ip: `${serverIp}:${serverPort}`,
+            version: {
+              name: result.version.name,
+              protocol: result.version.protocol,
+            },
+            players: {
+              online: result.players.online,
+              max: result.players.max,
+            },
+            motd: {
+              raw: result.motd.raw,
+              clean: result.motd.clean,
+              html: result.motd.html,
+            },
+            favicon: result.favicon,
+            srvRecord: result.srvRecord,
+            time: time,
+          };
+          res.send(data);
+        })
+        .catch((error) => {
+          if (error.toString().includes("Timed out")) {
+            res.send({
+              error: { name: "Timed out", stacktrace: null },
+              online: false,
+            });
+          } else {
+            res.send({
+              error: { name: "Unexpected Error", stacktrace: error.toString() },
+            });
+          }
+        });
+    }
+  );
+});
+
+app.get("/api/network/general", async (req, res) => {
   minecraftUtil
     .status("buildtheearth.net", 25565, {
       timeout: 1000 * 20, // timeout in milliseconds
@@ -228,10 +241,12 @@ app.get("/api/network/ping", async (req, res) => {
       res.send(data);
     })
     .catch((error) => {
-      if (error.contains("Timed out")) {
+      if (error.toString().includes("Timed out")) {
         res.send({ error: { name: "Timed out", stacktrace: null } });
       } else {
-        res.send({ error: { name: "Unexpected Error", stacktrace: error } });
+        res.send({
+          error: { name: "Unexpected Error", stacktrace: error.toString() },
+        });
       }
     });
 });
@@ -354,6 +369,8 @@ app.get("/api/districts/:name", async (req, res) => {
     }
   );
 });
+
+app.get("/api/admin/:token/settings", (req, res) => {});
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
