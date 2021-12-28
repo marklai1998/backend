@@ -5,6 +5,7 @@ const cors = require("cors");
 const bp = require("body-parser");
 const app = express();
 const minecraftUtil = require("minecraft-server-util");
+const res = require("express/lib/response");
 const port = 8080;
 
 app.use(cors());
@@ -123,7 +124,13 @@ app.get("/api/network/ping/:server", async (req, res) => {
       const ips = JSON.parse(result[0].value);
 
       const serverName = req.params.server;
-      const server = ips[serverName];
+      const server = ips[Object.keys(ips).find(key => key.toLowerCase() === serverName.toLowerCase())]
+      if(server === undefined) {
+        res.send({
+          error: { name: "Invalid Server", stacktrace: null },
+        });
+        return;
+      }
       const serverIp = server.split(":")[0];
       const serverPort = parseInt(server.split(":")[1]);
       minecraftUtil
@@ -292,6 +299,7 @@ app.post("/api/users/update", (req, res) => {
     "/query?query=SELECT * FROM users WHERE email = '" + toSet.email + "'"
   );
 });
+// Districts
 app.get("/api/districts/:name", async (req, res) => {
   const name = req.params.name;
   if (req.query.sleep) {
@@ -369,6 +377,45 @@ app.get("/api/districts/:name", async (req, res) => {
     }
   );
 });
+// Blocks
+app.get("/api/blocks/setdetails", (req, res) => {
+  // TODO change to body
+  const district = req.query.district;
+  const blockID = req.query.blockID;
+  const details = req.query.details;
+
+  if(district === undefined || blockID === undefined || details === undefined) {
+    res.send(generateError("Specify district, blockID and details", "aBSD1", null));
+    return;
+  }
+  if(isNaN(blockID) || (details.toLowerCase() !== "true" && details.toLowerCase() !== "false")) {
+    res.send(generateError("Invalid input", "aBSD2", null));
+    return;
+  }
+
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+    (err,result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        if(result.length === 0) {
+          res.send(generateError("District/Block not found", "aBSD3", null));
+        } else if(result.length > 1) {
+          res.send(generateError("More then one block found, please message a system administrator", "aBSD4", null))
+        } else {
+          db.query(
+            `UPDATE blocks SET details = '${details.replace("true", "1").replace("false", "0")}' WHERE rid = '${result[0].rid}'`,
+            (err,result) => {
+              res.send( { success: true } )
+            }
+          )
+        }
+      }
+    }
+  )
+})
 
 app.get("/api/admin/:token/settings", (req, res) => {});
 
