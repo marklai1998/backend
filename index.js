@@ -124,8 +124,13 @@ app.get("/api/network/ping/:server", async (req, res) => {
       const ips = JSON.parse(result[0].value);
 
       const serverName = req.params.server;
-      const server = ips[Object.keys(ips).find(key => key.toLowerCase() === serverName.toLowerCase())]
-      if(server === undefined) {
+      const server =
+        ips[
+          Object.keys(ips).find(
+            (key) => key.toLowerCase() === serverName.toLowerCase()
+          )
+        ];
+      if (server === undefined) {
         res.send({
           error: { name: "Invalid Server", stacktrace: null },
         });
@@ -185,74 +190,138 @@ app.get("/api/network/general", async (req, res) => {
       enableSRV: true, // SRV record lookup
     })
     .then((result) => {
-      const time = new Date().toLocaleTimeString();
-      const lobby = parseInt(
-        result.players.sample[2].name
-          .replace("§8[§b", "")
-          .replace("§8]§7 are in §dLobby", "")
+      db.query(
+        `SELECT value FROM adminsettings WHERE name = 'ips'`,
+        (err, result3) => {
+          const ips = JSON.parse(result3[0].value);
+
+          const serverName = "Hub1";
+          const server =
+            ips[
+              Object.keys(ips).find(
+                (key) => key.toLowerCase() === serverName.toLowerCase()
+              )
+            ];
+          if (server === undefined) {
+            res.send({
+              error: { name: "Invalid Server", stacktrace: null },
+            });
+            return;
+          }
+          const serverIp = server.split(":")[0];
+          const serverPort = parseInt(server.split(":")[1]);
+          minecraftUtil
+            .status(serverIp, serverPort, {
+              timeout: 1000 * 20,
+              enableSRV: true,
+            })
+            .then((result2) => {
+              const time = new Date().toLocaleTimeString();
+              const lobby = parseInt(
+                result.players.sample[2].name
+                  .replace("§8[§b", "")
+                  .replace("§8]§7 are in §dLobby", "")
+              );
+              const building = parseInt(
+                result.players.sample[3].name
+                  .replace("§8[§b", "")
+                  .replace("§8]§7 are in §bBuilding", "")
+              );
+              const teams = parseInt(
+                result.players.sample[4].name
+                  .replace("§8[§b", "")
+                  .replace("§8]§7 are in §aBuild Teams", "")
+              );
+              const data = {
+                online: true,
+                serverNews: result.motd.clean
+                  .split("\n")[1]
+                  .replace("|||  ", "")
+                  .replace("  |||", ""),
+                ip: {
+                  default: "buildtheearth.net:25565",
+                  fallback: "network.buildtheearth.net:25565",
+                  bedrock: "bedrock.buildtheearth.net:19132",
+                },
+                version: {
+                  support: result.motd.clean
+                    .split("\n")[0]
+                    .split("|  ")[1]
+                    .replace("[", "")
+                    .replace("]", ""),
+                  fullName: result.version.name,
+                  protocol: result.version.protocol,
+                  name: result.version.name.split(" ")[1],
+                  bedrock: "latest",
+                },
+                players: {
+                  total: result.players.online,
+                  max: result.players.max,
+                  lobby: lobby,
+                  building: building,
+                  teams: teams,
+                  other: result.players.online - (lobby + building + teams),
+                },
+                motd: {
+                  raw: result.motd.raw,
+                  clean: result.motd.clean,
+                  rows: [
+                    result.motd.clean.split("\n")[0],
+                    result.motd.clean.split("\n")[1],
+                  ],
+                  html: result.motd.html,
+                },
+                favicon: result.favicon,
+                srvRecord: result.srvRecord,
+                error: { name: null, stacktrace: null },
+                time: time,
+
+                joinable: true,
+                hub: {
+                  online: true,
+                  version: {
+                    name: result2.version.name,
+                    protocol: result2.version.protocol,
+                  },
+                  players: {
+                    online: result2.players.online,
+                    max: result2.players.max,
+                  },
+                  motd: {
+                    raw: result2.motd.raw,
+                    clean: result2.motd.clean,
+                    html: result2.motd.html,
+                  },
+                  favicon: result2.favicon,
+                  srvRecord: result2.srvRecord,
+                },
+              };
+              res.send(data);
+            })
+            .catch((error) => {
+              if (error.toString().includes("Timed out")) {
+                res.send({
+                  error: { name: "Timed out", stacktrace: null },
+                  online: false,
+                });
+              } else {
+                res.send({
+                  error: {
+                    name: "Unexpected Error 2 ",
+                    stacktrace: error.toString(),
+                  },
+                });
+              }
+            });
+        }
       );
-      const building = parseInt(
-        result.players.sample[3].name
-          .replace("§8[§b", "")
-          .replace("§8]§7 are in §bBuilding", "")
-      );
-      const teams = parseInt(
-        result.players.sample[4].name
-          .replace("§8[§b", "")
-          .replace("§8]§7 are in §aBuild Teams", "")
-      );
-      const data = {
-        online: true,
-        serverNews: result.motd.clean
-          .split("\n")[1]
-          .replace("|||  ", "")
-          .replace("  |||", ""),
-        ip: {
-          default: "buildtheearth.net:25565",
-          fallback: "network.buildtheearth.net:25565",
-          bedrock: "bedrock.buildtheearth.net:19132",
-        },
-        version: {
-          support: result.motd.clean
-            .split("\n")[0]
-            .split("|  ")[1]
-            .replace("[", "")
-            .replace("]", ""),
-          fullName: result.version.name,
-          protocol: result.version.protocol,
-          name: result.version.name.split(" ")[1],
-          bedrock: "latest",
-        },
-        players: {
-          total: result.players.online,
-          max: result.players.max,
-          lobby: lobby,
-          building: building,
-          teams: teams,
-          other: result.players.online - (lobby + building + teams),
-        },
-        motd: {
-          raw: result.motd.raw,
-          clean: result.motd.clean,
-          rows: [
-            result.motd.clean.split("\n")[0],
-            result.motd.clean.split("\n")[1],
-          ],
-          html: result.motd.html,
-        },
-        favicon: result.favicon,
-        srvRecord: result.srvRecord,
-        error: { name: null, stacktrace: null },
-        time: time,
-      };
-      res.send(data);
     })
     .catch((error) => {
       if (error.toString().includes("Timed out")) {
         res.send({ error: { name: "Timed out", stacktrace: null } });
       } else {
         res.send({
-          error: { name: "Unexpected Error", stacktrace: error.toString() },
+          error: { name: "Unexpected Error 1", stacktrace: error.toString() },
         });
       }
     });
@@ -384,38 +453,55 @@ app.get("/api/blocks/setdetails", (req, res) => {
   const blockID = req.query.blockID;
   const details = req.query.details;
 
-  if(district === undefined || blockID === undefined || details === undefined) {
-    res.send(generateError("Specify district, blockID and details", "aBSD1", null));
+  if (
+    district === undefined ||
+    blockID === undefined ||
+    details === undefined
+  ) {
+    res.send(
+      generateError("Specify district, blockID and details", "aBSD1", null)
+    );
     return;
   }
-  if(isNaN(blockID) || (details.toLowerCase() !== "true" && details.toLowerCase() !== "false")) {
+  if (
+    isNaN(blockID) ||
+    (details.toLowerCase() !== "true" && details.toLowerCase() !== "false")
+  ) {
     res.send(generateError("Invalid input", "aBSD2", null));
     return;
   }
 
   db.query(
     `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err,result) => {
+    (err, result) => {
       if (err) {
         console.log(err);
         res.send(generateError("SQL Error", "sq1", err));
       } else {
-        if(result.length === 0) {
+        if (result.length === 0) {
           res.send(generateError("District/Block not found", "aBSD3", null));
-        } else if(result.length > 1) {
-          res.send(generateError("More then one block found, please message a system administrator", "aBSD4", null))
+        } else if (result.length > 1) {
+          res.send(
+            generateError(
+              "More then one block found, please message a system administrator",
+              "aBSD4",
+              null
+            )
+          );
         } else {
           db.query(
-            `UPDATE blocks SET details = '${details.replace("true", "1").replace("false", "0")}' WHERE rid = '${result[0].rid}'`,
-            (err,result) => {
-              res.send( { success: true } )
+            `UPDATE blocks SET details = '${details
+              .replace("true", "1")
+              .replace("false", "0")}' WHERE rid = '${result[0].rid}'`,
+            (err, result) => {
+              res.send({ success: true });
             }
-          )
+          );
         }
       }
     }
-  )
-})
+  );
+});
 
 app.get("/api/admin/:token/settings", (req, res) => {});
 
