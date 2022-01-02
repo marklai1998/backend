@@ -447,11 +447,73 @@ app.get("/api/districts/:name", async (req, res) => {
   );
 });
 // Blocks
-app.get("/api/blocks/setdetails", (req, res) => {
-  // TODO change to body
-  const district = req.query.district;
-  const blockID = req.query.blockID;
-  const details = req.query.details;
+app.post("/api/blocks/setprogress", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const progress = req.body.progress;
+
+  if (
+    district === undefined ||
+    blockID === undefined ||
+    progress === undefined
+  ) {
+    res.send(
+      generateError("Specify district, blockID and progress", "aBSP1", null)
+    );
+    return;
+  }
+  if (typeof blockID !== "number") {
+    res.send(generateError("Invalid blockID", "aBSP2", null));
+    return;
+  }
+  if (typeof progress !== "number") {
+    res.send(generateError("Invalid progress", "aBSP3", null));
+    return;
+  }
+  if (progress < 0 || progress > 100) {
+    res.send(
+      generateError("Progress has to be between 0 and 100", "aBSP4", null)
+    );
+    return;
+  }
+
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+    (err, result1) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        if (result1.length === 0) {
+          res.send(generateError("District/Block not found", "aBSP5", null));
+        } else if (result1.length > 1) {
+          res.send(
+            generateError(
+              "More then one block found, please message a system administrator",
+              "aBSP6",
+              null
+            )
+          );
+        } else {
+          db.query(
+            `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}'`,
+            (err, result2) => {
+              res.send(
+                generateSuccess(
+                  `Progress of ${district} block ${blockID} set to ${progress}%`
+                )
+              );
+            }
+          );
+        }
+      }
+    }
+  );
+});
+app.post("/api/blocks/setdetails", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const details = req.body.details;
 
   if (
     district === undefined ||
@@ -463,11 +525,12 @@ app.get("/api/blocks/setdetails", (req, res) => {
     );
     return;
   }
-  if (
-    isNaN(blockID) ||
-    (details.toLowerCase() !== "true" && details.toLowerCase() !== "false")
-  ) {
-    res.send(generateError("Invalid input", "aBSD2", null));
+  if (typeof blockID !== "number") {
+    res.send(generateError("Invalid blockID", "aBSD2", null));
+    return;
+  }
+  if (typeof details !== "boolean") {
+    res.send(generateError("Details has to be a boolean", "aBSD3", null));
     return;
   }
 
@@ -479,22 +542,26 @@ app.get("/api/blocks/setdetails", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err));
       } else {
         if (result.length === 0) {
-          res.send(generateError("District/Block not found", "aBSD3", null));
+          res.send(generateError("District/Block not found", "aBSD4", null));
         } else if (result.length > 1) {
           res.send(
             generateError(
               "More then one block found, please message a system administrator",
-              "aBSD4",
+              "aBSD5",
               null
             )
           );
         } else {
           db.query(
-            `UPDATE blocks SET details = '${details
-              .replace("true", "1")
-              .replace("false", "0")}' WHERE rid = '${result[0].rid}'`,
+            `UPDATE blocks SET details = '${
+              details ? "1" : "0"
+            }' WHERE rid = '${result[0].rid}'`,
             (err, result) => {
-              res.send({ success: true });
+              res.send(
+                generateSuccess(
+                  `Details of ${district} block ${blockID} set to ${details}`
+                )
+              );
             }
           );
         }
@@ -518,7 +585,10 @@ function generatePasswordToken(pw) {
   );
 }
 function generateError(msg, code, stacktrace) {
-  return { error: true, msg: msg, code: code, full: stacktrace };
+  return { success: false, msg: msg, code: code, full: stacktrace };
+}
+function generateSuccess(msg, newData) {
+  return { success: true, msg: msg, newData: newData };
 }
 function sleep(ms) {
   return new Promise((resolve) => {
