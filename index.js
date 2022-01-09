@@ -447,6 +447,82 @@ app.get("/api/districts/:name", async (req, res) => {
   );
 });
 // Blocks
+app.post("/api/blocks/update", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const progress = req.body.progress;
+  const details = req.body.details;
+  const builder = req.body.builder;
+
+  if (
+    district === undefined ||
+    blockID === undefined ||
+    progress === undefined ||
+    details === undefined ||
+    builder === undefined
+  ) {
+    res.send(
+      generateError(
+        "Specify district, blockID, progress, details and builder",
+        "aBU1",
+        null
+      )
+    );
+    return;
+  }
+  if (typeof blockID !== "number") {
+    res.send(generateError("Invalid blockID", "aBU2", null));
+    return;
+  }
+  if (progress !== undefined && typeof progress !== "number") {
+    res.send(generateError("Invalid progress", "aBU3", null));
+    return;
+  }
+  if (details !== undefined && typeof details !== "boolean") {
+    res.send(generateError("Details has to be a boolean", "aBU4", null));
+    return;
+  }
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+    (err, result1) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        if (result1.length === 0) {
+          res.send(generateError("District/Block not found", "aBU5", null));
+        } else if (result1.length > 1) {
+          res.send(
+            generateError(
+              "More then one block found, please message a system administrator",
+              "aBU6",
+              null
+            )
+          );
+        } else {
+          db.query(
+            `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}';` +
+              `UPDATE blocks SET details = '${
+                details ? "1" : "0"
+              }' WHERE rid = '${result1[0].rid}';` +
+              `UPDATE blocks SET builder = '${builder}' WHERE rid = '${result1[0].rid}';`,
+            (err, result2) => {
+              if (err) {
+                console.log(err);
+                res.send(generateError("SQL Error", "sq1", err));
+              } else {
+                checkForChangeBlock(result1, district, blockID);
+                res.send(
+                  generateSuccess(`Block ${blockID} of ${district} updated`)
+                );
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
 app.post("/api/blocks/setprogress", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
@@ -498,6 +574,7 @@ app.post("/api/blocks/setprogress", (req, res) => {
           db.query(
             `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}'`,
             (err, result2) => {
+              checkForChangeBlock(result1, district, blockID);
               res.send(
                 generateSuccess(
                   `Progress of ${district} block ${blockID} set to ${progress}%`
@@ -536,14 +613,14 @@ app.post("/api/blocks/setdetails", (req, res) => {
 
   db.query(
     `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err, result) => {
+    (err, result1) => {
       if (err) {
         console.log(err);
         res.send(generateError("SQL Error", "sq1", err));
       } else {
-        if (result.length === 0) {
+        if (result1.length === 0) {
           res.send(generateError("District/Block not found", "aBSD4", null));
-        } else if (result.length > 1) {
+        } else if (result1.length > 1) {
           res.send(
             generateError(
               "More then one block found, please message a system administrator",
@@ -555,8 +632,9 @@ app.post("/api/blocks/setdetails", (req, res) => {
           db.query(
             `UPDATE blocks SET details = '${
               details ? "1" : "0"
-            }' WHERE rid = '${result[0].rid}'`,
-            (err, result) => {
+            }' WHERE rid = '${result1[0].rid}'`,
+            (err, result2) => {
+              checkForChangeBlock(result1, district, blockID);
               res.send(
                 generateSuccess(
                   `Details of ${district} block ${blockID} set to ${details}`
@@ -610,6 +688,89 @@ function dynamicSort(property) {
     return result * sortOrder;
   };
 }
+
+// Follow-up changes
+function checkForChangeBlock(before, district, block) {
+  const oldStatus = before[0].status;
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${block}'`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        const data = result[0];
+        var newStatus = undefined;
+        var date = undefined;
+
+        if (data.progress === 100 && data.details === 1) {
+          if (oldStatus !== 4) {
+            // Status changed to Completed
+            newStatus = 4;
+
+            date = `'${new Date().toISOString().split("T")[0]}'`;
+          }
+        } else if (data.progress === 100 && data.details === 0) {
+          if (oldStatus !== 3) {
+            // Status changed to Detailing
+            newStatus = 3;
+
+            if (oldStatus === 4) {
+              date = null;
+            }
+          }
+        } else if (data.progress > 0 || data.details === 1) {
+          if (oldStatus !== 2) {
+            // Status changed to Building
+            newStatus = 2;
+
+            if (oldStatus === 4) {
+              date = null;
+            }
+          }
+        } else if (
+          data.progress === 0 &&
+          data.details === 0 &&
+          data.builder !== ""
+        ) {
+          if (oldStatus !== 1) {
+            // Status changed to Reserved
+            newStatus = 1;
+
+            if (oldStatus === 4) {
+              date = null;
+            }
+          }
+        } else if (
+          data.progress === 0 &&
+          data.details === 0 &&
+          data.builder === ""
+        ) {
+          if (oldStatus !== 0) {
+            // Status changed to Not Started
+            newStatus = 0;
+
+            if (oldStatus === 4) {
+              date = null;
+            }
+          }
+        }
+
+        if (newStatus !== undefined) {
+          db.query(
+            `UPDATE blocks SET status = '${newStatus}' WHERE rid = '${data.rid}'`
+          );
+        }
+        if (date !== undefined) {
+          db.query(
+            `UPDATE blocks SET completionDate = ${date} WHERE rid = '${data.rid}'`
+          );
+        }
+      }
+    }
+  );
+}
+
 module.exports = {
   app: app,
   sleep: (ms) => sleep(ms),
