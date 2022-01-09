@@ -295,6 +295,7 @@ app.get("/api/network/general", async (req, res) => {
                   favicon: result2.favicon,
                   srvRecord: result2.srvRecord,
                 },
+                servers: toArray(ips),
               };
               res.send(data);
             })
@@ -503,7 +504,26 @@ app.get("/api/blocks/setdetails", (req, res) => {
   );
 });
 
-app.get("/api/admin/:token/settings", (req, res) => {});
+app.get("/api/admin/:token/settings", (req, res) => {
+  db.query(
+    "SELECT * FROM users WHERE password ='" + req.params.token + "'",
+    (err, result) => {
+      console.log("here");
+      if (err) {
+        res.send(err);
+        return;
+      }
+      db.query("SELECT * FROM adminsettings", (err, result) => {
+        if (err) {
+          console.log(err);
+          res.send(generateError("SQL Error", "sq1", err));
+        } else {
+          res.send(result);
+        }
+      });
+    }
+  );
+});
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
@@ -539,6 +559,13 @@ function dynamicSort(property) {
       a[property] > b[property] ? -1 : a[property] < b[property] ? 1 : 0;
     return result * sortOrder;
   };
+}
+function toArray(json) {
+  var result = [];
+  for (var key in json) {
+    result.push({value:json[key],key});
+  }
+  return result;
 }
 module.exports = {
   app: app,
