@@ -648,6 +648,202 @@ app.post("/api/blocks/setdetails", (req, res) => {
   );
 });
 
+// Admin
+app.post("/api/admin/districts/update", (req, res) => {
+  const district = req.body.district;
+  const status = req.body.status;
+  const blocksDone = req.body.blocksDone;
+  const blocksLeft = req.body.blocksLeft;
+  const progress = req.body.progress;
+  const completionDate = req.body.completionDate;
+  const image = req.body.image;
+  const map = req.body.map;
+  const parent = req.body.parent;
+  const location = req.body.location;
+  const about = req.body.about;
+
+  // Error Handling
+  if (district === undefined) {
+    res.send(generateError("Specify a district", "aADU1", null));
+    return;
+  }
+  if (status !== undefined && typeof status !== "number") {
+    res.send(generateError("Invalid status", "aADU2", null));
+    return;
+  }
+  if (blocksDone !== undefined && typeof blocksDone !== "number") {
+    res.send(generateError("Invalid blocksDone", "aADU3", null));
+    return;
+  }
+  if (blocksLeft !== undefined && typeof blocksLeft !== "number") {
+    res.send(generateError("Invalid blocksLeft", "aADU4", null));
+    return;
+  }
+  if (progress !== undefined && typeof progress !== "number") {
+    res.send(generateError("Invalid progress", "aADU5", null));
+    return;
+  }
+  // DB request
+  db.query(
+    `${
+      status !== undefined
+        ? `UPDATE districts SET status = '${status}' WHERE name = '${district}';`
+        : ``
+    }` +
+      `${
+        blocksDone !== undefined
+          ? `UPDATE districts SET blocksDone = '${blocksDone}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        blocksLeft !== undefined
+          ? `UPDATE districts SET blocksLeft = '${blocksLeft}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        progress !== undefined
+          ? `UPDATE districts SET progress = '${progress}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        completionDate !== undefined
+          ? `UPDATE districts SET completionDate = '${completionDate}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        image !== undefined
+          ? `UPDATE districts SET image = '${image}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        map !== undefined
+          ? `UPDATE districts SET map = '${map}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        parent !== undefined
+          ? `UPDATE districts SET parent = '${parent}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        location !== undefined
+          ? `UPDATE districts SET location = '${location}' WHERE name = '${district}';`
+          : ``
+      }` +
+      `${
+        about !== undefined
+          ? `UPDATE districts SET about = '${about}' WHERE name = '${district}';`
+          : ``
+      }`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        res.send(generateSuccess(`District ${district} updated`));
+      }
+    }
+  );
+});
+app.post("/api/admin/blocks/update", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const location = req.body.location;
+  const status = req.body.status;
+  const progress = req.body.progress;
+  const details = req.body.details;
+  const builder = req.body.builder;
+  const completionDate = req.body.completionDate;
+
+  // Error Handling
+  if (district === undefined || blockID === undefined) {
+    res.send(generateError("Specify district and blockID", "aABU1", null));
+    return;
+  }
+  if (typeof blockID !== "number") {
+    res.send(generateError("Invalid blockID", "aABU2", null));
+    return;
+  }
+  if (status !== undefined && typeof status !== "number") {
+    res.send(generateError("Invalid status", "aABU3", null));
+    return;
+  }
+  if (progress !== undefined && typeof progress !== "number") {
+    res.send(generateError("Invalid progress", "aABU4", null));
+    return;
+  }
+  if (details !== undefined && typeof details !== "boolean") {
+    res.send(generateError("Invalid details", "aABU5", null));
+    return;
+  }
+  // DB request
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        if (result1.length === 0) {
+          res.send(generateError("District/Block not found", "aABU2", null));
+        } else if (result1.length > 1) {
+          res.send(
+            generateError(
+              "More then one block found, please message a system administrator",
+              "aABU6",
+              null
+            )
+          );
+        } else {
+          db.query(
+            `${
+              location !== undefined
+                ? `UPDATE blocks SET location = '${location}' WHERE rid = '${result1[0].rid}';`
+                : ``
+            }` +
+              `${
+                status !== undefined
+                  ? `UPDATE blocks SET status = '${status}' WHERE rid = '${result1[0].rid}';`
+                  : ``
+              }` +
+              `${
+                progress !== undefined
+                  ? `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}';`
+                  : ``
+              }` +
+              `${
+                details !== undefined
+                  ? `UPDATE blocks SET details = '${
+                      details ? "1" : "0"
+                    }' WHERE rid = '${result1[0].rid}';`
+                  : ``
+              }` +
+              `${
+                builder !== undefined
+                  ? `UPDATE blocks SET builder = '${builder}' WHERE rid = '${result1[0].rid}';`
+                  : ``
+              }` +
+              `${
+                completionDate !== undefined
+                  ? `UPDATE blocks SET completionDate = '${completionDate}' WHERE rid = '${result1[0].rid}';`
+                  : ``
+              }`,
+            (err2, result2) => {
+              if (err2) {
+                console.log(err2);
+                res.send(generateError("SQL Error", "sq1", err2));
+              } else {
+                res.send(
+                  generateSuccess(`Block ${blockID} of ${district} updated`)
+                );
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
 app.get("/api/admin/:token/settings", (req, res) => {});
 
 app.listen(port, () => {
