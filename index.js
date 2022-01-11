@@ -664,23 +664,23 @@ app.post("/api/admin/districts/update", (req, res) => {
 
   // Error Handling
   if (district === undefined) {
-    res.send(generateError("Specify a district", "aADU1", null));
+    res.send(generateError("Specify a district", "aaDU1", null));
     return;
   }
   if (status !== undefined && typeof status !== "number") {
-    res.send(generateError("Invalid status", "aADU2", null));
+    res.send(generateError("Invalid status", "aaDU2", null));
     return;
   }
   if (blocksDone !== undefined && typeof blocksDone !== "number") {
-    res.send(generateError("Invalid blocksDone", "aADU3", null));
+    res.send(generateError("Invalid blocksDone", "aaDU3", null));
     return;
   }
   if (blocksLeft !== undefined && typeof blocksLeft !== "number") {
-    res.send(generateError("Invalid blocksLeft", "aADU4", null));
+    res.send(generateError("Invalid blocksLeft", "aaDU4", null));
     return;
   }
   if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aADU5", null));
+    res.send(generateError("Invalid progress", "aaDU5", null));
     return;
   }
   // DB request
@@ -757,23 +757,23 @@ app.post("/api/admin/blocks/update", (req, res) => {
 
   // Error Handling
   if (district === undefined || blockID === undefined) {
-    res.send(generateError("Specify district and blockID", "aABU1", null));
+    res.send(generateError("Specify district and blockID", "aaBU1", null));
     return;
   }
   if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "aABU2", null));
+    res.send(generateError("Invalid blockID", "aaBU2", null));
     return;
   }
   if (status !== undefined && typeof status !== "number") {
-    res.send(generateError("Invalid status", "aABU3", null));
+    res.send(generateError("Invalid status", "aaBU3", null));
     return;
   }
   if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aABU4", null));
+    res.send(generateError("Invalid progress", "aaBU4", null));
     return;
   }
   if (details !== undefined && typeof details !== "boolean") {
-    res.send(generateError("Invalid details", "aABU5", null));
+    res.send(generateError("Invalid details", "aaBU5", null));
     return;
   }
   // DB request
@@ -785,12 +785,12 @@ app.post("/api/admin/blocks/update", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err1));
       } else {
         if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aABU2", null));
+          res.send(generateError("District/Block not found", "aaBU6", null));
         } else if (result1.length > 1) {
           res.send(
             generateError(
               "More then one block found, please message a system administrator",
-              "aABU6",
+              "aaBU7",
               null
             )
           );
@@ -844,6 +844,119 @@ app.post("/api/admin/blocks/update", (req, res) => {
     }
   );
 });
+app.post("/api/admin/districts/add", (req, res) => {
+  const name = req.body.district;
+
+  // Error Handling
+  if (name === undefined) {
+    res.send(generateError("Specify a name", "aaDA1", null));
+    return;
+  }
+  if (typeof name !== "string") {
+    res.send(generateError("Invalid name", "aaDA2", null));
+    return;
+  }
+
+  // DB Request
+  db.query(
+    `SELECT * FROM districts WHERE name = '${name}'`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        if (result1.length > 0) {
+          res.send(generateError("District already exists", "aaDA3", null));
+        } else {
+          db.query(
+            `INSERT INTO districts (name) VALUES ('${name}')`,
+            (err2, result2) => {
+              if (err2) {
+                console.log(err2);
+                res.send(generateError("SQL Error", "sq1", err2));
+              } else {
+                res.send(generateSuccess(`District ${name} added`));
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
+app.post("/api/admin/blocks/add", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+
+  // Error Handling
+  if (district === undefined || blockID === undefined) {
+    res.send(generateError("Specify district and blockID", "aaBA1", null));
+    return;
+  }
+  if (typeof district !== "string") {
+    res.send(generateError("Invalid district", "aaBA2", null));
+    return;
+  }
+  if (typeof blockID !== "number") {
+    res.send(generateError("Invalid blockID", "aaBA3", null));
+    return;
+  }
+
+  // DB Request
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        if (result1.length > 0) {
+          res.send(generateError("Block already exists", "aaBA4", null));
+        } else {
+          db.query(
+            `SELECT * FROM districts WHERE name = '${district}'`,
+            (err2, result2) => {
+              if (err2) {
+                console.log(err2);
+                res.send(generateError("SQL Error", "sq1", err2));
+              } else {
+                if (result2.length === 0) {
+                  res.send(generateError("District not found", "aaBA5", null));
+                } else if (result2.length > 1) {
+                  res.send(
+                    generateError(
+                      "More then one district found, please message a system administrator",
+                      "aaBA6",
+                      null
+                    )
+                  );
+                } else {
+                  db.query(
+                    `INSERT INTO blocks (id,district) VALUES ('${blockID}','${result2[0].id}')`,
+                    (err3, result3) => {
+                      if (err3) {
+                        console.log(err3);
+                        res.send(generateError("SQL Error", "sq1", err3));
+                      } else {
+                        res.send(
+                          generateSuccess(
+                            `Block ${blockID} of ${district} added`
+                          )
+                        );
+                      }
+                    }
+                  );
+                }
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
+app.post("/api/admin/districts/remove", (req, res) => {});
+app.post("/api/admin/blocks/remove", (req, res) => {});
 app.get("/api/admin/:token/settings", (req, res) => {});
 
 app.listen(port, () => {
