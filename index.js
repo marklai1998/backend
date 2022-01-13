@@ -649,6 +649,30 @@ app.post("/api/blocks/setdetails", (req, res) => {
   );
 });
 
+app.use("/api/admin", (req, res, next) => {
+  if (req.body.token) {
+    db.query(
+      "SELECT * FROM users WHERE password = '" + req.body.token + "'",
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          res.send(generateError("SQL Error", "sq1", err));
+        } else {
+          if(result[0].permissions.includes("admin")){
+            next();
+          }else {
+            res.send(generateError("Invalid Token", "aA", err));
+
+          }
+        }
+      }
+    );
+  }else {
+    res.send(generateError("No token specified", "aA", null));
+
+  }
+});
+
 // Admin
 app.post("/api/admin/districts/update", (req, res) => {
   const district = req.body.district;
@@ -957,25 +981,15 @@ app.post("/api/admin/blocks/add", (req, res) => {
     }
   );
 });
-app.get("/api/admin/:token/settings", (req, res) => {
-  db.query(
-    "SELECT * FROM users WHERE password ='" + req.params.token + "'",
-    (err, result) => {
-      console.log("here");
-      if (err) {
-        res.send(err);
-        return;
-      }
-      db.query("SELECT * FROM adminsettings", (err, result) => {
-        if (err) {
-          console.log(err);
-          res.send(generateError("SQL Error", "sq1", err));
-        } else {
-          res.send(result);
-        }
-      });
+app.get("/api/admin/settings", (req, res) => {
+  db.query("SELECT * FROM adminsettings", (err, result) => {
+    if (err) {
+      console.log(err);
+      res.send(generateError("SQL Error", "sq1", err));
+    } else {
+      res.send(result);
     }
-  );
+  });
 });
 app.post("/api/admin/districts/remove", (req, res) => {});
 app.post("/api/admin/blocks/remove", (req, res) => {});
