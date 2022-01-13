@@ -650,9 +650,13 @@ app.post("/api/blocks/setdetails", (req, res) => {
 });
 
 app.use("/api/admin", (req, res, next) => {
-  if (req.body.token) {
+  if (req.body.token || req.query.token) {
+    var token = req.body.token;
+    if (token === undefined) {
+      token = req.query.token;
+    }
     db.query(
-      "SELECT * FROM users WHERE password = '" + req.body.token + "'",
+      "SELECT * FROM users WHERE password = '" + token + "'",
       (err, result) => {
         if (err) {
           console.log(err);
