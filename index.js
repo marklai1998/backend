@@ -979,7 +979,6 @@ app.get("/api/admin/:token/settings", (req, res) => {
 });
 app.post("/api/admin/districts/remove", (req, res) => {});
 app.post("/api/admin/blocks/remove", (req, res) => {});
-app.get("/api/admin/:token/settings", (req, res) => {});
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
