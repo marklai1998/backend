@@ -89,6 +89,10 @@ app.post("/login", (req, res) => {
   );
 });
 app.post("/register", (req, res) => {
+  if (req.body.username === undefined || req.body.password === undefined) {
+    res.send(generateError("Speacify Username and Password", "R1", null));
+    return;
+  }
   db.query("SELECT * FROM users", (err, result) => {
     if (err) {
       console.log(err);
@@ -448,7 +452,7 @@ app.get("/api/districts/:name", async (req, res) => {
   );
 });
 // Blocks
-app.post("/api/blocks/update", (req, res) => {
+app.post("/api/blocks/update", checkDistrictBlock, (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const progress = req.body.progress;
@@ -456,8 +460,6 @@ app.post("/api/blocks/update", (req, res) => {
   const builder = req.body.builder;
 
   if (
-    district === undefined ||
-    blockID === undefined ||
     progress === undefined ||
     details === undefined ||
     builder === undefined
@@ -471,16 +473,12 @@ app.post("/api/blocks/update", (req, res) => {
     );
     return;
   }
-  if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "aBU2", null));
-    return;
-  }
   if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aBU3", null));
+    res.send(generateError("Invalid progress", "aBU2", null));
     return;
   }
   if (details !== undefined && typeof details !== "boolean") {
-    res.send(generateError("Details has to be a boolean", "aBU4", null));
+    res.send(generateError("Details has to be a boolean", "aBU3", null));
     return;
   }
   db.query(
@@ -491,12 +489,12 @@ app.post("/api/blocks/update", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err));
       } else {
         if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aBU5", null));
+          res.send(generateError("District/Block not found", "aBU4", null));
         } else if (result1.length > 1) {
           res.send(
             generateError(
               "More then one block found, please message a system administrator",
-              "aBU6",
+              "aBU5",
               null
             )
           );
@@ -524,32 +522,24 @@ app.post("/api/blocks/update", (req, res) => {
     }
   );
 });
-app.post("/api/blocks/setprogress", (req, res) => {
+app.post("/api/blocks/setprogress", checkDistrictBlock, (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const progress = req.body.progress;
 
-  if (
-    district === undefined ||
-    blockID === undefined ||
-    progress === undefined
-  ) {
+  if (progress === undefined) {
     res.send(
       generateError("Specify district, blockID and progress", "aBSP1", null)
     );
     return;
   }
-  if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "aBSP2", null));
-    return;
-  }
   if (typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aBSP3", null));
+    res.send(generateError("Invalid progress", "aBSP2", null));
     return;
   }
   if (progress < 0 || progress > 100) {
     res.send(
-      generateError("Progress has to be between 0 and 100", "aBSP4", null)
+      generateError("Progress has to be between 0 and 100", "aBSP3", null)
     );
     return;
   }
@@ -562,7 +552,7 @@ app.post("/api/blocks/setprogress", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err));
       } else {
         if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aBSP5", null));
+          res.send(generateError("District/Block not found", "aBSP4", null));
         } else if (result1.length > 1) {
           res.send(
             generateError(
@@ -588,27 +578,19 @@ app.post("/api/blocks/setprogress", (req, res) => {
     }
   );
 });
-app.post("/api/blocks/setdetails", (req, res) => {
+app.post("/api/blocks/setdetails", checkDistrictBlock, (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const details = req.body.details;
 
-  if (
-    district === undefined ||
-    blockID === undefined ||
-    details === undefined
-  ) {
+  if (details === undefined) {
     res.send(
       generateError("Specify district, blockID and details", "aBSD1", null)
     );
     return;
   }
-  if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "aBSD2", null));
-    return;
-  }
   if (typeof details !== "boolean") {
-    res.send(generateError("Details has to be a boolean", "aBSD3", null));
+    res.send(generateError("Details has to be a boolean", "aBSD2", null));
     return;
   }
 
@@ -620,12 +602,12 @@ app.post("/api/blocks/setdetails", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err));
       } else {
         if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aBSD4", null));
+          res.send(generateError("District/Block not found", "aBSD3", null));
         } else if (result1.length > 1) {
           res.send(
             generateError(
               "More then one block found, please message a system administrator",
-              "aBSD5",
+              "aBSD4",
               null
             )
           );
@@ -662,18 +644,16 @@ app.use("/api/admin", (req, res, next) => {
           console.log(err);
           res.send(generateError("SQL Error", "sq1", err));
         } else {
-          if(result[0].permissions.includes("admin")){
+          if (result[0].permissions.includes("admin")) {
             next();
-          }else {
+          } else {
             res.send(generateError("Invalid Token", "aA", err));
-
           }
         }
       }
     );
-  }else {
+  } else {
     res.send(generateError("No token specified", "aA", null));
-
   }
 });
 
@@ -774,7 +754,7 @@ app.post("/api/admin/districts/update", (req, res) => {
     }
   );
 });
-app.post("/api/admin/blocks/update", (req, res) => {
+app.post("/api/admin/blocks/update", checkDistrictBlock, (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const location = req.body.location;
@@ -785,24 +765,16 @@ app.post("/api/admin/blocks/update", (req, res) => {
   const completionDate = req.body.completionDate;
 
   // Error Handling
-  if (district === undefined || blockID === undefined) {
-    res.send(generateError("Specify district and blockID", "aaBU1", null));
-    return;
-  }
-  if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "aaBU2", null));
-    return;
-  }
   if (status !== undefined && typeof status !== "number") {
-    res.send(generateError("Invalid status", "aaBU3", null));
+    res.send(generateError("Invalid status", "aaBU1", null));
     return;
   }
   if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aaBU4", null));
+    res.send(generateError("Invalid progress", "aaBU2", null));
     return;
   }
   if (details !== undefined && typeof details !== "boolean") {
-    res.send(generateError("Invalid details", "aaBU5", null));
+    res.send(generateError("Invalid details", "aaBU3", null));
     return;
   }
   // DB request
@@ -814,12 +786,12 @@ app.post("/api/admin/blocks/update", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err1));
       } else {
         if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aaBU6", null));
+          res.send(generateError("District/Block not found", "aaBU4", null));
         } else if (result1.length > 1) {
           res.send(
             generateError(
               "More then one block found, please message a system administrator",
-              "aaBU7",
+              "aaBU5",
               null
             )
           );
@@ -914,23 +886,9 @@ app.post("/api/admin/districts/add", (req, res) => {
   );
 });
 
-app.post("/api/admin/blocks/add", (req, res) => {
+app.post("/api/admin/blocks/add", checkDistrictBlock, (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
-
-  // Error Handling
-  if (district === undefined || blockID === undefined) {
-    res.send(generateError("Specify district and blockID", "aaBA1", null));
-    return;
-  }
-  if (typeof district !== "string") {
-    res.send(generateError("Invalid district", "aaBA2", null));
-    return;
-  }
-  if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "aaBA3", null));
-    return;
-  }
 
   // DB Request
   db.query(
@@ -941,7 +899,7 @@ app.post("/api/admin/blocks/add", (req, res) => {
         res.send(generateError("SQL Error", "sq1", err1));
       } else {
         if (result1.length > 0) {
-          res.send(generateError("Block already exists", "aaBA4", null));
+          res.send(generateError("Block already exists", "aaBA1", null));
         } else {
           db.query(
             `SELECT * FROM districts WHERE name = '${district}'`,
@@ -951,12 +909,12 @@ app.post("/api/admin/blocks/add", (req, res) => {
                 res.send(generateError("SQL Error", "sq1", err2));
               } else {
                 if (result2.length === 0) {
-                  res.send(generateError("District not found", "aaBA5", null));
+                  res.send(generateError("District not found", "aaBA2", null));
                 } else if (result2.length > 1) {
                   res.send(
                     generateError(
                       "More then one district found, please message a system administrator",
-                      "aaBA6",
+                      "aaBA3",
                       null
                     )
                   );
@@ -997,6 +955,183 @@ app.get("/api/admin/settings", (req, res) => {
 });
 app.post("/api/admin/districts/remove", (req, res) => {});
 app.post("/api/admin/blocks/remove", (req, res) => {});
+
+// Minecraft
+app.get("/api/minecraft/user", (req, res) => {
+  var id = req.query.uuid;
+  var type = "uuid";
+  if (id === undefined) {
+    id = req.query.username;
+    type = "name";
+  }
+  if (id === undefined) {
+    res.send(generateError("Specify username or uuid", "aMU1"));
+    return;
+  }
+  db.query(`SELECT * FROM minecraft WHERE ${type} = '${id}'`, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.send(generateError("SQL Error", "sq1", err));
+    } else {
+      res.send({
+        uuid: result[0].uuid,
+        username: result[0].name,
+        rank: result[0].rank,
+        settings: JSON.parse(result[0].settings),
+      });
+    }
+  });
+});
+app.get("/api/minecraft/users", (req, res) => {
+  db.query(`SELECT * FROM minecraft`, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.send(generateError("SQL Error", "sq1", err));
+    } else {
+      const json = [];
+      for (var i = 0; i < result.length; i++) {
+        json[i] = {
+          uuid: result[i].uuid,
+          username: result[i].name,
+          rank: result[i].rank,
+          settings: JSON.parse(result[i].settings),
+        };
+      }
+      res.send(json);
+    }
+  });
+});
+app.post("/api/minecraft/registerUser", checkUUID, (req, res) => {
+  const uuid = req.body.uuid;
+  const name = req.body.username;
+  const rank = req.body.rank;
+  const settings = req.body.settings;
+
+  if (name === undefined || rank === undefined || settings === undefined) {
+    res.send(
+      generateError("Specify UUID, Username, Rank and Settings", "aMRU1")
+    );
+    return;
+  }
+  db.query(
+    `SELECT * FROM minecraft WHERE uuid = '${uuid}'`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        if (result1.length >= 1) {
+          res.send(generateError("User already registered", "aMRU2"));
+        } else {
+          db.query(
+            `INSERT INTO minecraft (uuid,name,settings,rank) VALUES ('${uuid}','${name}','${settings}','${rank}')`,
+            (err2, result2) => {
+              if (err2) {
+                console.log(err2);
+                res.send(generateError("SQL Error", "sq1", err2));
+              } else {
+                res.send(generateSuccess("User registered"));
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
+app.post("/api/minecraft/updateUser", checkUUID, (req, res) => {
+  const uuid = req.body.uuid;
+  const type = req.body.type;
+  const value = req.body.value;
+
+  //Error handling
+  if (
+    typeof type !== "string" &&
+    type.toLowerCase() !== "name" &&
+    type.toLowerCase() !== "rank"
+  ) {
+    res.send(
+      generateError("Invalid type. Available types: name, rank", "aMUU3")
+    );
+    return;
+  }
+
+  db.query(
+    `SELECT * FROM minecraft WHERE uuid = '${uuid}'`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        if (result1.length === 0) {
+          res.send(`UUID ${uuid} not found`, "aMUU4");
+        } else if (result1.length > 1) {
+          res.send(
+            "More then one user found, please message a system administrator",
+            "aMUU5"
+          );
+        } else {
+          db.query(
+            `UPDATE minecraft SET ${type} = '${value}' WHERE uuid = '${uuid}'`,
+            (err2, result2) => {
+              if (err2) {
+                console.log(err2);
+                res.send(generateError("SQL Error", "sq1", err2));
+              } else {
+                res.send(generateSuccess("User updated"));
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
+app.post("/api/minecraft/setSettings", checkUUID, (req, res) => {
+  const uuid = req.body.uuid;
+  const type = req.body.type;
+  const value = req.body.value;
+
+  if (type === undefined || value === undefined) {
+    res.send(generateError("Specify UUID, type and value", "aMSS1"));
+    return;
+  }
+
+  db.query(
+    `SELECT * FROM minecraft WHERE uuid = '${uuid}'`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        if (result1.length === 0) {
+          res.send(`UUID ${uuid} not found`, "aMSS2");
+        } else if (result1.length > 1) {
+          res.send(
+            "More then one user found, please message a system administrator",
+            "aMSS3"
+          );
+        } else {
+          const settings = JSON.parse(result1[0].settings);
+          settings[type] = value;
+          db.query(
+            `UPDATE minecraft SET settings = '${JSON.stringify(
+              settings
+            )}' WHERE uuid = '${uuid}'`,
+            (err2, result2) => {
+              if (err2) {
+                console.log(err2);
+                res.send(generateError("SQL Error", "sq1", err2));
+              } else {
+                res.send(generateSuccess("User Settings updated"));
+              }
+            }
+          );
+        }
+      }
+    }
+  );
+});
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
@@ -1124,6 +1259,39 @@ function checkForChangeBlock(before, district, block) {
       }
     }
   );
+}
+
+// Middlewares
+function checkUUID(req, res, next) {
+  const uuid = req.body.uuid;
+
+  if (uuid === undefined) {
+    res.send(generateError("Specify a UUID", "cU1"));
+    return;
+  }
+  if (typeof uuid !== "string" || uuid.length !== 36) {
+    res.send(generateError("Invalid UUID", "cU1"));
+    return;
+  }
+  next();
+}
+function checkDistrictBlock(req, res, next) {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+
+  if (district === undefined || blockID === undefined) {
+    res.send(generateError("Specify district and blockID", "cDB1", null));
+    return;
+  }
+  if (typeof district !== "string") {
+    res.send(generateError("Invalid district", "cDB2", null));
+    return;
+  }
+  if (typeof blockID !== "number") {
+    res.send(generateError("Invalid blockID", "cDB3", null));
+    return;
+  }
+  next();
 }
 
 module.exports = {
