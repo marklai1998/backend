@@ -1,5 +1,6 @@
 const express = require("express");
 const db = require("./Database");
+const valid = require("./Validation");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bp = require("body-parser");
@@ -452,183 +453,168 @@ app.get("/api/districts/:name", async (req, res) => {
   );
 });
 // Blocks
-app.post("/api/blocks/update", checkDistrictBlock, (req, res) => {
+app.post("/api/blocks/update", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const progress = req.body.progress;
   const details = req.body.details;
   const builder = req.body.builder;
 
-  if (
-    progress === undefined ||
-    details === undefined ||
-    builder === undefined
-  ) {
-    res.send(
-      generateError(
-        "Specify district, blockID, progress, details and builder",
-        "aBU1",
-        null
-      )
-    );
-    return;
-  }
-  if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aBU2", null));
-    return;
-  }
-  if (details !== undefined && typeof details !== "boolean") {
-    res.send(generateError("Details has to be a boolean", "aBU3", null));
-    return;
-  }
-  db.query(
-    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err, result1) => {
-      if (err) {
-        console.log(err);
-        res.send(generateError("SQL Error", "sq1", err));
-      } else {
-        if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aBU4", null));
-        } else if (result1.length > 1) {
-          res.send(
-            generateError(
-              "More then one block found, please message a system administrator",
-              "aBU5",
-              null
-            )
-          );
-        } else {
-          db.query(
-            `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}';` +
-              `UPDATE blocks SET details = '${
-                details ? "1" : "0"
-              }' WHERE rid = '${result1[0].rid}';` +
-              `UPDATE blocks SET builder = '${builder}' WHERE rid = '${result1[0].rid}';`,
-            (err, result2) => {
-              if (err) {
-                console.log(err);
-                res.send(generateError("SQL Error", "sq1", err));
-              } else {
-                checkForChangeBlock(result1, district, blockID);
-                res.send(
-                  generateSuccess(`Block ${blockID} of ${district} updated`)
-                );
-              }
+  valid.validateBlockUpdate
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length === 0) {
+              res.send(generateError("District/Block not found", "aBU2", null));
+            } else if (result1.length > 1) {
+              res.send(
+                generateError(
+                  "More then one block found, please message a system administrator",
+                  "aBU3",
+                  null
+                )
+              );
+            } else {
+              db.query(
+                `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}';` +
+                  `UPDATE blocks SET details = '${
+                    details ? "1" : "0"
+                  }' WHERE rid = '${result1[0].rid}';` +
+                  `UPDATE blocks SET builder = '${builder}' WHERE rid = '${result1[0].rid}';`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    checkForChangeBlock(result1, district, blockID);
+                    res.send(
+                      generateSuccess(`Block ${blockID} of ${district} updated`)
+                    );
+                  }
+                }
+              );
             }
-          );
+          }
         }
-      }
-    }
-  );
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aBU1"));
+    });
 });
-app.post("/api/blocks/setprogress", checkDistrictBlock, (req, res) => {
+app.post("/api/blocks/setprogress", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const progress = req.body.progress;
 
-  if (progress === undefined) {
-    res.send(
-      generateError("Specify district, blockID and progress", "aBSP1", null)
-    );
-    return;
-  }
-  if (typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aBSP2", null));
-    return;
-  }
-  if (progress < 0 || progress > 100) {
-    res.send(
-      generateError("Progress has to be between 0 and 100", "aBSP3", null)
-    );
-    return;
-  }
-
-  db.query(
-    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err, result1) => {
-      if (err) {
-        console.log(err);
-        res.send(generateError("SQL Error", "sq1", err));
-      } else {
-        if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aBSP4", null));
-        } else if (result1.length > 1) {
-          res.send(
-            generateError(
-              "More then one block found, please message a system administrator",
-              "aBSP6",
-              null
-            )
-          );
-        } else {
-          db.query(
-            `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}'`,
-            (err, result2) => {
-              checkForChangeBlock(result1, district, blockID);
+  valid.validateProgress
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length === 0) {
               res.send(
-                generateSuccess(
-                  `Progress of ${district} block ${blockID} set to ${progress}%`
+                generateError("District/Block not found", "aBSP2", null)
+              );
+            } else if (result1.length > 1) {
+              res.send(
+                generateError(
+                  "More then one block found, please message a system administrator",
+                  "aBSP3",
+                  null
                 )
               );
+            } else {
+              db.query(
+                `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}'`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    checkForChangeBlock(result1, district, blockID);
+                    res.send(
+                      generateSuccess(
+                        `Progress of ${district} block ${blockID} set to ${progress}%`
+                      )
+                    );
+                  }
+                }
+              );
             }
-          );
+          }
         }
-      }
-    }
-  );
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aBSP1"));
+    });
 });
-app.post("/api/blocks/setdetails", checkDistrictBlock, (req, res) => {
+app.post("/api/blocks/setdetails", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const details = req.body.details;
 
-  if (details === undefined) {
-    res.send(
-      generateError("Specify district, blockID and details", "aBSD1", null)
-    );
-    return;
-  }
-  if (typeof details !== "boolean") {
-    res.send(generateError("Details has to be a boolean", "aBSD2", null));
-    return;
-  }
-
-  db.query(
-    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err, result1) => {
-      if (err) {
-        console.log(err);
-        res.send(generateError("SQL Error", "sq1", err));
-      } else {
-        if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aBSD3", null));
-        } else if (result1.length > 1) {
-          res.send(
-            generateError(
-              "More then one block found, please message a system administrator",
-              "aBSD4",
-              null
-            )
-          );
-        } else {
-          db.query(
-            `UPDATE blocks SET details = '${
-              details ? "1" : "0"
-            }' WHERE rid = '${result1[0].rid}'`,
-            (err, result2) => {
-              checkForChangeBlock(result1, district, blockID);
+  valid.validateDetails
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length === 0) {
               res.send(
-                generateSuccess(
-                  `Details of ${district} block ${blockID} set to ${details}`
+                generateError("District/Block not found", "aBSD2", null)
+              );
+            } else if (result1.length > 1) {
+              res.send(
+                generateError(
+                  "More then one block found, please message a system administrator",
+                  "aBSD3",
+                  null
                 )
               );
+            } else {
+              db.query(
+                `UPDATE blocks SET details = '${
+                  details ? "1" : "0"
+                }' WHERE rid = '${result1[0].rid}'`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    checkForChangeBlock(result1, district, blockID);
+                    res.send(
+                      generateSuccess(
+                        `Details of ${district} block ${blockID} set to ${details}`
+                      )
+                    );
+                  }
+                }
+              );
             }
-          );
+          }
         }
-      }
-    }
-  );
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aBSD1"));
+    });
 });
 
 app.use("/api/admin", (req, res, next) => {
@@ -671,90 +657,75 @@ app.post("/api/admin/districts/update", (req, res) => {
   const location = req.body.location;
   const about = req.body.about;
 
-  // Error Handling
-  if (district === undefined) {
-    res.send(generateError("Specify a district", "aaDU1", null));
-    return;
-  }
-  if (status !== undefined && typeof status !== "number") {
-    res.send(generateError("Invalid status", "aaDU2", null));
-    return;
-  }
-  if (blocksDone !== undefined && typeof blocksDone !== "number") {
-    res.send(generateError("Invalid blocksDone", "aaDU3", null));
-    return;
-  }
-  if (blocksLeft !== undefined && typeof blocksLeft !== "number") {
-    res.send(generateError("Invalid blocksLeft", "aaDU4", null));
-    return;
-  }
-  if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aaDU5", null));
-    return;
-  }
-  // DB request
-  db.query(
-    `${
-      status !== undefined
-        ? `UPDATE districts SET status = '${status}' WHERE name = '${district}';`
-        : ``
-    }` +
-      `${
-        blocksDone !== undefined
-          ? `UPDATE districts SET blocksDone = '${blocksDone}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        blocksLeft !== undefined
-          ? `UPDATE districts SET blocksLeft = '${blocksLeft}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        progress !== undefined
-          ? `UPDATE districts SET progress = '${progress}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        completionDate !== undefined
-          ? `UPDATE districts SET completionDate = '${completionDate}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        image !== undefined
-          ? `UPDATE districts SET image = '${image}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        map !== undefined
-          ? `UPDATE districts SET map = '${map}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        parent !== undefined
-          ? `UPDATE districts SET parent = '${parent}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        location !== undefined
-          ? `UPDATE districts SET location = '${location}' WHERE name = '${district}';`
-          : ``
-      }` +
-      `${
-        about !== undefined
-          ? `UPDATE districts SET about = '${about}' WHERE name = '${district}';`
-          : ``
-      }`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-        res.send(generateError("SQL Error", "sq1", err));
-      } else {
-        res.send(generateSuccess(`District ${district} updated`));
-      }
-    }
-  );
+  valid.validateDistrictUpdateAdmin
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `${
+          status !== undefined
+            ? `UPDATE districts SET status = '${status}' WHERE name = '${district}';`
+            : ``
+        }` +
+          `${
+            blocksDone !== undefined
+              ? `UPDATE districts SET blocksDone = '${blocksDone}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            blocksLeft !== undefined
+              ? `UPDATE districts SET blocksLeft = '${blocksLeft}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            progress !== undefined
+              ? `UPDATE districts SET progress = '${progress}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            completionDate !== undefined
+              ? `UPDATE districts SET completionDate = '${completionDate}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            image !== undefined
+              ? `UPDATE districts SET image = '${image}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            map !== undefined
+              ? `UPDATE districts SET map = '${map}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            parent !== undefined
+              ? `UPDATE districts SET parent = '${parent}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            location !== undefined
+              ? `UPDATE districts SET location = '${location}' WHERE name = '${district}';`
+              : ``
+          }` +
+          `${
+            about !== undefined
+              ? `UPDATE districts SET about = '${about}' WHERE name = '${district}';`
+              : ``
+          }`,
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            res.send(generateError("SQL Error", "sq1", err));
+          } else {
+            res.send(generateSuccess(`District ${district} updated`));
+          }
+        }
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aADU1"));
+    });
 });
-app.post("/api/admin/blocks/update", checkDistrictBlock, (req, res) => {
+app.post("/api/admin/blocks/update", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
   const location = req.body.location;
@@ -764,184 +735,182 @@ app.post("/api/admin/blocks/update", checkDistrictBlock, (req, res) => {
   const builder = req.body.builder;
   const completionDate = req.body.completionDate;
 
-  // Error Handling
-  if (status !== undefined && typeof status !== "number") {
-    res.send(generateError("Invalid status", "aaBU1", null));
-    return;
-  }
-  if (progress !== undefined && typeof progress !== "number") {
-    res.send(generateError("Invalid progress", "aaBU2", null));
-    return;
-  }
-  if (details !== undefined && typeof details !== "boolean") {
-    res.send(generateError("Invalid details", "aaBU3", null));
-    return;
-  }
-  // DB request
-  db.query(
-    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err1, result1) => {
-      if (err1) {
-        console.log(err1);
-        res.send(generateError("SQL Error", "sq1", err1));
-      } else {
-        if (result1.length === 0) {
-          res.send(generateError("District/Block not found", "aaBU4", null));
-        } else if (result1.length > 1) {
-          res.send(
-            generateError(
-              "More then one block found, please message a system administrator",
-              "aaBU5",
-              null
-            )
-          );
-        } else {
-          db.query(
-            `${
-              location !== undefined
-                ? `UPDATE blocks SET location = '${location}' WHERE rid = '${result1[0].rid}';`
-                : ``
-            }` +
-              `${
-                status !== undefined
-                  ? `UPDATE blocks SET status = '${status}' WHERE rid = '${result1[0].rid}';`
-                  : ``
-              }` +
-              `${
-                progress !== undefined
-                  ? `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}';`
-                  : ``
-              }` +
-              `${
-                details !== undefined
-                  ? `UPDATE blocks SET details = '${
-                      details ? "1" : "0"
-                    }' WHERE rid = '${result1[0].rid}';`
-                  : ``
-              }` +
-              `${
-                builder !== undefined
-                  ? `UPDATE blocks SET builder = '${builder}' WHERE rid = '${result1[0].rid}';`
-                  : ``
-              }` +
-              `${
-                completionDate !== undefined
-                  ? `UPDATE blocks SET completionDate = '${completionDate}' WHERE rid = '${result1[0].rid}';`
-                  : ``
-              }`,
-            (err2, result2) => {
-              if (err2) {
-                console.log(err2);
-                res.send(generateError("SQL Error", "sq1", err2));
-              } else {
-                res.send(
-                  generateSuccess(`Block ${blockID} of ${district} updated`)
-                );
-              }
+  valid.validateBlockUpdateAdmin
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length === 0) {
+              res.send(
+                generateError("District/Block not found", "aaBU2", null)
+              );
+            } else if (result1.length > 1) {
+              res.send(
+                generateError(
+                  "More then one block found, please message a system administrator",
+                  "aaBU3",
+                  null
+                )
+              );
+            } else {
+              db.query(
+                `${
+                  location !== undefined
+                    ? `UPDATE blocks SET location = '${location}' WHERE rid = '${result1[0].rid}';`
+                    : ``
+                }` +
+                  `${
+                    status !== undefined
+                      ? `UPDATE blocks SET status = '${status}' WHERE rid = '${result1[0].rid}';`
+                      : ``
+                  }` +
+                  `${
+                    progress !== undefined
+                      ? `UPDATE blocks SET progress = '${progress}' WHERE rid = '${result1[0].rid}';`
+                      : ``
+                  }` +
+                  `${
+                    details !== undefined
+                      ? `UPDATE blocks SET details = '${
+                          details ? "1" : "0"
+                        }' WHERE rid = '${result1[0].rid}';`
+                      : ``
+                  }` +
+                  `${
+                    builder !== undefined
+                      ? `UPDATE blocks SET builder = '${builder}' WHERE rid = '${result1[0].rid}';`
+                      : ``
+                  }` +
+                  `${
+                    completionDate !== undefined
+                      ? `UPDATE blocks SET completionDate = '${completionDate}' WHERE rid = '${result1[0].rid}';`
+                      : ``
+                  }`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    res.send(
+                      generateSuccess(`Block ${blockID} of ${district} updated`)
+                    );
+                  }
+                }
+              );
             }
-          );
+          }
         }
-      }
-    }
-  );
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aABU1"));
+    });
 });
 app.post("/api/admin/districts/add", (req, res) => {
   const name = req.body.district;
 
-  // Error Handling
-  if (name === undefined) {
-    res.send(generateError("Specify a name", "aaDA1", null));
-    return;
-  }
-  if (typeof name !== "string") {
-    res.send(generateError("Invalid name", "aaDA2", null));
-    return;
-  }
-
-  // DB Request
-  db.query(
-    `SELECT * FROM districts WHERE name = '${name}'`,
-    (err1, result1) => {
-      if (err1) {
-        console.log(err1);
-        res.send(generateError("SQL Error", "sq1", err1));
-      } else {
-        if (result1.length > 0) {
-          res.send(generateError("District already exists", "aaDA3", null));
-        } else {
-          db.query(
-            `INSERT INTO districts (name) VALUES ('${name}')`,
-            (err2, result2) => {
-              if (err2) {
-                console.log(err2);
-                res.send(generateError("SQL Error", "sq1", err2));
-              } else {
-                res.send(generateSuccess(`District ${name} added`));
-              }
+  valid.validateDistrict
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT * FROM districts WHERE name = '${name}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length > 0) {
+              res.send(generateError("District already exists", "aADA2", null));
+            } else {
+              db.query(
+                `INSERT INTO districts (name) VALUES ('${name}')`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    res.send(generateSuccess(`District ${name} added`));
+                  }
+                }
+              );
             }
-          );
+          }
         }
-      }
-    }
-  );
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aADA1"));
+    });
 });
-
-app.post("/api/admin/blocks/add", checkDistrictBlock, (req, res) => {
+app.post("/api/admin/blocks/add", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
 
-  // DB Request
-  db.query(
-    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
-    (err1, result1) => {
-      if (err1) {
-        console.log(err1);
-        res.send(generateError("SQL Error", "sq1", err1));
-      } else {
-        if (result1.length > 0) {
-          res.send(generateError("Block already exists", "aaBA1", null));
-        } else {
-          db.query(
-            `SELECT * FROM districts WHERE name = '${district}'`,
-            (err2, result2) => {
-              if (err2) {
-                console.log(err2);
-                res.send(generateError("SQL Error", "sq1", err2));
-              } else {
-                if (result2.length === 0) {
-                  res.send(generateError("District not found", "aaBA2", null));
-                } else if (result2.length > 1) {
-                  res.send(
-                    generateError(
-                      "More then one district found, please message a system administrator",
-                      "aaBA3",
-                      null
-                    )
-                  );
-                } else {
-                  db.query(
-                    `INSERT INTO blocks (id,district) VALUES ('${blockID}','${result2[0].id}')`,
-                    (err3, result3) => {
-                      if (err3) {
-                        console.log(err3);
-                        res.send(generateError("SQL Error", "sq1", err3));
-                      } else {
-                        res.send(
-                          generateSuccess(
-                            `Block ${blockID} of ${district} added`
-                          )
-                        );
-                      }
+  valid.validateBlock
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}' AND blocks.id = '${blockID}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length > 0) {
+              res.send(generateError("Block already exists", "aABA2", null));
+            } else {
+              db.query(
+                `SELECT * FROM districts WHERE name = '${district}'`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    if (result2.length === 0) {
+                      res.send(
+                        generateError("District not found", "aABA3", null)
+                      );
+                    } else if (result2.length > 1) {
+                      res.send(
+                        generateError(
+                          "More then one district found, please message a system administrator",
+                          "aABA4",
+                          null
+                        )
+                      );
+                    } else {
+                      db.query(
+                        `INSERT INTO blocks (id,district) VALUES ('${blockID}','${result2[0].id}')`,
+                        (err3, result3) => {
+                          if (err3) {
+                            console.log(err3);
+                            res.send(generateError("SQL Error", "sq1", err3));
+                          } else {
+                            res.send(
+                              generateSuccess(
+                                `Block ${blockID} of ${district} added`
+                              )
+                            );
+                          }
+                        }
+                      );
                     }
-                  );
+                  }
                 }
-              }
+              );
             }
-          );
+          }
         }
-      }
-    }
-  );
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aABA1"));
+    });
 });
 app.get("/api/admin/settings", (req, res) => {
   db.query("SELECT * FROM adminsettings", (err, result) => {
@@ -1271,24 +1240,6 @@ function checkUUID(req, res, next) {
   }
   if (typeof uuid !== "string" || uuid.length !== 36) {
     res.send(generateError("Invalid UUID", "cU1"));
-    return;
-  }
-  next();
-}
-function checkDistrictBlock(req, res, next) {
-  const district = req.body.district;
-  const blockID = req.body.blockID;
-
-  if (district === undefined || blockID === undefined) {
-    res.send(generateError("Specify district and blockID", "cDB1", null));
-    return;
-  }
-  if (typeof district !== "string") {
-    res.send(generateError("Invalid district", "cDB2", null));
-    return;
-  }
-  if (typeof blockID !== "number") {
-    res.send(generateError("Invalid blockID", "cDB3", null));
     return;
   }
   next();
