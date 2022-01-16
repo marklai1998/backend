@@ -374,6 +374,114 @@ app.post("/api/users/update", (req, res) => {
     "/query?query=SELECT * FROM users WHERE email = '" + toSet.email + "'"
   );
 });
+// Overview
+app.get("/api/progress", (req, res) => {
+  db.query(`SELECT * FROM districts ORDER BY parent`, (err1, districts) => {
+    if (err1) {
+      console.log(err1);
+      res.send(generateError("SQL Error", "sq1", err1));
+    } else {
+      db.query(`SELECT * FROM blocks`, (err2, blocks) => {
+        if (err2) {
+          console.log(err2);
+          res.send(generateError("SQL Error", "sq1", err2));
+        } else {
+          const json = {};
+          const boroughs = [];
+          var counter = 0;
+
+          for (var i = 0; i < districts.length; i++) {
+            if (districts[i].parent === "New York City") {
+              boroughs[counter++] = {
+                name: districts[i].name,
+                status: districts[i].status,
+                blocks_done: districts[i].blocksDone,
+                blocks_left: districts[i].blocksLeft,
+                progress: districts[i].progress,
+                completion: districts[i].completionDate.toLocaleDateString(),
+                coords: districts[i].location,
+                subboroughs: [],
+              };
+            }
+          }
+          counter = 0;
+
+          for (var i = 0; i < boroughs.length; i++) {
+            for (var j = 0; j < districts.length; j++) {
+              if (districts[j].parent === boroughs[i].name) {
+                boroughs[i].subboroughs[counter++] = {
+                  name: districts[j].name,
+                  status: districts[j].status,
+                  blocks_done: districts[j].blocksDone,
+                  blocks_left: districts[j].blocksLeft,
+                  progress: districts[j].progress,
+                  completion: districts[j].completionDate.toLocaleDateString(),
+                  coords: districts[j].location,
+                  districts: [],
+                };
+              }
+            }
+          }
+          counter = 0;
+
+          for (var i = 0; i < boroughs.length; i++) {
+            for (var j = 0; j < boroughs[i].subboroughs.length; j++) {
+              for (var k = 0; k < districts.length; k++) {
+                if (districts[k].parent === boroughs[i].subboroughs[j].name) {
+                  boroughs[i].subboroughs[j].districts[counter++] = {
+                    name: districts[k].name,
+                    status: districts[k].status,
+                    blocks_done: districts[k].blocksDone,
+                    blocks_left: districts[k].blocksLeft,
+                    progress: districts[k].progress,
+                    completion:
+                      districts[k].completionDate.toLocaleDateString(),
+                    coords: districts[k].location,
+                    blocks: [],
+                  };
+                }
+              }
+            }
+          }
+          counter = 0;
+
+          var districtCounter = 0;
+          for (var i = 0; i < boroughs.length; i++) {
+            for (var j = 0; j < boroughs[i].subboroughs.length; j++) {
+              for (
+                var k = 0;
+                k < boroughs[i].subboroughs[j].districts.length;
+                k++
+              ) {
+                for (var l = 0; l < blocks.length; l++) {
+                  if (blocks[l].district === districts[districtCounter].id) {
+                    boroughs[i].subboroughs[j].districts[k].blocks[counter++] =
+                      {
+                        block: blocks[l].id,
+                        status: blocks[l].status,
+                        progress: blocks[l].progress,
+                        details: blocks[l].details === 1 ? true : false,
+                        builder: blocks[l].builder,
+                        completion:
+                          blocks[l].completionDate.toLocaleDateString(),
+                        coords: blocks[l].location,
+                      };
+                  }
+                }
+                districtCounter++;
+              }
+              districtCounter = 0;
+            }
+          }
+
+          json.boroughs = boroughs;
+          res.send(json);
+        }
+      });
+    }
+  });
+});
+
 // Districts
 app.get("/api/districts/:name", async (req, res) => {
   const name = req.params.name;
@@ -617,6 +725,7 @@ app.post("/api/blocks/setdetails", (req, res) => {
     });
 });
 
+// Admin
 app.use("/api/admin", (req, res, next) => {
   if (req.body.token || req.query.token) {
     var token = req.body.token;
@@ -643,7 +752,6 @@ app.use("/api/admin", (req, res, next) => {
   }
 });
 
-// Admin
 app.post("/api/admin/districts/update", (req, res) => {
   const district = req.body.district;
   const status = req.body.status;
@@ -796,6 +904,7 @@ app.post("/api/admin/blocks/update", (req, res) => {
                     console.log(err2);
                     res.send(generateError("SQL Error", "sq1", err2));
                   } else {
+                    checkForChangeBlock(result1, district, blockID);
                     res.send(
                       generateSuccess(`Block ${blockID} of ${district} updated`)
                     );
