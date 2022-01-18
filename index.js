@@ -994,7 +994,8 @@ app.post("/api/admin/blocks/add", (req, res) => {
                       );
                     } else {
                       db.query(
-                        `INSERT INTO blocks (id,district) VALUES ('${blockID}','${result2[0].id}')`,
+                        `INSERT INTO blocks (id,district) VALUES ('${blockID}','${result2[0].id}');` +
+                          `UPDATE districts SET blocksLeft = blocksLeft+1 WHERE name = '${district}'`,
                         (err3, result3) => {
                           if (err3) {
                             console.log(err3);
@@ -1325,9 +1326,25 @@ function checkForChangeBlock(before, district, block) {
         }
 
         if (newStatus !== undefined) {
+          // Status changed
           db.query(
             `UPDATE blocks SET status = '${newStatus}' WHERE rid = '${data.rid}'`
           );
+          if (newStatus === 4) {
+            // Increase blocks done for district
+            db.query(
+              `UPDATE districts SET blocksDone = blocksDone+1 WHERE name = '${district}';` +
+                `UPDATE districts SET blocksLeft = blocksLeft-1 WHERE name = '${district}';`
+            );
+          } else {
+            if (oldStatus === 4) {
+              // Decrease blocks done for district
+              db.query(
+                `UPDATE districts SET blocksDone = blocksDone-1 WHERE name = '${district}';` +
+                  `UPDATE districts SET blocksLeft = blocksLeft+1 WHERE name = '${district}';`
+              );
+            }
+          }
         }
         if (date !== undefined) {
           db.query(
