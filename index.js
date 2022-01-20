@@ -386,37 +386,53 @@ app.get("/api/progress", (req, res) => {
           console.log(err2);
           res.send(generateError("SQL Error", "sq1", err2));
         } else {
-          const json = {};
-          const boroughs = [];
+          const json = {
+            name: districts[0].name,
+            status: districts[0].status,
+            blocks_done: districts[0].blocksDone,
+            blocks_left: districts[0].blocksLeft,
+            progress: districts[0].progress,
+            completion:
+              districts[0].completionDate !== null
+                ? districts[0].completionDate.toLocaleDateString()
+                : null,
+            boroughs: [],
+          };
           var counter = 0;
 
-          for (var i = 0; i < districts.length; i++) {
-            if (districts[i].parent === "New York City") {
-              boroughs[counter++] = {
+          for (var i = 1; i < districts.length; i++) {
+            if (districts[i].parent === districts[0].name) {
+              json.boroughs[counter++] = {
                 name: districts[i].name,
                 status: districts[i].status,
                 blocks_done: districts[i].blocksDone,
                 blocks_left: districts[i].blocksLeft,
                 progress: districts[i].progress,
-                completion: districts[i].completionDate.toLocaleDateString(),
-                coords: districts[i].location,
+                completion:
+                  districts[i].completionDate !== null
+                    ? districts[i].completionDate.toLocaleDateString()
+                    : null,
+                location: districts[i].location,
                 subboroughs: [],
               };
             }
           }
           counter = 0;
 
-          for (var i = 0; i < boroughs.length; i++) {
+          for (var i = 0; i < json.boroughs.length; i++) {
             for (var j = 0; j < districts.length; j++) {
-              if (districts[j].parent === boroughs[i].name) {
-                boroughs[i].subboroughs[counter++] = {
+              if (districts[j].parent === json.boroughs[i].name) {
+                json.boroughs[i].subboroughs[counter++] = {
                   name: districts[j].name,
                   status: districts[j].status,
                   blocks_done: districts[j].blocksDone,
                   blocks_left: districts[j].blocksLeft,
                   progress: districts[j].progress,
-                  completion: districts[j].completionDate.toLocaleDateString(),
-                  coords: districts[j].location,
+                  completion:
+                    districts[j].completionDate !== null
+                      ? districts[j].completionDate.toLocaleDateString()
+                      : null,
+                  location: districts[j].location,
                   districts: [],
                 };
               }
@@ -424,19 +440,23 @@ app.get("/api/progress", (req, res) => {
           }
           counter = 0;
 
-          for (var i = 0; i < boroughs.length; i++) {
-            for (var j = 0; j < boroughs[i].subboroughs.length; j++) {
+          for (var i = 0; i < json.boroughs.length; i++) {
+            for (var j = 0; j < json.boroughs[i].subboroughs.length; j++) {
               for (var k = 0; k < districts.length; k++) {
-                if (districts[k].parent === boroughs[i].subboroughs[j].name) {
-                  boroughs[i].subboroughs[j].districts[counter++] = {
+                if (
+                  districts[k].parent === json.boroughs[i].subboroughs[j].name
+                ) {
+                  json.boroughs[i].subboroughs[j].districts[counter++] = {
                     name: districts[k].name,
                     status: districts[k].status,
                     blocks_done: districts[k].blocksDone,
                     blocks_left: districts[k].blocksLeft,
                     progress: districts[k].progress,
                     completion:
-                      districts[k].completionDate.toLocaleDateString(),
-                    coords: districts[k].location,
+                      districts[k].completionDate !== null
+                        ? districts[k].completionDate.toLocaleDateString()
+                        : null,
+                    location: districts[k].location,
                     blocks: [],
                   };
                 }
@@ -446,26 +466,29 @@ app.get("/api/progress", (req, res) => {
           counter = 0;
 
           var districtCounter = 0;
-          for (var i = 0; i < boroughs.length; i++) {
-            for (var j = 0; j < boroughs[i].subboroughs.length; j++) {
+          for (var i = 0; i < json.boroughs.length; i++) {
+            for (var j = 0; j < json.boroughs[i].subboroughs.length; j++) {
               for (
                 var k = 0;
-                k < boroughs[i].subboroughs[j].districts.length;
+                k < json.boroughs[i].subboroughs[j].districts.length;
                 k++
               ) {
                 for (var l = 0; l < blocks.length; l++) {
                   if (blocks[l].district === districts[districtCounter].id) {
-                    boroughs[i].subboroughs[j].districts[k].blocks[counter++] =
-                      {
-                        block: blocks[l].id,
-                        status: blocks[l].status,
-                        progress: blocks[l].progress,
-                        details: blocks[l].details === 1 ? true : false,
-                        builder: blocks[l].builder,
-                        completion:
-                          blocks[l].completionDate.toLocaleDateString(),
-                        coords: blocks[l].location,
-                      };
+                    json.boroughs[i].subboroughs[j].districts[k].blocks[
+                      counter++
+                    ] = {
+                      block: blocks[l].id,
+                      status: blocks[l].status,
+                      progress: blocks[l].progress,
+                      details: blocks[l].details === 1 ? true : false,
+                      builder: blocks[l].builder,
+                      completion:
+                        blocks[l].completionDate !== null
+                          ? blocks[l].completionDate.toLocaleDateString()
+                          : null,
+                      location: blocks[l].location,
+                    };
                   }
                 }
                 districtCounter++;
@@ -474,7 +497,6 @@ app.get("/api/progress", (req, res) => {
             }
           }
 
-          json.boroughs = boroughs;
           res.send(json);
         }
       });
@@ -601,6 +623,7 @@ app.post("/api/blocks/update", (req, res) => {
                     res.send(generateError("SQL Error", "sq1", err2));
                   } else {
                     checkForChangeBlock(result1, district, blockID);
+                    calculateProgressDistrict(district);
                     res.send(
                       generateSuccess(`Block ${blockID} of ${district} updated`)
                     );
@@ -652,6 +675,7 @@ app.post("/api/blocks/setprogress", (req, res) => {
                     res.send(generateError("SQL Error", "sq1", err2));
                   } else {
                     checkForChangeBlock(result1, district, blockID);
+                    calculateProgressDistrict(district);
                     res.send(
                       generateSuccess(
                         `Progress of ${district} block ${blockID} set to ${progress}%`
@@ -905,6 +929,7 @@ app.post("/api/admin/blocks/update", (req, res) => {
                     res.send(generateError("SQL Error", "sq1", err2));
                   } else {
                     checkForChangeBlock(result1, district, blockID);
+                    calculateProgressDistrict(district);
                     res.send(
                       generateSuccess(`Block ${blockID} of ${district} updated`)
                     );
@@ -1001,6 +1026,7 @@ app.post("/api/admin/blocks/add", (req, res) => {
                             console.log(err3);
                             res.send(generateError("SQL Error", "sq1", err3));
                           } else {
+                            calculateProgressDistrict(district);
                             res.send(
                               generateSuccess(
                                 `Block ${blockID} of ${district} added`
@@ -1034,6 +1060,295 @@ app.get("/api/admin/settings", (req, res) => {
 });
 app.post("/api/admin/districts/remove", (req, res) => {});
 app.post("/api/admin/blocks/remove", (req, res) => {});
+app.post("/api/admin/syncdata", (req, res) => {
+  db.query(`SELECT * FROM blocks ORDER BY district`, (err1, blocks) => {
+    if (err1) {
+      console.log(err1);
+      res.send(generateError("SQL Error", "sq1", err1));
+    } else {
+      db.query(`SELECT * FROM districts`, (err2, districts) => {
+        if (err2) {
+          console.log(err2);
+          res.send(generateError("SQL Error", "sq1", err2));
+        } else {
+          var parents = [];
+          var edits = 0;
+          var currentDistrict = blocks[0].district;
+          var blocksDone = 0;
+          var blocksLeft = 0;
+          var progress = 0;
+
+          for (const block of blocks) {
+            // Check for block inconsistency
+            if (
+              block.progress === 100 &&
+              block.details === 1 &&
+              block.status !== 4
+            ) {
+              db.query(`UPDATE blocks SET status = 4 WHERE rid = ${block.rid}`);
+              block.status = 4;
+              edits++;
+            } else if (
+              block.progress === 100 &&
+              block.details === 0 &&
+              block.status !== 3
+            ) {
+              db.query(`UPDATE blocks SET status = 3 WHERE rid = ${block.rid}`);
+              block.status = 3;
+              edits++;
+            } else if (
+              ((block.progress > 0 && block.progress < 100) ||
+                (block.details === 1 && block.progress < 100)) &&
+              block.status !== 2
+            ) {
+              db.query(`UPDATE blocks SET status = 2 WHERE rid = ${block.rid}`);
+              block.status = 2;
+              edits++;
+            } else if (
+              block.progress === 0 &&
+              block.details === 0 &&
+              block.builder !== "" &&
+              block.builder !== null &&
+              block.status !== 1
+            ) {
+              db.query(`UPDATE blocks SET status = 1 WHERE rid = ${block.rid}`);
+              block.status = 1;
+              edits++;
+            } else if (
+              block.progress === 0 &&
+              block.details === 0 &&
+              (block.builder === "" || block.builder === null) &&
+              block.status !== 0
+            ) {
+              db.query(`UPDATE blocks SET status = 0 WHERE rid = ${block.rid}`);
+              block.status = 0;
+              edits++;
+            }
+
+            // District inconsistency
+            if (currentDistrict !== block.district) {
+              // Update district
+              const district = districts.find(
+                (element) => element.id === currentDistrict
+              );
+
+              if (blocksDone !== district.blocksDone) {
+                db.query(
+                  `UPDATE districts SET blocksDone = ${blocksDone} WHERE id = ${currentDistrict}`
+                );
+                district.blocksDone = blocksDone;
+                edits++;
+              }
+              if (blocksLeft !== district.blocksLeft) {
+                db.query(
+                  `UPDATE districts SET blocksLeft = ${blocksLeft} WHERE id = ${currentDistrict}`
+                );
+                district.blocksLeft = blocksLeft;
+                edits++;
+              }
+              if (progress / (blocksDone + blocksLeft) !== district.progress) {
+                db.query(
+                  `UPDATE districts SET progress = ${
+                    progress / (blocksDone + blocksLeft)
+                  } WHERE id = ${currentDistrict}`
+                );
+                district.progress = progress / (blocksDone + blocksLeft);
+                edits++;
+              }
+              //Update Status
+              if (
+                district.progress === 100 &&
+                district.blocksLeft === 0 &&
+                district.status !== 4
+              ) {
+                db.query(
+                  `UPDATE districts SET status = 4 WHERE id = ${district.id}`
+                );
+                edits++;
+              } else if (district.progress === 100 && district.status !== 3) {
+                db.query(
+                  `UPDATE districts SET status = 3 WHERE id = ${district.id}`
+                );
+                edits++;
+              } else if (district.progress > 0 && district.status !== 2) {
+                db.query(
+                  `UPDATE districts SET status = 2 WHERE id = ${district.id}`
+                );
+                edits++;
+              } else if (district.progress === 0 && district.status !== 0) {
+                db.query(
+                  `UPDATE districts SET status = 0 WHERE id = ${district.id}`
+                );
+                edits++;
+              }
+
+              parents.push(district.parent);
+
+              // Reset for next district
+              currentDistrict = block.district;
+              blocksDone = blocksLeft = progress = 0;
+            }
+
+            // Change counters
+            block.status === 4 ? blocksDone++ : blocksLeft++;
+            progress += block.progress;
+          }
+          // Update last district
+          var district = districts.find(
+            (element) => element.id === currentDistrict
+          );
+
+          if (blocksDone !== district.blocksDone) {
+            db.query(
+              `UPDATE districts SET blocksDone = ${blocksDone} WHERE id = ${currentDistrict}`
+            );
+            edits++;
+          }
+          if (blocksLeft !== district.blocksLeft) {
+            db.query(
+              `UPDATE districts SET blocksLeft = ${blocksLeft} WHERE id = ${currentDistrict}`
+            );
+            edits++;
+          }
+          if (progress / (blocksDone + blocksLeft) !== district.progress) {
+            db.query(
+              `UPDATE districts SET progress = ${
+                progress / (blocksDone + blocksLeft)
+              } WHERE id = ${currentDistrict}`
+            );
+            edits++;
+          }
+          //Update Status
+          if (
+            district.progress === 100 &&
+            district.blocksLeft === 0 &&
+            district.status !== 4
+          ) {
+            db.query(
+              `UPDATE districts SET status = 4 WHERE id = ${district.id}`
+            );
+            edits++;
+          } else if (
+            district.progress === 100 &&
+            district.blocksLeft > 0 &&
+            district.status !== 3
+          ) {
+            db.query(
+              `UPDATE districts SET status = 3 WHERE id = ${district.id}`
+            );
+            edits++;
+          } else if (
+            district.progress > 0 &&
+            district.blocksLeft > 0 &&
+            district.status !== 2
+          ) {
+            db.query(
+              `UPDATE districts SET status = 2 WHERE id = ${district.id}`
+            );
+            edits++;
+          } else if (
+            district.progress === 0 &&
+            district.blocksLeft > 0 &&
+            district.status !== 0
+          ) {
+            db.query(
+              `UPDATE districts SET status = 0 WHERE id = ${district.id}`
+            );
+            edits++;
+          }
+
+          parents.push(district.parent);
+
+          // Check parents
+          for (const parent of parents) {
+            blocksDone = blocksLeft = progress = 0;
+            for (const district of districts) {
+              if (parent === district.parent) {
+                blocksDone += district.blocksDone;
+                blocksLeft += district.blocksLeft;
+                progress +=
+                  (district.blocksDone + district.blocksLeft) *
+                  district.progress;
+              }
+            }
+
+            // Update parent
+            district = districts.find((element) => element.name === parent);
+            if (district.blocksDone !== blocksDone) {
+              db.query(
+                `UPDATE districts SET blocksDone = ${blocksDone} WHERE id = ${district.id}`
+              );
+              edits++;
+            }
+            if (district.blocksLeft !== blocksLeft) {
+              db.query(
+                `UPDATE districts SET blocksLeft = ${blocksLeft} WHERE id = ${district.id}`
+              );
+              edits++;
+            }
+            if (district.progress !== progress / (blocksLeft + blocksDone)) {
+              db.query(
+                `UPDATE districts SET progress = ${
+                  progress / (blocksDone + blocksLeft)
+                } WHERE id = ${district.id}`
+              );
+              edits++;
+            }
+            //Update Status
+            if (
+              district.progress === 100 &&
+              district.blocksLeft === 0 &&
+              district.status !== 4
+            ) {
+              db.query(
+                `UPDATE districts SET status = 4 WHERE id = ${district.id}`
+              );
+              edits++;
+            } else if (
+              district.progress === 100 &&
+              district.blocksLeft > 0 &&
+              district.status !== 3
+            ) {
+              db.query(
+                `UPDATE districts SET status = 3 WHERE id = ${district.id}`
+              );
+              edits++;
+            } else if (
+              district.progress > 0 &&
+              district.blocksLeft > 0 &&
+              district.status !== 2
+            ) {
+              db.query(
+                `UPDATE districts SET status = 2 WHERE id = ${district.id}`
+              );
+              edits++;
+            } else if (
+              district.progress === 0 &&
+              district.blocksLeft > 0 &&
+              district.status !== 0
+            ) {
+              db.query(
+                `UPDATE districts SET status = 0 WHERE id = ${district.id}`
+              );
+              edits++;
+            }
+            if (district.parent !== null) {
+              parents.push(district.parent);
+            }
+          }
+
+          res.send(
+            generateSuccess(
+              edits === 0
+                ? `No inconsistencies found`
+                : `${edits} inconsistencies fixed`
+            )
+          );
+        }
+      });
+    }
+  });
+});
 
 // Minecraft
 app.get("/api/minecraft/user", (req, res) => {
@@ -1355,6 +1670,62 @@ function checkForChangeBlock(before, district, block) {
     }
   );
 }
+function calculateProgressDistrict(district) {
+  db.query(
+    `SELECT blocks.* FROM blocks JOIN districts ON blocks.district=districts.id WHERE districts.name = '${district}'`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        var progress = 0;
+        for (const block of result) {
+          progress += block.progress;
+        }
+        progress /= result.length;
+
+        db.query(
+          `UPDATE districts SET progress = ${progress} WHERE name = '${district}'`
+        );
+        calculateProgressSubborough(district);
+      }
+    }
+  );
+}
+function calculateProgressSubborough(districtName) {
+  db.query(
+    `SELECT * FROM districts WHERE parent = (SELECT parent FROM districts WHERE name = '${districtName}')`,
+    (err1, result1) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        var progress = 0;
+        for (const district of result1) {
+          progress +=
+            (district.blocksDone + district.blocksLeft) * district.progress;
+        }
+
+        db.query(
+          `SELECT * FROM districts WHERE name = '${result1[0].parent}'`,
+          (err2, result2) => {
+            if (err2) {
+              console.log(err2);
+              res.send(generateError("SQL Error", "sq1", err2));
+            } else {
+              progress /= result2[0].blocksDone + result2[0].blocksLeft;
+
+              db.query(
+                `UPDATE districts SET progress = ${progress} WHERE name = '${result1[0].parent}'`
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+}
+function calculateProgressBorough() {}
 
 // Middlewares
 function checkUUID(req, res, next) {
