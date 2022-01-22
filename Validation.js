@@ -158,6 +158,13 @@ const validateBlockUpdateAdmin = yup.object().shape({
       { excludeEmptyString: true, message: "Invalid Date Format (dd.MM.yyyy)" }
     ),
 });
+const validateAdminSettingsUpdate = yup.object().shape({
+  name: yup
+    .string()
+    .typeError("Invalid setting name")
+    .required("Specify a setting name"),
+  value: yup.string().typeError("Invalid value").required("Specify a value"),
+});
 
 module.exports = {
   validateUser,
@@ -168,4 +175,5 @@ module.exports = {
   validateDetails,
   validateDistrictUpdateAdmin,
   validateBlockUpdateAdmin,
+  validateAdminSettingsUpdate,
 };

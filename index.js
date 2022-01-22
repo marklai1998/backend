@@ -437,8 +437,8 @@ app.get("/api/progress", (req, res) => {
                 };
               }
             }
+            counter = 0;
           }
-          counter = 0;
 
           for (var i = 0; i < json.boroughs.length; i++) {
             for (var j = 0; j < json.boroughs[i].subboroughs.length; j++) {
@@ -461,9 +461,9 @@ app.get("/api/progress", (req, res) => {
                   };
                 }
               }
+              counter = 0;
             }
           }
-          counter = 0;
 
           var districtCounter = 0;
           for (var i = 0; i < json.boroughs.length; i++) {
@@ -475,7 +475,7 @@ app.get("/api/progress", (req, res) => {
               ) {
                 for (var l = 0; l < blocks.length; l++) {
                   if (blocks[l].district === districts[districtCounter].id) {
-                    json.boroughs[i].subboroughs[j].districts[k].blocks[
+                    json.boroughs[i].subboroughs[j].districts[k - 1].blocks[
                       counter++
                     ] = {
                       block: blocks[l].id,
@@ -1058,6 +1058,53 @@ app.get("/api/admin/settings", (req, res) => {
     }
   });
 });
+app.post("/api/admin/settings/set", (req, res) => {
+  const name = req.body.name;
+  const value = req.body.value;
+
+  valid.validateAdminSettingsUpdate
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT * FROM adminsettings WHERE name = '${name}'`,
+        (err1, result1) => {
+          if (err1) {
+            console.log(err1);
+            res.send(generateError("SQL Error", "sq1", err1));
+          } else {
+            if (result1.length === 0) {
+              db.query(
+                `INSERT INTO adminsettings (name,value) VALUES ('${name}','${value}')`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    res.send(generateSuccess("Setting added"));
+                  }
+                }
+              );
+            } else {
+              db.query(
+                `UPDATE adminsettings SET value = '${value}' WHERE name = '${name}'`,
+                (err2, result2) => {
+                  if (err2) {
+                    console.log(err2);
+                    res.send(generateError("SQL Error", "sq1", err2));
+                  } else {
+                    res.send(generateSuccess("Setting updated"));
+                  }
+                }
+              );
+            }
+          }
+        }
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aASS1"));
+    });
+});
 app.post("/api/admin/districts/remove", (req, res) => {});
 app.post("/api/admin/blocks/remove", (req, res) => {});
 app.post("/api/admin/syncdata", (req, res) => {
@@ -1507,7 +1554,9 @@ app.post("/api/minecraft/setSettings", checkUUID, (req, res) => {
           );
         } else {
           const settings = JSON.parse(result1[0].settings);
-          settings[type] = value;
+
+          setAttributeJson(settings, type, value);
+
           db.query(
             `UPDATE minecraft SET settings = '${JSON.stringify(
               settings
@@ -1571,6 +1620,13 @@ function toArray(json) {
     result.push({ value: json[key], key });
   }
   return result;
+}
+function setAttributeJson(json, path, value) {
+  var k = json;
+  var steps = path.split(".");
+  var last = steps.pop();
+  steps.forEach((e) => (k[e] = k[e] || {}) && (k = k[e]));
+  k[last] = value;
 }
 
 // Follow-up changes
