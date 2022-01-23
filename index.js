@@ -526,7 +526,7 @@ app.get("/api/districts/:name", async (req, res) => {
             } else {
               var builders = [];
               for (var i = 0; i < result2.length; i++) {
-                if (result2[i].builder.includes(" ,")) {
+                if (result2[i].builder.includes(",")) {
                   var buildersMultiple = result2[i].builder.split(",");
                   for (var j = 0; j < buildersMultiple.length; j++) {
                     if (builders.some((e) => e.name === buildersMultiple[j])) {
@@ -583,6 +583,120 @@ app.get("/api/districts/:name", async (req, res) => {
   );
 });
 // Blocks
+app.get("/api/blocks/:filter/:value", (req, res) => {
+  const filter = req.params.filter;
+  const value = req.params.value;
+  db.query(
+    `SELECT * FROM blocks WHERE ${filter} = '${value}'`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+app.get("/api/blocks/player/:name", (req, res) => {
+  const name = req.params.name;
+  db.query(
+    `SELECT rid,b.id,b.location,d.name AS district,b.status,b.progress,details,builder,b.completionDate FROM blocks b, districts d WHERE b.district = d.id ORDER BY b.district`,
+    (err1, blocks) => {
+      if (err1) {
+        console.log(err1);
+        res.send(generateError("SQL Error", "sq1", err1));
+      } else {
+        db.query(
+          `SELECT * FROM minecraft WHERE name = '${name}'`,
+          (err2, minecraft) => {
+            var response;
+            if (err2) {
+              console.log(err2);
+              res.send(generateError("SQL Error", "sq1", err2));
+            } else {
+              response = {
+                name: minecraft.length === 0 ? name : minecraft[0].name,
+                uuid: minecraft.length === 0 ? null : minecraft[0].uuid,
+                claims: {
+                  done: 0,
+                  detailing: 0,
+                  building: 0,
+                  reserved: 0,
+                },
+                districts: [],
+              };
+              for (var i = 0; i < blocks.length; i++) {
+                if (blocks[i].completionDate !== null) {
+                  blocks[i].completionDate =
+                    blocks[i].completionDate.toLocaleDateString();
+                }
+                if (blocks[i].builder.includes(",")) {
+                  const builderSplit = blocks[i].builder.split(",");
+                  for (var j = 0; j < builderSplit.length; j++) {
+                    if (builderSplit[j].toLowerCase() === name.toLowerCase()) {
+                      response.districts[blocks.district].push(blocks[i]);
+
+                      switch (blocks[i].status) {
+                        case 4:
+                          response.claims.done++;
+                          break;
+                        case 3:
+                          response.claims.detailing++;
+                          break;
+                        case 2:
+                          response.claims.building++;
+                          break;
+                        case 1:
+                          response.claims.reserved++;
+                          break;
+                      }
+                    }
+                  }
+                } else {
+                  if (blocks[i].builder.toLowerCase() === name.toLowerCase()) {
+                    const index = response.districts.findIndex(
+                      (e) => e.name === blocks[i].district
+                    );
+
+                    if (index === -1) {
+                      response.districts.push({
+                        name: blocks[i].district,
+                        blocks: [],
+                      });
+                    }
+
+                    response.districts.some((e) => {
+                      if (e.name === blocks[i].district) {
+                        e.blocks.push(blocks[i]);
+                      }
+                    });
+
+                    switch (blocks[i].status) {
+                      case 4:
+                        response.claims.done++;
+                        break;
+                      case 3:
+                        response.claims.detailing++;
+                        break;
+                      case 2:
+                        response.claims.building++;
+                        break;
+                      case 1:
+                        response.claims.reserved++;
+                        break;
+                    }
+                  }
+                }
+              }
+              res.send(response);
+            }
+          }
+        );
+      }
+    }
+  );
+});
 app.post("/api/blocks/update", (req, res) => {
   const district = req.body.district;
   const blockID = req.body.blockID;
