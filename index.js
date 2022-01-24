@@ -862,6 +862,107 @@ app.post("/api/blocks/setdetails", (req, res) => {
       res.send(generateError(err.message, "aBSD1"));
     });
 });
+app.post("/api/blocks/addbuilder", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const builder = req.body.builder;
+
+  valid.validateBuilder
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district = districts.id WHERE districts.name = '${district}' AND blocks.id = ${blockID}`,
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            res.send(generateError("SQL Error", "sq1", err));
+          } else {
+            if (result[0].builder !== undefined && result[0].builder !== null) {
+              const builderSplit = result[0].builder.split(",");
+              for (const b of builderSplit) {
+                if (b === builder) {
+                  res.send(generateError("Builder already set", "aBAB2"));
+                  return;
+                }
+              }
+            }
+            if (
+              result[0].builder !== undefined &&
+              result[0].builder !== null &&
+              result[0].builder !== ""
+            ) {
+              db.query(
+                `UPDATE blocks SET builder = CONCAT(builder, ',${builder}') WHERE rid = ${result[0].rid}`
+              );
+            } else {
+              db.query(
+                `UPDATE blocks SET builder = '${builder}' WHERE rid = ${result[0].rid}`
+              );
+            }
+            res.send(generateSuccess("Builder added"));
+          }
+        }
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aBAB1"));
+    });
+});
+app.post("/api/blocks/removebuilder", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const builder = req.body.builder;
+
+  valid.validateBuilder
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district = districts.id WHERE districts.name = '${district}' AND blocks.id = ${blockID}`,
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            res.send(generateError("SQL Error", "sq1", err));
+          } else {
+            if (
+              result[0].builder !== undefined &&
+              result[0].builder !== null &&
+              result[0].builder !== ""
+            ) {
+              const builderSplit = result[0].builder.split(",");
+              for (var i = 0; i < builderSplit.length; i++) {
+                if (builderSplit[i].toLowerCase() === builder.toLowerCase()) {
+                  if (builderSplit.length > 1) {
+                    var builderStr = "";
+                    builderSplit.some((e) => {
+                      if (e.toLowerCase() !== builder.toLowerCase()) {
+                        builderStr += `,${e}`;
+                      }
+                    });
+                    db.query(
+                      `UPDATE blocks SET builder = '${builderStr.replace(
+                        builderStr[0],
+                        ""
+                      )}' WHERE rid = ${result[0].rid}`
+                    );
+                  } else {
+                    db.query(
+                      `UPDATE blocks SET builder = null WHERE rid = ${result[0].rid}`
+                    );
+                  }
+                  res.send(generateSuccess("Builder removed"));
+                  return;
+                }
+              }
+            }
+            res.send(generateError("Builder not found", "aBRB2"));
+          }
+        }
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aBRB1"));
+    });
+});
 
 // Admin
 app.use("/api/admin", (req, res, next) => {

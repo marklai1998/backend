@@ -85,6 +85,21 @@ const validateDetails = yup.object().shape({
     .typeError("Details must be a boolean")
     .required("Specify Details"),
 });
+const validateBuilder = yup.object().shape({
+  district: yup
+    .string()
+    .typeError("Invalid district name")
+    .required("Specify a district"),
+  blockID: yup
+    .number()
+    .typeError("Invalid blockID")
+    .min(1, "blockID must at least be 1")
+    .required("Specify a blockID"),
+  builder: yup
+    .string()
+    .typeError("Invalid builder")
+    .required("Specify a builder"),
+});
 const validateDistrictUpdateAdmin = yup.object().shape({
   district: yup
     .string()
@@ -173,6 +188,7 @@ module.exports = {
   validateBlockUpdate,
   validateProgress,
   validateDetails,
+  validateBuilder,
   validateDistrictUpdateAdmin,
   validateBlockUpdateAdmin,
   validateAdminSettingsUpdate,
