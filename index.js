@@ -963,6 +963,33 @@ app.post("/api/blocks/removebuilder", (req, res) => {
       res.send(generateError(err.message, "aBRB1"));
     });
 });
+app.post("/api/blocks/setlocation", (req, res) => {
+  const district = req.body.district;
+  const blockID = req.body.blockID;
+  const location = req.body.location;
+
+  valid.validateLocation
+    .validate(req.body)
+    .then(function (valid) {
+      db.query(
+        `SELECT blocks.* FROM blocks JOIN districts ON blocks.district = districts.id WHERE districts.name = '${district}' AND blocks.id = ${blockID}`,
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            res.send(generateError("SQL Error", "sq1", err));
+          } else {
+            db.query(
+              `UPDATE blocks SET location = '${location}' WHERE rid = ${result[0].rid}`
+            );
+            res.send(generateSuccess("Location updated"));
+          }
+        }
+      );
+    })
+    .catch(function (err) {
+      res.send(generateError(err.message, "aBSL1"));
+    });
+});
 
 // Admin
 app.use("/api/admin", (req, res, next) => {
@@ -989,6 +1016,87 @@ app.use("/api/admin", (req, res, next) => {
   } else {
     res.send(generateError("No token specified", "aA", null));
   }
+});
+
+app.get("/api/admin/get/:table/:columns", (req, res) => {
+  const table = req.params.table;
+  const columns = req.params.columns;
+  const conditionsJson = req.body.conditions;
+
+  var conditions = "";
+  for (const condition in conditionsJson) {
+    conditions += `${condition}='${conditionsJson[condition]}' AND `;
+  }
+  if (conditions.endsWith(" AND ")) {
+    conditions = conditions.substring(0, conditions.length - 5);
+  }
+
+  db.query(
+    `SELECT ${columns} FROM ${table} WHERE ${conditions}`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+app.post("/api/admin/update/:table/:column/:value", (req, res) => {
+  const table = req.params.table;
+  const column = req.params.column;
+  const value = req.params.value;
+  const conditionsJson = req.body.conditions;
+
+  var conditions = "";
+  for (const condition in conditionsJson) {
+    conditions += `${condition}='${conditionsJson[condition]}' AND `;
+  }
+  if (conditions.endsWith(" AND ")) {
+    conditions = conditions.substring(0, conditions.length - 5);
+  }
+
+  db.query(
+    `UPDATE ${table} SET ${column} = '${value}' WHERE ${conditions}`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+app.post("/api/admin/insert/:table", (req, res) => {
+  const table = req.params.table;
+  const valuesJson = req.body.values;
+
+  var columns = "";
+  var values = "";
+  for (const value in valuesJson) {
+    columns += `${value},`;
+    values += `'${valuesJson[value]}',`;
+  }
+  if (columns.endsWith(",")) {
+    columns = columns.substring(0, columns.length - 1);
+  }
+  if (values.endsWith(",")) {
+    values = values.substring(0, values.length - 1);
+  }
+
+  db.query(
+    `INSERT INTO ${table} (${columns}) VALUES (${values})`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.send(generateError("SQL Error", "sq1", err));
+      } else {
+        res.send(result);
+      }
+    }
+  );
 });
 
 app.post("/api/admin/districts/update", (req, res) => {
