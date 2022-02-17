@@ -1,5 +1,6 @@
 import "reflect-metadata";
-import { createConnection } from "typeorm";
+import { createConnection, EntityTarget, Repository } from "typeorm";
+import { validate } from "class-validator";
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as jwt from "jsonwebtoken";
@@ -59,13 +60,27 @@ createConnection()
   })
   .catch((error) => console.log(error));
 
-function generatePasswordToken(pw) {
+function generatePasswordToken(pw: string) {
   return jwt.sign(
     {
       data: pw,
     },
     "progress"
   );
+}
+
+async function getValidation(
+  object: object,
+  repo: Repository<any>,
+  successMessage: string
+) {
+  const errors = await validate(object);
+
+  if (errors.length > 0) {
+    return generateError(Object.values(errors[0].constraints)[0]);
+  }
+  repo.save(object);
+  return generateSuccess(successMessage);
 }
 
 function generateSuccess(message: string) {
@@ -76,4 +91,10 @@ function generateError(message: string) {
   return { success: false, message: message };
 }
 
-export { jwt, generatePasswordToken, generateSuccess, generateError };
+export {
+  jwt,
+  generatePasswordToken,
+  getValidation,
+  generateSuccess,
+  generateError,
+};

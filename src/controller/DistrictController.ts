@@ -1,6 +1,7 @@
 import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { District } from "../entity/District";
+import * as index from "../index";
 
 export class DistrictController {
   private districtRepository = getRepository(District);
@@ -14,6 +15,13 @@ export class DistrictController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    return this.districtRepository.findOne({ name: request.params.name });
+    let res = await this.districtRepository.findOne({
+      name: request.params.name,
+    });
+
+    if (res === undefined) {
+      return index.generateError("District not found");
+    }
+    return res;
   }
 }
