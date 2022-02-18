@@ -13,8 +13,8 @@ export class District extends BaseEntity {
   @Column("text")
   area: string;
 
-  @Column("bigint", { nullable: true })
-  completionDate: string;
+  @Column({ nullable: true })
+  completionDate: Date;
 
   @Column("text")
   image: string;

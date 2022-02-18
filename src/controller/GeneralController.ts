@@ -4,6 +4,7 @@ import * as minecraftUtil from "minecraft-server-util";
 import * as index from "../index";
 import { AdminSetting } from "../entity/AdminSetting";
 import { District } from "../entity/District";
+import { Block } from "../entity/Block";
 
 const { google } = require("googleapis");
 
@@ -35,7 +36,7 @@ export class GeneralController {
     next: NextFunction
   ) {
     let district = await this.districtRepository.findOne({
-      name: request.params.distrcit,
+      name: request.params.district,
     });
 
     if (district === undefined) {
@@ -45,10 +46,44 @@ export class GeneralController {
     const getData = await googleSheets.spreadsheets.values.get({
       auth: authGoogle,
       spreadsheetId: sheetID,
-      range: `${district}!B6:G`,
+      range: `${district.name}!B6:G`,
     });
     const data = getData.data.values;
-    console.log(data);
+    var counter = 0;
+
+    for (const d of data) {
+      if (d[0] === undefined || d[0] === null || d[0] === "") break;
+
+      let block = new Block();
+      block.id = parseInt(d[0]);
+      block.district = district.id;
+      block.status = statusToNumber(d[1]);
+      block.progress =
+        d[2] === undefined || d[2] === null || d[2] === ""
+          ? 0.0
+          : parseFloat(d[2]);
+      block.details = d[3] === "TRUE" ? true : false;
+      block.builder = d[4] === undefined || d[4] === null ? "" : d[4];
+
+      if (d[5] === undefined || d[5] === null) {
+        block.completionDate = null;
+      } else {
+        const dateSplit = d[5].split(".");
+        if (dateSplit.length !== 3) {
+          block.completionDate = null;
+        } else {
+          const isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
+          const date = new Date(isoDate);
+          block.completionDate =
+            date.toString() === "Invalid Date" ? null : date;
+        }
+      }
+
+      await block.save();
+      counter++;
+    }
+
+    return index.generateSuccess(`${counter} Blocks imported`);
   }
 
   async pingNetwork(request: Request, response: Response, next: NextFunction) {
@@ -241,5 +276,20 @@ export class GeneralController {
     let districts = await this.districtRepository.find({
       order: { parent: "ASC" },
     });
+  }
+}
+
+function statusToNumber(status: string) {
+  switch (status) {
+    case "Done":
+      return 4;
+    case "Detailing":
+      return 3;
+    case "Building":
+      return 2;
+    case "Reserved":
+      return 1;
+    default:
+      return 0;
   }
 }

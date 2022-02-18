@@ -124,7 +124,7 @@ export class DistrictController {
         completionDate:
           b.completionDate === null
             ? null
-            : new Date(parseInt(b.completionDate)).toLocaleDateString(),
+            : b.completionDate.toLocaleDateString(),
       });
 
       const buildersSplit = b.builder.split(",");

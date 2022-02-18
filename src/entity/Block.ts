@@ -37,6 +37,6 @@ export class Block extends BaseEntity {
   })
   builder: string;
 
-  @Column("bigint", { nullable: true })
-  completionDate: string;
+  @Column({ nullable: true })
+  completionDate: Date;
 }
