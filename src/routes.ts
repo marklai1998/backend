@@ -1,5 +1,6 @@
 import { GeneralController } from "./controller/GeneralController";
 import { UserController } from "./controller/UserController";
+import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
 import { MinecraftController } from "./controller/MinecraftController";
 import { AdminSettingController } from "./controller/AdminSettingController";
@@ -21,6 +22,12 @@ export const Routes = [
   // General
   {
     method: "get",
+    route: "/api/importfromsheet/:district",
+    controller: GeneralController,
+    action: "importFromSheet",
+  },
+  {
+    method: "get",
     route: "/api/network/ping",
     controller: GeneralController,
     action: "pingNetwork",
@@ -30,6 +37,12 @@ export const Routes = [
     route: "/api/network/ping/:server",
     controller: GeneralController,
     action: "pingServer",
+  },
+  {
+    method: "get",
+    route: "/api/progress",
+    controller: GeneralController,
+    action: "overview",
   },
   // Admin Settings
   {
@@ -53,15 +66,70 @@ export const Routes = [
   // Districts
   {
     method: "get",
-    route: "/api/districts",
+    route: "/api/districts/get",
     controller: DistrictController,
     action: "getAll",
   },
   {
     method: "get",
-    route: "/api/districts/:name",
+    route: "/api/districts/get/:name",
     controller: DistrictController,
     action: "getOne",
+  },
+  {
+    method: "post",
+    route: "/api/districts/create",
+    controller: DistrictController,
+    action: "create",
+  },
+  {
+    method: "post",
+    route: "/api/districts/delete",
+    controller: DistrictController,
+    action: "delete",
+  },
+  // Blocks
+  {
+    method: "get",
+    route: "/api/blocks/get/:district/:blockID",
+    controller: BlockController,
+    action: "getOne",
+  },
+  {
+    method: "post",
+    route: "/api/blocks/create",
+    controller: BlockController,
+    action: "create",
+  },
+  {
+    method: "post",
+    route: "/api/blocks/delete",
+    controller: BlockController,
+    action: "delete",
+  },
+  {
+    method: "post",
+    route: "/api/blocks/setProgress",
+    controller: BlockController,
+    action: "setProgress",
+  },
+  {
+    method: "post",
+    route: "/api/blocks/setDetails",
+    controller: BlockController,
+    action: "setDetails",
+  },
+  {
+    method: "post",
+    route: "/api/blocks/addBuilder",
+    controller: BlockController,
+    action: "addBuilder",
+  },
+  {
+    method: "post",
+    route: "/api/blocks/removeBuilder",
+    controller: BlockController,
+    action: "removeBuilder",
   },
   // Minecraft
   {

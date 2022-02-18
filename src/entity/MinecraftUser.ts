@@ -14,7 +14,7 @@ export class MinecraftUser {
   @Length(3, 16, {
     message: "Username must be between 3 and 16 characters",
   })
-  @Matches(/^([a-zA-Z0-9_]{3,16}[,]?){1,}$/, {
+  @Matches(/^[a-zA-Z0-9_]{3,16}$/, {
     message: "Invalid Username",
   })
   username: string;

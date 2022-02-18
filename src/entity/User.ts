@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  Generated,
-  OneToOne,
-  JoinColumn,
-} from "typeorm";
-import { MinecraftUser } from "./MinecraftUser";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 @Entity({ name: "users" })
 export class User {

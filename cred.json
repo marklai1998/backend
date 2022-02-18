@@ -1,0 +1,12 @@
+{
+    "type": "service_account",
+    "project_id": "minefactprogress",
+    "private_key_id": "5615da62977eb9f18a40fbc49b894f1ee491e32d",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCsyTWGJ8/4ihZU\niauMuHVD9If0XdULaKIoANb9gUVv2N0FExidQlYt53yM82r85y8lofBcDvDU4Mnd\npMIBD2raF7WUazLt2mgW3WplkrMgyerH/FCWF949CLABw88gdDHMBilMfkzXSS+X\nQM9BxnLUZebyCGXSJwhIAdgk4jfzP8WO9beTN0L3vU+27kuTiU4LjhkqKRQmMY1H\nv+8jSi5ZtCfA6SAO9vEGwMDjpaNRaMrsFEw92QbRz0tNjOI3lZAhl5BMLF1DzNZY\nF4keh/SdAEHm9LzF+Dam2JTMYIdORwDxGx/5d60kwrwxjCjcW9Alicz7xc3fS56l\nxr5loONRAgMBAAECggEAAhSrE9bdCjY+6+GN92HI/gO4Do3LAREYk2G/x1K+atIt\nqzJVLJ8QPi/89HwmOeUDGfqOwfB5jLEC35mjinNMlFNXxF9J0oFOBykIb1TYI4bf\nh0iSf5Q4JWmVuin/2MJrKtArUwG1gMDEOgVskGD/e7iZAE4ncOOlTKuL33CxGsuQ\n7P3eRclTiDlo52drnv2Q7dX1xN1mf+Mi8rVuTEvsdIXcWrmHp9VgagTT+z8rCrEG\nfsvMauSnbnUXhGZLA0Rtv3v3fglK11e6bpzPwXpuswaueOqtSNJ40bnwuTTmVZxu\nRfV3wUKDSEZ+u/J9ZG4ss289eeV0tpETsHz0nxkdSQKBgQDpfCpMqRTvoNdU7Nmq\nkKMj9mndljG/BPOzVTxG1/MiFU1Vx9/LYC3YdSklVsPRjN+Nd5bBgryHl6jQElxs\nQvQHkDwkrhyGmtmIBNTnXDmiuuGfmo0sMJXT8zjIzr+FBl4NPzNQI5UFnfKyvz2p\nkpRA+IwSu9W7CM/s5XfSNowEZQKBgQC9cp78RrvWC6OySGlUHhAC70ucLqMh1PhB\n1+KsZBsYokZUe2z5savYYHDMb9k4/LNNOM2Xwm7OPtKvezLgKxM+l7SVk5EAgbOv\nno077Xqtn/aHLnG9jk3Pvhr1iEgeCNN3CEvD7AqP0snHLV/JkoiEzoZjHHy/Hngu\noxFTXRDmfQKBgFViyhlU8Eod+QGeyI9e67p4IAkgJzsjNXhM4IlL6id5wNlxCf/X\nQYzac9yq2Vvl989Ff8Vu6UFxDhRh0pjo91NYxRXo8perQ4hBtBaUHKPNUjvLCnux\nnOlxFkAhk9qzFGwlw7839ASk2Z/S3lsINt13x8oGFUicFWYeGO6wcg4dAoGAOHJZ\niqNsvjcTnEBVGdonPSidp7iBpMf2/G9du63MIQfg2rU34CIfKMZ7dX5yA7fPmNeu\n8mPdbhhr4BteKkrLXiAHj3W7g6IhrtcYD94PaoI6C0c8XpVy+84R7Eyh6EkK8PGI\n2aSP9RCCTJVpb/74LFH42rkXNj7W4lZ2CBe3vGUCgYEAgl78nrOm+aVQVElCp+e6\nTlwFRl28iGJoSsCdCNqnvk3ue9Jt7CF6SAFkhI3GnTlMnKfEvnof3xGhS9RwtkMX\noqxF8zI06GiglOugsHfKF0BRPSeuV/avYKMWP3to27pgbQ+K7otY8PFFmZLJ8jRY\nN/6Bsl9o9j4NIjerSq0LGxg=\n-----END PRIVATE KEY-----\n",
+    "client_email": "minefactprogress@minefactprogress.iam.gserviceaccount.com",
+    "client_id": "107083829558176840271",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/minefactprogress%40minefactprogress.iam.gserviceaccount.com"
+  }

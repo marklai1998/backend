@@ -1,18 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
+import { IsString, IsInt } from "class-validator";
 
-@Entity({ name: "distrcts" })
-export class District {
+@Entity({ name: "districts" })
+export class District extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
+  @IsString({ message: "Invalid Name" })
   name: string;
 
   @Column("text")
   area: string;
 
-  @Column("bigint")
-  completionDate: number;
+  @Column("bigint", { nullable: true })
+  completionDate: string;
 
   @Column("text")
   image: string;
@@ -20,7 +22,8 @@ export class District {
   @Column("text")
   map: string;
 
-  @Column()
+  @Column({ nullable: true })
+  @IsInt({ message: "Invalid Parent" })
   parent: number;
 
   @Column("text")

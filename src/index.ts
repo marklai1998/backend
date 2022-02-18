@@ -39,23 +39,18 @@ createConnection()
       );
     });
 
-    // setup express app here
-    // ...
+    // Create nyc district
+    let nyc = await District.findOne({ name: "New York City" });
+    if (nyc === undefined) {
+      await connection.manager.save(
+        connection.manager.create(District, {
+          name: "New York City",
+        })
+      );
+    }
 
     // start express server
     app.listen(port);
-
-    // insert new users for test
-    /*await connection.manager.save(connection.manager.create(District, {
-        name: "SoHo",
-        parent: 0
-    }));
-    await connection.manager.save(connection.manager.create(User, {
-        firstName: "Phantom",
-        lastName: "Assassin",
-        age: 24
-    }));*/
-
     console.log(`Progress API running on port ${port}.`);
   })
   .catch((error) => console.log(error));
