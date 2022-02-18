@@ -1,12 +1,20 @@
 import "reflect-metadata";
-import { createConnection, EntityTarget, Repository } from "typeorm";
-import { validate } from "class-validator";
-import * as express from "express";
+
 import * as bodyParser from "body-parser";
+import * as express from "express";
 import * as jwt from "jsonwebtoken";
+
+import { EntityTarget, Repository, createConnection } from "typeorm";
 import { Request, Response } from "express";
-import { Routes } from "./routes";
+
 import { District } from "./entity/District";
+import { Routes } from "./routes";
+import { validate } from "class-validator";
+
+var cors = require('cors')
+var helmet = require('helmet')
+
+
 
 const port = 8080;
 
@@ -15,6 +23,8 @@ createConnection()
     // create express app
     const app = express();
     app.use(bodyParser.json());
+    app.use(helmet());
+    app.use(cors());
 
     // register express routes from defined application routes
     Routes.forEach((route) => {
