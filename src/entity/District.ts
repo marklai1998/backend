@@ -6,7 +6,7 @@ export class District extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column()
   @IsString({ message: "Invalid Name" })
   name: string;
 

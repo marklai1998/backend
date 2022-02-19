@@ -1,8 +1,11 @@
 import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
+import * as google from "../utils/SheetUtils";
 import { District } from "../entity/District";
 import { Block } from "../entity/Block";
 import * as index from "../index";
+
+const axios = require("axios");
 
 export class DistrictController {
   private districtRepository = getRepository(District);
@@ -170,6 +173,93 @@ export class DistrictController {
       about: district.about,
       area: district.area,
     };
+  }
+
+  async import(request: Request, response: Response, next: NextFunction) {
+    const blocks =
+      request.query.blocks === undefined
+        ? false
+        : request.query.blocks.toLowerCase() === "true"
+        ? true
+        : false;
+    const getData = await google.googleSheets.spreadsheets.values.get({
+      auth: google.authGoogle,
+      spreadsheetId: google.sheetID,
+      range: `New York City (Overview)!A5:H`,
+    });
+    const data = getData.data.values;
+    var districtCounter = 0;
+    var blocksCounter = 0;
+
+    this.districtRepository.clear();
+    this.districtRepository.query("ALTER TABLE districts AUTO_INCREMENT = 1");
+
+    const boroughs = [];
+    var isBorough = true;
+    var currentParent = null;
+    var boroughCounter = -1;
+    for (const d of data) {
+      if (d[1] === undefined || d[1] === null || d[1] === "") {
+        isBorough = false;
+        boroughCounter++;
+        continue;
+      }
+
+      let district = new District();
+      district.name = d[1];
+
+      if (isBorough) {
+        district.parent = currentParent;
+      } else {
+        if (d[0] === "P") {
+          district.parent = boroughs[boroughCounter];
+        } else {
+          district.parent = currentParent;
+        }
+      }
+
+      const dateSplit = d[6].split(".");
+      if (dateSplit.length === 3) {
+        district.completionDate = new Date(
+          `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`
+        );
+      } else {
+        district.completionDate = null;
+      }
+
+      let parent = await this.districtRepository.save(district);
+
+      if (d[0] === "P") {
+        currentParent = parent.id;
+      } else {
+        if (isBorough) {
+          boroughs.push(parent.id);
+        } else {
+          if (blocks && d[7] === "Click") {
+            await axios
+              .get(`http://localhost:8080/api/import/blocks/${d[1]}`)
+              .then((res) => {
+                if (res.data.success) {
+                  blocksCounter += parseInt(
+                    res.data.message.replace(" Blocks imported", "")
+                  );
+                  console.log(`Blocks of ${d[1]} imported`);
+                } else {
+                  console.log(`No data found for ${d[1]}`);
+                }
+              })
+              .catch((error) => {
+                console.log(`Error occured for district ${d[1]}`, error);
+              });
+          }
+        }
+      }
+      districtCounter++;
+    }
+
+    return index.generateSuccess(
+      `${districtCounter} Districts and ${blocksCounter} Blocks imported`
+    );
   }
 }
 

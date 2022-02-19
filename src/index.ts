@@ -11,10 +11,8 @@ import { District } from "./entity/District";
 import { Routes } from "./routes";
 import { validate } from "class-validator";
 
-var cors = require('cors')
-var helmet = require('helmet')
-
-
+var cors = require("cors");
+var helmet = require("helmet");
 
 const port = 8080;
 
@@ -50,14 +48,14 @@ createConnection()
     });
 
     // Create nyc district
-    let nyc = await District.findOne({ name: "New York City" });
+    /*let nyc = await District.findOne({ name: "New York City" });
     if (nyc === undefined) {
       await connection.manager.save(
         connection.manager.create(District, {
           name: "New York City",
         })
       );
-    }
+    }*/
 
     // start express server
     app.listen(port);

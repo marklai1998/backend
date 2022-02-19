@@ -191,8 +191,14 @@ export const Routes = [
   },
   {
     method: "get",
+    route: "/api/import/districts",
+    controller: DistrictController,
+    action: "import",
+  },
+  {
+    method: "get",
     route: "/api/import/blocks/:district",
-    controller: GeneralController,
-    action: "importBlocks",
+    controller: BlockController,
+    action: "import",
   },
 ];
