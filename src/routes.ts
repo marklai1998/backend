@@ -4,6 +4,7 @@ import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
 import { MinecraftController } from "./controller/MinecraftController";
 import { AdminSettingController } from "./controller/AdminSettingController";
+import { ProjectCountController } from "./controller/ProjectCountController";
 
 export const Routes = [
   // Registration & Login
@@ -20,12 +21,6 @@ export const Routes = [
     action: "login",
   },
   // General
-  {
-    method: "get",
-    route: "/api/importfromsheet/:district",
-    controller: GeneralController,
-    action: "importFromSheet",
-  },
   {
     method: "get",
     route: "/api/network/ping",
@@ -131,6 +126,25 @@ export const Routes = [
     controller: BlockController,
     action: "removeBuilder",
   },
+  // Projects
+  {
+    method: "get",
+    route: "/api/projects/get/:date",
+    controller: ProjectCountController,
+    action: "getOne",
+  },
+  {
+    method: "get",
+    route: "/api/projects/get",
+    controller: ProjectCountController,
+    action: "getAll",
+  },
+  {
+    method: "post",
+    route: "/api/projects/set",
+    controller: ProjectCountController,
+    action: "set",
+  },
   // Minecraft
   {
     method: "get",
@@ -167,5 +181,18 @@ export const Routes = [
     route: "/api/minecraft/setSettings",
     controller: MinecraftController,
     action: "setSettings",
+  },
+  // Sheet Imports
+  {
+    method: "get",
+    route: "/api/import/projects",
+    controller: ProjectCountController,
+    action: "import",
+  },
+  {
+    method: "get",
+    route: "/api/import/blocks/:district",
+    controller: GeneralController,
+    action: "importBlocks",
   },
 ];

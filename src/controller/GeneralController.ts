@@ -2,39 +2,16 @@ import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import * as minecraftUtil from "minecraft-server-util";
 import * as index from "../index";
+import * as google from "../utils/SheetUtils";
 import { AdminSetting } from "../entity/AdminSetting";
 import { District } from "../entity/District";
 import { Block } from "../entity/Block";
-
-const { google } = require("googleapis");
-
-const sheetID = "1Hmf3KCHCEsLxYrlW-RNQK0LxqD0_ItzFx4zimpnOzMw";
-const authConfig = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: "euhfehjsdbfz4z8iekbIZIjnz4i",
-  baseURL: "http://localhost:8080",
-  clientID: "5K0ji4rnMs5OzRoU81c7wmCehz6uX2yP",
-  issuerBaseURL: "https://minefactprogress.eu.auth0.com",
-};
-const authGoogle = new google.auth.GoogleAuth({
-  keyFile: "cred.json",
-  scopes: "https://www.googleapis.com/auth/spreadsheets",
-});
-async function getClientGoogle() {
-  return await authGoogle.getClient();
-}
-const googleSheets = google.sheets({ version: "v4", auth: getClientGoogle });
 
 export class GeneralController {
   private configRepository = getRepository(AdminSetting);
   private districtRepository = getRepository(District);
 
-  async importFromSheet(
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) {
+  async importBlocks(request: Request, response: Response, next: NextFunction) {
     let district = await this.districtRepository.findOne({
       name: request.params.district,
     });
@@ -43,9 +20,9 @@ export class GeneralController {
       return index.generateError("District not found in database");
     }
 
-    const getData = await googleSheets.spreadsheets.values.get({
-      auth: authGoogle,
-      spreadsheetId: sheetID,
+    const getData = await google.googleSheets.spreadsheets.values.get({
+      auth: google.authGoogle,
+      spreadsheetId: google.sheetID,
       range: `${district.name}!B6:G`,
     });
     const data = getData.data.values;
@@ -85,6 +62,12 @@ export class GeneralController {
 
     return index.generateSuccess(`${counter} Blocks imported`);
   }
+
+  async importProjects(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {}
 
   async pingNetwork(request: Request, response: Response, next: NextFunction) {
     const java = await minecraftUtil
