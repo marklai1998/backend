@@ -177,11 +177,7 @@ export class DistrictController {
 
   async import(request: Request, response: Response, next: NextFunction) {
     const blocks =
-      request.query.blocks === undefined
-        ? false
-        : request.query.blocks.toLowerCase() === "true"
-        ? true
-        : false;
+      request.query.blocks;
     const getData = await google.googleSheets.spreadsheets.values.get({
       auth: google.authGoogle,
       spreadsheetId: google.sheetID,
