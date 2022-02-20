@@ -8,7 +8,6 @@ import * as jwt from "./utils/JsonWebToken";
 import { Repository, createConnection } from "typeorm";
 import { Request, Response } from "express";
 
-import { District } from "./entity/District";
 import { User } from "./entity/User";
 import { Routes } from "./routes";
 import { validate } from "class-validator";
@@ -26,42 +25,24 @@ createConnection()
     app.use(helmet());
     app.use(cors());
 
-    app.use("/", async (req, res, next) => {
-      const route = Routes.find((element) => {
-        return element.route === req.originalUrl.split("?")[0];
-      });
-      if (route.permission !== 0) {
-        if (req.query.key || req.body.key) {
-          var key = req.query.key;
-          if (key === undefined) {
-            key = req.body.key;
-          }
-
-          let user = await User.findOne({ apikey: key });
-
-          if (user === undefined) {
-            res.send(generateError("Invalid API-Key"));
-            return;
-          }
-
-          if (user.permission < route.permission) {
-            res.send(generateError("No permission"));
-            return;
-          }
-          next();
-        } else {
-          res.send(generateError("No key specified"));
-        }
-      } else {
-        next();
-      }
-    });
-
     // register express routes from defined application routes
     Routes.forEach((route) => {
       (app as any)[route.method](
         route.route,
-        (req: Request, res: Response, next: Function) => {
+        async (req: Request, res: Response, next: Function) => {
+          if (route.permission > 0) {
+            let user = await User.findOne({
+              apikey: req.body.key || req.query.key,
+            });
+            if (user === undefined) {
+              res.send(generateError("Invalid or missing API-Key"));
+              return;
+            }
+            if (user.permission < route.permission) {
+              res.send(generateError("No permission"));
+              return;
+            }
+          }
           const result = new (route.controller as any)()[route.action](
             req,
             res,
@@ -79,16 +60,6 @@ createConnection()
         }
       );
     });
-
-    // Create nyc district
-    /*let nyc = await District.findOne({ name: "New York City" });
-    if (nyc === undefined) {
-      await connection.manager.save(
-        connection.manager.create(District, {
-          name: "New York City",
-        })
-      );
-    }*/
 
     // Create root user
     let root = await User.findOne({ username: "root" });
