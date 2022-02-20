@@ -18,18 +18,21 @@ export const Routes = [
     route: "/register",
     controller: UserController,
     action: "register",
+    permission: 0,
   },
   {
     method: "post",
     route: "/login",
     controller: UserController,
     action: "login",
+    permission: 0,
   },
   {
     method: "post",
     route: "/api/createKey",
     controller: UserController,
     action: "generateAPIKey",
+    permission: 0,
   },
   // General
   {

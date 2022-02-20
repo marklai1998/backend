@@ -30,7 +30,7 @@ createConnection()
       const route = Routes.find((element) => {
         return element.route === req.originalUrl.split("?")[0];
       });
-      if (route.permission !== undefined) {
+      if (route.permission !== 0) {
         if (req.query.key || req.body.key) {
           var key = req.query.key;
           if (key === undefined) {
