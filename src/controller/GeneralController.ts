@@ -4,10 +4,12 @@ import * as minecraftUtil from "minecraft-server-util";
 import * as index from "../index";
 import { AdminSetting } from "../entity/AdminSetting";
 import { District } from "../entity/District";
+import { Block } from "../entity/Block";
 
 export class GeneralController {
   private configRepository = getRepository(AdminSetting);
   private districtRepository = getRepository(District);
+  private blockRepository = getRepository(Block);
 
   async pingNetwork(request: Request, response: Response, next: NextFunction) {
     const java = await minecraftUtil
@@ -142,9 +144,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-        Object.keys(ips).find(
-          (key) => key.toLowerCase() === serverName.toLowerCase()
-        )
+      Object.keys(ips).find(
+        (key) => key.toLowerCase() === serverName.toLowerCase()
+      )
       ];
 
     if (server === undefined) {
@@ -196,8 +198,16 @@ export class GeneralController {
   }
 
   async overview(request: Request, response: Response, next: NextFunction) {
-    let districts = await this.districtRepository.find({
-      order: { parent: "ASC" },
-    });
+    const claims = await this.blockRepository.createQueryBuilder("block")
+      .where("block.builder IS NOT NULL")
+      .andWhere("TRIM(block.builder) <> ''")
+      .getMany();
+    return {
+      claims: claims.length,
+      // Only temporary until we have a proper way to get the progress with the use of each block
+      // TODO : Add a way to get the progress of each block and display it here
+      progress: (claims.length / (await this.blockRepository.find()).length) * 100
+    };
+
   }
 }
