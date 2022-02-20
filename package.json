@@ -25,6 +25,7 @@
       "nodemon": "^2.0.15",
       "reflect-metadata": "^0.1.13",
       "typeorm": "0.2.42",
+      "uuid": "^8.3.2",
       "yup": "^0.32.11"
    },
    "devDependencies": {

@@ -2,6 +2,7 @@ import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entity/User";
 import * as index from "../index";
+import * as jwt from "../utils/JsonWebToken";
 
 export class UserController {
   private userRepository = getRepository(User);
@@ -24,10 +25,15 @@ export class UserController {
 
     user = new User();
     user.username = request.body.username;
-    user.password = index.generatePasswordToken(request.body.password);
+    user.password = jwt.generateToken(
+      request.body.password,
+      jwt.secretInternal
+    );
 
     this.userRepository.save(user);
-    return index.generateSuccess("User registered");
+    return index.generateSuccess("User registered", {
+      user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+    });
   }
 
   async login(request: Request, response: Response, next: NextFunction) {
@@ -39,16 +45,48 @@ export class UserController {
       return index.generateError("There is no user matching this username");
     }
 
-    return index.jwt.verify(user.password, "progress", function (err, decoded) {
-      if (err) {
-        return index.generateError("Invalid Password");
-      } else {
-        if (decoded.data === request.body.password) {
-          return index.generateSuccess("Login successful");
-        } else {
+    return jwt.jwt.verify(
+      user.password,
+      jwt.secretInternal,
+      function (err, decoded) {
+        if (err) {
           return index.generateError("Invalid Password");
+        } else {
+          if (decoded.data === request.body.password) {
+            return index.generateSuccess("Login successful", {
+              user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+            });
+          } else {
+            return index.generateError("Invalid Password");
+          }
         }
       }
+    );
+  }
+
+  async generateAPIKey(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    if (request.body.uid === undefined) {
+      return index.generateError("Specify the UID of the User");
+    }
+
+    let user = await this.userRepository.findOne({ uid: request.body.uid });
+
+    if (user === undefined) {
+      return index.generateError("User not found");
+    }
+
+    const key = index.generateUUID();
+    user.apikey = key;
+
+    this.userRepository.save(user);
+
+    return index.generateSuccess("API Key created", {
+      uid: user.uid,
+      apikey: jwt.generateToken(key, jwt.secretInternal),
     });
   }
 }

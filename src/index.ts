@@ -2,12 +2,14 @@ import "reflect-metadata";
 
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import * as jwt from "./utils/JsonWebToken";
 
-import { EntityTarget, Repository, createConnection } from "typeorm";
+import { Repository, createConnection } from "typeorm";
 import { Request, Response } from "express";
 
 import { District } from "./entity/District";
+import { User } from "./entity/User";
 import { Routes } from "./routes";
 import { validate } from "class-validator";
 
@@ -23,6 +25,37 @@ createConnection()
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
+
+    app.use("/", async (req, res, next) => {
+      const route = Routes.find((element) => {
+        return element.route === req.originalUrl.split("?")[0];
+      });
+      if (route.permission !== undefined) {
+        if (req.query.key || req.body.key) {
+          var key = req.query.key;
+          if (key === undefined) {
+            key = req.body.key;
+          }
+
+          let user = await User.findOne({ apikey: key });
+
+          if (user === undefined) {
+            res.send(generateError("Invalid API-Key"));
+            return;
+          }
+
+          if (user.permission < route.permission) {
+            res.send(generateError("No permission"));
+            return;
+          }
+          next();
+        } else {
+          res.send(generateError("No key specified"));
+        }
+      } else {
+        next();
+      }
+    });
 
     // register express routes from defined application routes
     Routes.forEach((route) => {
@@ -57,20 +90,32 @@ createConnection()
       );
     }*/
 
+    // Create root user
+    let root = await User.findOne({ username: "root" });
+    if (root === undefined) {
+      await connection.manager.save(
+        connection.manager.create(User, {
+          email: "root@roo.com",
+          username: "root",
+          permission: 2,
+          discord: "Root#1234",
+          about:
+            "The Root user of the Website, only for development use. Please always use your right user.",
+          image:
+            "https://cdn.discordapp.com/attachments/714797791913705472/831352332163350603/2021-04-12_19.11.21.png",
+          picture:
+            "https://i.picsum.photos/id/568/200/300.jpg?hmac=vQmkZRQt1uS-LMo2VtIQ7fn08mmx8Fz3Yy3lql5wkzM",
+          password: jwt.generateToken("Progress2022", jwt.secretInternal),
+          apikey: generateUUID(),
+        })
+      );
+    }
+
     // start express server
     app.listen(port);
     console.log(`Progress API running on port ${port}.`);
   })
   .catch((error) => console.log(error));
-
-function generatePasswordToken(pw: string) {
-  return jwt.sign(
-    {
-      data: pw,
-    },
-    "progress"
-  );
-}
 
 async function getValidation(
   object: object,
@@ -86,18 +131,16 @@ async function getValidation(
   return generateSuccess(successMessage);
 }
 
-function generateSuccess(message: string) {
-  return { success: true, message: message };
+function generateSuccess(message: string, data?: object) {
+  return { success: true, message: message, data };
 }
 
 function generateError(message: string) {
   return { success: false, message: message };
 }
 
-export {
-  jwt,
-  generatePasswordToken,
-  getValidation,
-  generateSuccess,
-  generateError,
-};
+function generateUUID() {
+  return uuidv4();
+}
+
+export { getValidation, generateSuccess, generateError, generateUUID };

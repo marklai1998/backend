@@ -1,18 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
+import { IsEmail, IsUUID } from "class-validator";
 
 @Entity({ name: "users" })
-export class User {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   uid: number;
 
   @Column({ unique: true })
+  @IsEmail()
   email: string;
 
   @Column({ unique: true })
   username: string;
 
-  @Column()
-  rank: string;
+  @Column({ default: 0 })
+  permission: number;
 
   @Column()
   discord: string;
@@ -34,4 +36,8 @@ export class User {
 
   @Column("text")
   password: string;
+
+  @Column("text", { nullable: true, unique: true })
+  @IsUUID("4", { message: "Invalid API Key" })
+  apikey: string;
 }
