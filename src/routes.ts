@@ -69,14 +69,14 @@ export const Routes = [
     route: "/api/admin/settings/get/:setting",
     controller: AdminSettingController,
     action: "getOne",
-    permission: 4,
+    permission: 0,
   },
   {
     method: "get",
     route: "/api/admin/settings/get",
     controller: AdminSettingController,
     action: "getAll",
-    permission: 4,
+    permission: 0,
   },
   {
     method: "post",
