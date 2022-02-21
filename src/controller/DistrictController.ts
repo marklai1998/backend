@@ -115,6 +115,10 @@ export class DistrictController {
           blocksJson.not_started++;
           break;
       }
+
+      const buildersSplit =
+        b.builder === "" || b.builder === null ? [] : b.builder.split(",");
+
       blocksJson.blocks.push({
         uid: b.uid,
         id: b.id,
@@ -123,14 +127,13 @@ export class DistrictController {
         status: b.status,
         progress: b.progress,
         details: b.details,
-        builder: b.builder,
+        builders: buildersSplit,
         completionDate:
           b.completionDate === null
             ? null
             : b.completionDate.toLocaleDateString(),
       });
 
-      const buildersSplit = b.builder.split(",");
       for (var i = 0; i < buildersSplit.length; i++) {
         if (builders.some((e) => e.name === buildersSplit[i])) {
           builders.some((e) => {
@@ -176,8 +179,7 @@ export class DistrictController {
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
-    const blocks =
-      request.query.blocks;
+    const blocks = request.query.blocks;
     const getData = await google.googleSheets.spreadsheets.values.get({
       auth: google.authGoogle,
       spreadsheetId: google.sheetID,
