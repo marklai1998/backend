@@ -68,7 +68,7 @@ createConnection()
         connection.manager.create(User, {
           email: "root@roo.com",
           username: "root",
-          permission: 2,
+          permission: 4,
           discord: "Root#1234",
           about:
             "The Root user of the Website, only for development use. Please always use your right user.",

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
-import { IsEmail, IsUUID } from "class-validator";
+import { IsEmail, IsUUID, IsJSON, Matches, IsOptional } from "class-validator";
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
@@ -16,7 +16,9 @@ export class User extends BaseEntity {
   @Column({ default: 0 })
   permission: number;
 
-  @Column()
+  @Column({ nullable: true })
+  @IsOptional()
+  @Matches(/^.{3,32}#[0-9]{4}$/, { message: "Invalid Discord Tag" })
   discord: string;
 
   @Column({ nullable: true })
@@ -32,12 +34,14 @@ export class User extends BaseEntity {
   picture: string;
 
   @Column("text", { default: "{}" })
+  @IsJSON({ message: "Settings must be a valid JSON-String" })
   settings: string;
 
   @Column("text")
   password: string;
 
   @Column("text", { nullable: true, unique: true })
-  @IsUUID("4", { message: "Invalid API Key" })
+  @IsOptional()
+  @IsUUID("4", { message: "Invalid API Key set for user" })
   apikey: string;
 }

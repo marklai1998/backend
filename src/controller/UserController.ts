@@ -10,9 +10,10 @@ export class UserController {
   async register(request: Request, response: Response, next: NextFunction) {
     if (
       request.body.username === undefined ||
-      request.body.password === undefined
+      request.body.password === undefined ||
+      request.body.email === undefined
     ) {
-      return index.generateError("Specify Username and Password");
+      return index.generateError("Specify E-Mail, Username and Password");
     }
 
     let user = await this.userRepository.findOne({
@@ -25,6 +26,7 @@ export class UserController {
 
     user = new User();
     user.username = request.body.username;
+    user.email = request.body.email;
     user.password = jwt.generateToken(
       request.body.password,
       jwt.secretInternal
@@ -88,5 +90,25 @@ export class UserController {
       uid: user.uid,
       apikey: jwt.generateToken(key, jwt.secretInternal),
     });
+  }
+
+  async update(request: Request, response: Response, next: NextFunction) {
+    if (
+      request.body.uid === undefined ||
+      request.body.type === undefined ||
+      request.body.value === undefined
+    ) {
+      return index.generateError("Specify uid, type and value");
+    }
+
+    let user = await this.userRepository.findOne({ uid: request.body.uid });
+
+    if (user === undefined) {
+      return index.generateError("User not found");
+    }
+
+    user[request.body.type] = request.body.value;
+
+    return index.getValidation(user, this.userRepository, "User updated");
   }
 }
