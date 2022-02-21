@@ -17,4 +17,15 @@ export const AdminSettings = [
       BTLobby: "34.95.134.126:19183",
     },
   },
+  {
+    key: "links",
+    value: {
+      data: [
+        {
+          name: "Websiten Name",
+          link: "Websiten Link",
+        },
+      ],
+    },
+  },
 ];
