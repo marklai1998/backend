@@ -5,12 +5,14 @@ import * as express from "express";
 import { v4 as uuidv4 } from "uuid";
 import * as jwt from "./utils/JsonWebToken";
 
-import { Repository, createConnection } from "typeorm";
+import { Repository, createConnection, getRepository } from "typeorm";
 import { Request, Response } from "express";
 
 import { User } from "./entity/User";
 import { Routes } from "./routes";
+import { AdminSettings } from "./adminsettings";
 import { validate } from "class-validator";
+import { AdminSetting } from "./entity/AdminSetting";
 
 var cors = require("cors");
 var helmet = require("helmet");
@@ -81,6 +83,17 @@ createConnection()
         })
       );
     }
+
+    // Set default admin settings
+    let settings = await getRepository(AdminSetting).find();
+    AdminSettings.forEach(async (setting) => {
+      if (!settings.some((e) => e.key === setting.key)) {
+        const adminSetting = new AdminSetting();
+        adminSetting.key = setting.key;
+        adminSetting.value = JSON.stringify(setting.value);
+        await getRepository(AdminSetting).save(adminSetting);
+      }
+    });
 
     // start express server
     app.listen(port);
