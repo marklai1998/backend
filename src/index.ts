@@ -4,6 +4,7 @@ import * as bodyParser from "body-parser";
 import * as express from "express";
 import { v4 as uuidv4 } from "uuid";
 import * as jwt from "./utils/JsonWebToken";
+import * as date from "./utils/TimeUtils";
 
 import { Repository, createConnection, getRepository } from "typeorm";
 import { Request, Response } from "express";
@@ -13,6 +14,7 @@ import { Routes } from "./routes";
 import { AdminSettings } from "./adminsettings";
 import { validate } from "class-validator";
 import { AdminSetting } from "./entity/AdminSetting";
+import { ProjectCount } from "./entity/ProjectCount";
 
 var cors = require("cors");
 var helmet = require("helmet");
@@ -91,9 +93,31 @@ createConnection()
         const adminSetting = new AdminSetting();
         adminSetting.key = setting.key;
         adminSetting.value = JSON.stringify(setting.value);
+        adminSetting.permission = setting.permission;
         await getRepository(AdminSetting).save(adminSetting);
       }
     });
+
+    // Add new project count for today
+    date.executeEveryXMinutes(
+      0,
+      0,
+      0,
+      0,
+      async function () {
+        let allProjects = await getRepository(ProjectCount).find({
+          order: { date: "ASC" },
+        });
+        let last = allProjects[allProjects.length - 1];
+
+        const projectCount = new ProjectCount();
+        projectCount.date = new Date();
+        projectCount.projects = last.projects;
+
+        getRepository(ProjectCount).save(projectCount);
+      },
+      1440
+    );
 
     // start express server
     app.listen(port);

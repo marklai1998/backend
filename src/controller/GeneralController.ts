@@ -2,7 +2,7 @@ import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import * as minecraftUtil from "minecraft-server-util";
 import * as index from "../index";
-import * as date from "../utils/DateUtils";
+import * as date from "../utils/TimeUtils";
 import { AdminSetting } from "../entity/AdminSetting";
 import { District } from "../entity/District";
 import { Block } from "../entity/Block";
