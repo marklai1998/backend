@@ -16,6 +16,7 @@ export const AdminSettings = [
       Hub1: "144.217.77.29:25590",
       BTLobby: "34.95.134.126:19183",
     },
+    permission: 4,
   },
   {
     key: "links",
@@ -27,5 +28,6 @@ export const AdminSettings = [
         },
       ],
     },
+    permission: 0,
   },
 ];

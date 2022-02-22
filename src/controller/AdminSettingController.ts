@@ -2,22 +2,34 @@ import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { AdminSetting } from "../entity/AdminSetting";
 import * as index from "../index";
+import { User } from "../entity/User";
 
 export class AdminSettingController {
   private configRepository = getRepository(AdminSetting);
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let res = await this.configRepository.findOne({
+    let setting = await this.configRepository.findOne({
       key: request.params.setting,
     });
 
-    if (res === undefined) {
+    if (setting === undefined) {
       return index.generateError("Admin Setting not found");
+    }
+    if (setting.permission > 0) {
+      let user = await User.findOne({
+        apikey: request.body.key || request.query.key,
+      });
+      if (user === undefined) {
+        return index.generateError("Invalid or missing API-Key");
+      }
+      if (user.permission < setting.permission) {
+        return index.generateError("No permission");
+      }
     }
 
     return {
-      key: res.key,
-      value: JSON.parse(res.value),
+      key: setting.key,
+      value: JSON.parse(setting.value),
     };
   }
 
@@ -28,6 +40,7 @@ export class AdminSettingController {
       res[i] = {
         key: res[i].key,
         value: JSON.parse(res[i].value),
+        permission: res[i].permission,
       };
     }
     return res;
