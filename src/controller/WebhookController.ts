@@ -114,6 +114,9 @@ export class WebhookController {
     if (webhook === undefined) {
       return index.generateError("No webhook found with this name");
     }
+    if (!webhook.enabled) {
+      return index.generateError("Webhook disabled");
+    }
 
     if (
       request.body.method.toLowerCase() === "patch" &&

@@ -267,7 +267,7 @@ const Routes = [
     route: "/api/webhooks/send",
     controller: WebhookController,
     action: "send",
-    permission: Permissions.admin,
+    permission: Permissions.default,
   },
   // Sheet Imports
   {
