@@ -18,6 +18,8 @@ import { ProjectCount } from "./entity/ProjectCount";
 
 var cors = require("cors");
 var helmet = require("helmet");
+var fetch = require("node-fetch");
+var axios = require("axios");
 
 const port = 8080;
 
@@ -143,12 +145,19 @@ function generateSuccess(message?: string, data?: object) {
   return { success: true, message: message, data };
 }
 
-function generateError(message: string) {
-  return { success: false, message: message };
+function generateError(message: string, error?: object) {
+  return { success: false, message: message, error };
 }
 
 function generateUUID() {
   return uuidv4();
 }
 
-export { getValidation, generateSuccess, generateError, generateUUID };
+export {
+  fetch,
+  axios,
+  getValidation,
+  generateSuccess,
+  generateError,
+  generateUUID,
+};

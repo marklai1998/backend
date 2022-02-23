@@ -5,8 +5,6 @@ import { District } from "../entity/District";
 import { Block } from "../entity/Block";
 import * as index from "../index";
 
-const axios = require("axios");
-
 export class DistrictController {
   private districtRepository = getRepository(District);
 
@@ -234,7 +232,7 @@ export class DistrictController {
           boroughs.push(parent.id);
         } else {
           if (blocks && d[7] === "Click") {
-            await axios
+            await index.axios
               .get(`http://localhost:8080/api/import/blocks/${d[1]}`)
               .then((res) => {
                 if (res.data.success) {

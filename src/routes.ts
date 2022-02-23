@@ -228,6 +228,20 @@ const Routes = [
   },
   // Webhooks
   {
+    method: "get",
+    route: "/api/webhooks/get",
+    controller: WebhookController,
+    action: "getAll",
+    permission: Permissions.admin,
+  },
+  {
+    method: "get",
+    route: "/api/webhooks/get/:name",
+    controller: WebhookController,
+    action: "getOne",
+    permission: Permissions.admin,
+  },
+  {
     method: "post",
     route: "/api/webhooks/create",
     controller: WebhookController,
@@ -249,17 +263,10 @@ const Routes = [
     permission: Permissions.admin,
   },
   {
-    method: "get",
-    route: "/api/webhooks/get",
+    method: "post",
+    route: "/api/webhooks/send",
     controller: WebhookController,
-    action: "getAll",
-    permission: Permissions.admin,
-  },
-  {
-    method: "get",
-    route: "/api/webhooks/get/:name",
-    controller: WebhookController,
-    action: "getOne",
+    action: "send",
     permission: Permissions.admin,
   },
   // Sheet Imports

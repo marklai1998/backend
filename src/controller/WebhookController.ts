@@ -92,4 +92,52 @@ export class WebhookController {
       "Webhook updated"
     );
   }
+
+  async send(request: Request, response: Response, next: NextFunction) {
+    if (!request.body.name || !request.body.method) {
+      return index.generateError("Specify a name and a method");
+    }
+    if (
+      typeof request.body.method !== "string" ||
+      (request.body.method.toLowerCase() !== "post" &&
+        request.body.method.toLowerCase() !== "patch")
+    ) {
+      return index.generateError("Invalid method");
+    }
+    if (typeof request.body.body !== "object") {
+      return index.generateError("Invalid body");
+    }
+
+    let webhook = await this.webhookRepository.findOne({
+      name: request.body.name,
+    });
+    if (webhook === undefined) {
+      return index.generateError("No webhook found with this name");
+    }
+
+    if (
+      request.body.method.toLowerCase() === "patch" &&
+      webhook.message === null
+    ) {
+      return index.generateError("No messageID set for this webhook");
+    }
+
+    const link =
+      webhook.link +
+      (request.body.method.toLowerCase() === "patch"
+        ? `/messages/${webhook.message}`
+        : "");
+    await index
+      .fetch(link, {
+        method: request.body.method.toUpperCase(),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request.body.body),
+      })
+      .catch((error) => {
+        return index.generateError("Error occurred sending the message", error);
+      });
+    return index.generateSuccess("Message sent");
+  }
 }
