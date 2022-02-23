@@ -139,7 +139,7 @@ async function getValidation(
   return generateSuccess(successMessage);
 }
 
-function generateSuccess(message: string, data?: object) {
+function generateSuccess(message?: string, data?: object) {
   return { success: true, message: message, data };
 }
 

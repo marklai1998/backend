@@ -6,6 +6,7 @@ import { DistrictController } from "./controller/DistrictController";
 import { MinecraftController } from "./controller/MinecraftController";
 import { AdminSettingController } from "./controller/AdminSettingController";
 import { ProjectCountController } from "./controller/ProjectCountController";
+import { WebhookController } from "./controller/WebhookController";
 
 const Routes = [
   // Users
@@ -223,6 +224,42 @@ const Routes = [
     route: "/api/minecraft/setSettings",
     controller: MinecraftController,
     action: "setSettings",
+    permission: Permissions.admin,
+  },
+  // Webhooks
+  {
+    method: "post",
+    route: "/api/webhooks/create",
+    controller: WebhookController,
+    action: "create",
+    permission: Permissions.admin,
+  },
+  {
+    method: "post",
+    route: "/api/webhooks/delete",
+    controller: WebhookController,
+    action: "delete",
+    permission: Permissions.admin,
+  },
+  {
+    method: "post",
+    route: "/api/webhooks/update",
+    controller: WebhookController,
+    action: "update",
+    permission: Permissions.admin,
+  },
+  {
+    method: "get",
+    route: "/api/webhooks/get",
+    controller: WebhookController,
+    action: "getAll",
+    permission: Permissions.admin,
+  },
+  {
+    method: "get",
+    route: "/api/webhooks/get/:name",
+    controller: WebhookController,
+    action: "getOne",
     permission: Permissions.admin,
   },
   // Sheet Imports
