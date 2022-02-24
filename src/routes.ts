@@ -183,6 +183,13 @@ const Routes = [
     action: "set",
     permission: Permissions.admin,
   },
+  {
+    method: "get",
+    route: "/api/projects/milestones/:scale",
+    controller: ProjectCountController,
+    action: "getMilestones",
+    permission: Permissions.default,
+  },
   // Minecraft
   {
     method: "get",

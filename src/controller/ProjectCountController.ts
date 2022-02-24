@@ -2,6 +2,7 @@ import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import * as index from "../index";
 import * as google from "../utils/SheetUtils";
+import * as date from "../utils/TimeUtils";
 import { ProjectCount } from "../entity/ProjectCount";
 
 export class ProjectCountController {
@@ -59,6 +60,45 @@ export class ProjectCountController {
       this.projectRepository,
       "Projects updated"
     );
+  }
+
+  async getMilestones(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const scale = parseInt(request.params.scale);
+
+    if (scale < 1000) {
+      return index.generateError("Scale must be 1000 or greater");
+    }
+
+    let projects = await this.projectRepository.find();
+    const milestones = [];
+
+    var lastDate = null;
+    for (
+      var i = scale;
+      i < projects[projects.length - 1].projects;
+      i += scale
+    ) {
+      var project = projects.find(function (counter) {
+        return counter.projects >= i;
+      });
+      milestones.push({
+        date: date.parseDate(project.date),
+        days:
+          lastDate === null
+            ? (new Date(project.date).getTime() -
+                new Date("2020-04-13").getTime()) /
+              8.64e7
+            : (new Date(project.date).getTime() - lastDate.getTime()) / 8.64e7,
+        projects: project.projects,
+      });
+      lastDate = new Date(project.date);
+    }
+
+    return milestones;
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
