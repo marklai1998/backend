@@ -190,6 +190,11 @@ export class DistrictController {
     this.districtRepository.clear();
     this.districtRepository.query("ALTER TABLE districts AUTO_INCREMENT = 1");
 
+    if (blocks) {
+      Block.clear();
+      Block.query("ALTER TABLE blocks AUTO_INCREMENT = 1");
+    }
+
     const boroughs = [];
     var isBorough = true;
     var currentParent = null;
@@ -231,21 +236,44 @@ export class DistrictController {
         if (isBorough) {
           boroughs.push(parent.id);
         } else {
-          if (blocks && d[7] === "Click") {
+          const totalBlocks = parseInt(d[3]) + parseInt(d[4]);
+          if (blocks && totalBlocks > 0) {
             await index.axios
-              .get(`http://localhost:8080/api/import/blocks/${d[1]}`)
-              .then((res) => {
+              .get(
+                `http://localhost:8080/api/import/blocks/${d[1]}?key=2a9c6ac8-b298-45b9-a750-c379e63e3b44`
+              )
+              .then(async (res) => {
                 if (res.data.success) {
                   blocksCounter += parseInt(
                     res.data.message.replace(" Blocks imported", "")
                   );
                   console.log(`Blocks of ${d[1]} imported`);
                 } else {
-                  console.log(`No data found for ${d[1]}`);
+                  // No blocks found in sheet --> Create new blocks
+                  await index.axios
+                    .post(`http://localhost:8080/api/blocks/createmultiple`, {
+                      key: "2a9c6ac8-b298-45b9-a750-c379e63e3b44",
+                      district: d[1],
+                      number: totalBlocks,
+                      done: d[2] === "Done",
+                    })
+                    .then((res) => {
+                      if (res.data.success) {
+                        blocksCounter += parseInt(
+                          res.data.message.replace(" Blocks imported", "")
+                        );
+                        console.log(`Blocks of ${d[1]} imported`);
+                      } else {
+                        console.log(`No data found for ${d[1]}`);
+                      }
+                    })
+                    .catch((error) => {
+                      console.log(`Error occurred for district ${d[1]}`, error);
+                    });
                 }
               })
               .catch((error) => {
-                console.log(`Error occured for district ${d[1]}`, error);
+                console.log(`Error occurred for district ${d[1]}`, error);
               });
           }
         }
