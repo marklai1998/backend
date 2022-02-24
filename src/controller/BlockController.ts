@@ -37,6 +37,51 @@ export class BlockController {
     return index.getValidation(block, this.blockRepository, "Block created");
   }
 
+  async createMultiple(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    if (!request.body.district) {
+      return index.generateError("Specify a district");
+    }
+    if (!request.body.number) {
+      return index.generateError("Specify the number of blocks to create");
+    }
+    if (typeof request.body.number !== "number") {
+      return index.generateError("Invalid number");
+    }
+
+    let district = await District.findOne({ name: request.body.district });
+    if (district === undefined) {
+      return index.generateError("District not found");
+    }
+
+    let blocks = await this.blockRepository.find({
+      where: { district: district.id },
+      order: { id: "ASC" },
+    });
+    const lastID = blocks.length === 0 ? 0 : blocks[blocks.length - 1].id;
+
+    var counter = 0;
+    for (var i = lastID + 1; i <= lastID + request.body.number; i++) {
+      const block = new Block();
+      block.id = i;
+      block.district = district.id;
+
+      if (request.body.done) {
+        block.status = 4;
+        block.progress = 100;
+        block.details = true;
+      }
+
+      await this.blockRepository.save(block);
+      counter++;
+    }
+
+    return index.generateSuccess(`${counter} Blocks created`);
+  }
+
   async delete(request: Request, response: Response, next: NextFunction) {
     if (request.body.district === undefined) {
       return index.generateError("Specify a District Name");
@@ -172,7 +217,7 @@ export class BlockController {
         block.progress =
           d[2] === undefined || d[2] === null || d[2] === ""
             ? 0.0
-            : parseFloat(d[2]);
+            : parseFloat(d[2].replace(",", "."));
         block.details = d[3] === "TRUE" ? true : false;
         block.builder = d[4] === undefined || d[4] === null ? "" : d[4];
 

@@ -128,6 +128,13 @@ const Routes = [
   },
   {
     method: "post",
+    route: "/api/blocks/createmultiple",
+    controller: BlockController,
+    action: "createMultiple",
+    permission: Permissions.admin,
+  },
+  {
+    method: "post",
     route: "/api/blocks/delete",
     controller: BlockController,
     action: "delete",
