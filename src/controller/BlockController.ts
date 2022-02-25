@@ -4,6 +4,7 @@ import * as google from "../utils/SheetUtils";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import * as index from "../index";
+import * as date from "../utils/TimeUtils";
 
 export class BlockController {
   private blockRepository = getRepository(Block);
@@ -114,10 +115,22 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return block;
+    return {
+      uid: block.uid,
+      id: block.id,
+      location: block.location,
+      district: block.district,
+      status: block.status,
+      progress: block.progress,
+      details: block.details,
+      builder: block.builder,
+      completionDate: date.parseDate(block.completionDate),
+    };
   }
 
-  async setLocation(request: Request, response: Response, next: NextFunction) {}
+  async setLocation(request: Request, response: Response, next: NextFunction) {
+    // TODO
+  }
 
   async setProgress(request: Request, response: Response, next: NextFunction) {
     let block = await getBlock(request.body.district, request.body.blockID);
@@ -259,23 +272,57 @@ async function getBlock(districtName: string, blockID: number) {
 }
 
 async function setStatus(block: Block) {
-  if (block.progress === 100 && block.details) {
+  const oldStatus = block.status;
+  if (oldStatus !== 4 && block.progress === 100 && block.details) {
     block.status = 4;
-  } else if (block.progress === 100 && !block.details) {
+    block.completionDate = new Date();
+  } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
     block.status = 3;
-  } else if (block.progress > 0 || block.details) {
+    block.completionDate = null;
+  } else if (oldStatus !== 2 && (block.progress > 0 || block.details)) {
     block.status = 2;
+    block.completionDate = null;
   } else if (
+    oldStatus !== 1 &&
     block.progress === 0 &&
     !block.details &&
     block.builder !== "" &&
     block.builder !== null
   ) {
     block.status = 1;
-  } else {
+    block.completionDate = null;
+  } else if (oldStatus !== 0) {
     block.status = 0;
+    block.completionDate = null;
   }
-  await Block.save(block);
+
+  // Update on change
+  if (oldStatus !== block.status) {
+    await Block.save(block);
+
+    if (block.status === 4) {
+      let blocks = await Block.find({ district: block.district });
+      var done = 0;
+      for (const b of blocks) {
+        if (b.status === 4) {
+          done++;
+        }
+      }
+
+      if (done === blocks.length) {
+        // District completed
+        let district = await District.findOne({ id: block.district });
+        district.completionDate = new Date();
+        await district.save();
+      }
+    } else {
+      let district = await District.findOne({ id: block.district });
+      if (district.completionDate !== null) {
+        district.completionDate = null;
+        await district.save();
+      }
+    }
+  }
 }
 
 function statusToNumber(status: string) {
