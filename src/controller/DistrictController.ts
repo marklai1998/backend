@@ -238,10 +238,9 @@ export class DistrictController {
         } else {
           const totalBlocks = parseInt(d[3]) + parseInt(d[4]);
           if (blocks && totalBlocks > 0) {
+            const key = request.query.key || request.body.key;
             await index.axios
-              .get(
-                `http://localhost:8080/api/import/blocks/${d[1]}?key=2a9c6ac8-b298-45b9-a750-c379e63e3b44`
-              )
+              .get(`http://localhost:8080/api/import/blocks/${d[1]}?key=${key}`)
               .then(async (res) => {
                 if (res.data.success) {
                   blocksCounter += parseInt(
@@ -252,7 +251,7 @@ export class DistrictController {
                   // No blocks found in sheet --> Create new blocks
                   await index.axios
                     .post(`http://localhost:8080/api/blocks/createmultiple`, {
-                      key: "2a9c6ac8-b298-45b9-a750-c379e63e3b44",
+                      key: key,
                       district: d[1],
                       number: totalBlocks,
                       done: d[2] === "Done",
