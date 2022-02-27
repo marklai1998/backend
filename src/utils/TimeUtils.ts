@@ -1,8 +1,8 @@
-function parseDate(date: string | Date) {
+function parseDate(date: string | Date, locale?: string) {
   if (date === null) {
     return null;
   }
-  return new Date(date).toLocaleDateString();
+  return new Date(date).toLocaleDateString(locale);
 }
 
 function executeEveryXMinutes(

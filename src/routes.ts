@@ -73,7 +73,7 @@ const Routes = [
     route: "/api/admin/settings/get",
     controller: AdminSettingController,
     action: "getAll",
-    permission: Permissions.default,
+    permission: Permissions.default, // Permissions handled later
   },
   {
     method: "post",
@@ -167,6 +167,14 @@ const Routes = [
     controller: BlockController,
     action: "removeBuilder",
     permission: Permissions.builder,
+  },
+  // Claims
+  {
+    method: "get",
+    route: "/api/claims/:name",
+    controller: BlockController,
+    action: "getClaims",
+    permission: Permissions.default,
   },
   // Projects
   {
@@ -281,7 +289,7 @@ const Routes = [
     route: "/api/webhooks/send",
     controller: WebhookController,
     action: "send",
-    permission: Permissions.default,
+    permission: Permissions.default, // Permissions handled later
   },
   // Sheet Imports
   {

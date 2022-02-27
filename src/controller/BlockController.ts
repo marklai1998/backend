@@ -5,6 +5,7 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import * as index from "../index";
 import * as date from "../utils/TimeUtils";
+import { getClaims } from "../utils/JsonUtils";
 
 export class BlockController {
   private blockRepository = getRepository(Block);
@@ -126,6 +127,10 @@ export class BlockController {
       builder: block.builder,
       completionDate: date.parseDate(block.completionDate),
     };
+  }
+
+  async getClaims(request: Request, response: Response, next: NextFunction) {
+    return getClaims(request.params.name);
   }
 
   async setLocation(request: Request, response: Response, next: NextFunction) {
