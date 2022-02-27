@@ -1,6 +1,7 @@
 import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { Webhook } from "../entity/Webhook";
+import { User } from "../entity/User";
 import * as index from "../index";
 
 export class WebhookController {
@@ -111,9 +112,23 @@ export class WebhookController {
     let webhook = await this.webhookRepository.findOne({
       name: request.body.name,
     });
+
     if (webhook === undefined) {
       return index.generateError("No webhook found with this name");
     }
+
+    if (webhook.permission > 0) {
+      let user = await User.findOne({
+        apikey: request.body.key || request.query.key,
+      });
+      if (user === undefined) {
+        return index.generateError("Invalid or missing API-Key");
+      }
+      if (user.permission < webhook.permission) {
+        return index.generateError("No permission");
+      }
+    }
+
     if (!webhook.enabled) {
       return index.generateError("Webhook disabled");
     }

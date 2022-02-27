@@ -1,5 +1,6 @@
 import { Entity, PrimaryColumn, Column, BaseEntity } from "typeorm";
 import { IsUrl } from "class-validator";
+import { Permissions } from "../utils/Permissions";
 
 @Entity({ name: "webhooks" })
 export class Webhook {
@@ -15,4 +16,7 @@ export class Webhook {
 
   @Column({ default: false })
   enabled: boolean;
+
+  @Column({ default: Permissions.admin })
+  permission: number;
 }
