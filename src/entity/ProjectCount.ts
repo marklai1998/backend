@@ -1,8 +1,8 @@
-import { Entity, PrimaryColumn, Column } from "typeorm";
+import { Entity, PrimaryColumn, Column, BaseEntity } from "typeorm";
 import { IsInt } from "class-validator";
 
 @Entity({ name: "projects" })
-export class ProjectCount {
+export class ProjectCount extends BaseEntity {
   @PrimaryColumn({ type: "date" })
   date: Date;
 

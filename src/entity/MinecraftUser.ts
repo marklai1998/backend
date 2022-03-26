@@ -1,10 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
 import { Length, IsJSON, IsUUID, Matches } from "class-validator";
 
+import { generateError, getValidation } from "../index";
+import { setAttributeJson } from "../utils/JsonUtils";
+
 @Entity({ name: "minecraft" })
-export class MinecraftUser {
+export class MinecraftUser extends BaseEntity {
   @PrimaryGeneratedColumn()
-  rid: number;
+  uid: number;
 
   @Column({ length: 36 })
   @IsUUID("4", { message: "Invalid UUID" })
@@ -25,4 +28,35 @@ export class MinecraftUser {
   @Column("text")
   @IsJSON({ message: "Settings must be a valid JSON-String" })
   settings: string;
+
+  toJson(): object {
+    return {
+      uid: this.uid,
+      uuid: this.uuid,
+      username: this.username,
+      rank: this.rank,
+      settings: JSON.parse(this.settings),
+    };
+  }
+
+  update(type: string, value: string): object {
+    if (typeof type === "string") {
+      if (type.toLowerCase() === "name") {
+        this.username = value;
+        return getValidation(this, "Minecraft Username updated");
+      } else if (type.toLowerCase() === "rank") {
+        this.rank = value;
+        return getValidation(this, "Minecraft Rank updated");
+      }
+    }
+    return generateError("Invalid type. Available types: 'name', 'rank'");
+  }
+
+  setSetting(type: string, value: string): object {
+    const settings = JSON.parse(this.settings);
+    setAttributeJson(settings, type, value);
+    this.settings = JSON.stringify(settings);
+
+    return getValidation(this, "Minecraft Settings updated");
+  }
 }

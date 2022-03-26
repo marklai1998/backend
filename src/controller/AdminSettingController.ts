@@ -1,25 +1,24 @@
-import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
-import { AdminSetting } from "../entity/AdminSetting";
+
 import * as index from "../index";
+
+import { AdminSetting } from "../entity/AdminSetting";
 import { User } from "../entity/User";
 
 export class AdminSettingController {
-  private configRepository = getRepository(AdminSetting);
-
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let setting = await this.configRepository.findOne({
+    const setting = await AdminSetting.findOne({
       key: request.params.setting,
     });
 
-    if (setting === undefined) {
+    if (!setting) {
       return index.generateError("Admin Setting not found");
     }
     if (setting.permission > 0) {
-      let user = await User.findOne({
+      const user = await User.findOne({
         apikey: request.body.key || request.query.key,
       });
-      if (user === undefined) {
+      if (!user) {
         return index.generateError("Invalid or missing API-Key");
       }
       if (user.permission < setting.permission) {
@@ -27,31 +26,25 @@ export class AdminSettingController {
       }
     }
 
-    return {
-      key: setting.key,
-      value: JSON.parse(setting.value),
-    };
+    return setting.toJson({ showPermission: false });
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    let res = await this.configRepository.find();
+    const settings = await AdminSetting.find();
 
-    for (var i = 0; i < res.length; i++) {
-      res[i] = {
-        key: res[i].key,
-        value: JSON.parse(res[i].value),
-        permission: res[i].permission,
-      };
+    const res = [];
+    for (var i = 0; i < settings.length; i++) {
+      res.push(settings[i].toJson({ showPermission: true }));
     }
     return res;
   }
 
   async set(request: Request, response: Response, next: NextFunction) {
-    let config = await this.configRepository.findOne({
+    let config = await AdminSetting.findOne({
       key: request.params.setting,
     });
 
-    if (config === undefined) {
+    if (!config) {
       config = new AdminSetting();
       config.key = request.body.key;
     }
@@ -62,7 +55,6 @@ export class AdminSettingController {
       config.value = JSON.stringify(request.body.value);
     }
 
-    this.configRepository.save(config);
-    return index.generateSuccess("Setting updated");
+    return index.getValidation(config, "Setting updated");
   }
 }

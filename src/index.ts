@@ -1,20 +1,22 @@
 import "reflect-metadata";
 
+import { validate } from "class-validator";
+import { v4 as uuidv4 } from "uuid";
+import { createConnection, getRepository, BaseEntity } from "typeorm";
+import { Request, Response } from "express";
+
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import { v4 as uuidv4 } from "uuid";
+
 import * as jwt from "./utils/JsonWebToken";
 import * as date from "./utils/TimeUtils";
 
-import { Repository, createConnection, getRepository } from "typeorm";
-import { Request, Response } from "express";
-
-import { User } from "./entity/User";
-import { Routes } from "./routes";
 import { AdminSettings } from "./adminsettings";
-import { validate } from "class-validator";
+import { Routes } from "./routes";
+
 import { AdminSetting } from "./entity/AdminSetting";
 import { ProjectCount } from "./entity/ProjectCount";
+import { User } from "./entity/User";
 
 var cors = require("cors");
 var helmet = require("helmet");
@@ -127,9 +129,8 @@ createConnection()
   })
   .catch((error) => console.log(error));
 
-async function getValidation(
-  object: object,
-  repo: Repository<any>,
+export async function getValidation(
+  object: BaseEntity,
   successMessage: string
 ) {
   const errors = await validate(object);
@@ -137,27 +138,21 @@ async function getValidation(
   if (errors.length > 0) {
     return generateError(Object.values(errors[0].constraints)[0]);
   }
-  repo.save(object);
+
+  object.save();
   return generateSuccess(successMessage);
 }
 
-function generateSuccess(message?: string, data?: object) {
+export function generateSuccess(message?: string, data?: object) {
   return { success: true, message: message, data };
 }
 
-function generateError(message: string, error?: object) {
+export function generateError(message: string, error?: object) {
   return { success: false, message: message, error };
 }
 
-function generateUUID() {
+export function generateUUID() {
   return uuidv4();
 }
 
-export {
-  fetch,
-  axios,
-  getValidation,
-  generateSuccess,
-  generateError,
-  generateUUID,
-};
+export { fetch, axios };

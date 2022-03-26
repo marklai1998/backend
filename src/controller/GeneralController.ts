@@ -1,11 +1,16 @@
 import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
+
 import * as minecraftUtil from "minecraft-server-util";
+
 import * as index from "../index";
 import * as date from "../utils/TimeUtils";
+
+import { calculateProgressForDistrict } from "../utils/DistrictUtils";
+
 import { AdminSetting } from "../entity/AdminSetting";
-import { District } from "../entity/District";
 import { Block } from "../entity/Block";
+import { District } from "../entity/District";
 
 export class GeneralController {
   private configRepository = getRepository(AdminSetting);
@@ -199,17 +204,6 @@ export class GeneralController {
   }
 
   async overview(request: Request, response: Response, next: NextFunction) {
-    /*const claims = await this.blockRepository.createQueryBuilder("block")
-      .where("block.builder IS NOT NULL")
-      .andWhere("TRIM(block.builder) <> ''")
-      .getMany();
-    return {
-      claims: claims.length,
-      // Only temporary until we have a proper way to get the progress with the use of each block
-      // TODO : Add a way to get the progress of each block and display it here
-      progress: (claims.length / (await this.blockRepository.find()).length) * 100
-    };*/
-
     let districts = await this.districtRepository.find({
       order: { parent: "ASC" },
     });
@@ -404,7 +398,7 @@ function createDistrictObject(district: District, blocks?: any) {
     },
     completionDate: date.parseDate(district.completionDate),
     builders: [],
-    children: blocks === undefined ? [] : blocks,
+    children: blocks || [],
   };
 
   if (blocks !== undefined) {

@@ -1,9 +1,11 @@
 import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
-import * as google from "../utils/SheetUtils";
-import { District } from "../entity/District";
-import { Block } from "../entity/Block";
+
 import * as index from "../index";
+import * as google from "../utils/SheetUtils";
+
+import { Block } from "../entity/Block";
+import { District } from "../entity/District";
 
 export class DistrictController {
   private districtRepository = getRepository(District);
@@ -34,11 +36,7 @@ export class DistrictController {
     district.name = request.body.name;
     district.parent = parent.id;
 
-    return index.getValidation(
-      district,
-      this.districtRepository,
-      "District created"
-    );
+    return index.getValidation(district, "District created");
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
@@ -78,102 +76,7 @@ export class DistrictController {
       return index.generateError("District not found");
     }
 
-    let blocks = await Block.find({
-      order: { id: "ASC" },
-      where: { district: district.id },
-    });
-
-    const blocksJson = {
-      total: blocks.length,
-      done: 0,
-      detailing: 0,
-      building: 0,
-      reserved: 0,
-      not_started: 0,
-      blocks: [],
-    };
-    const builders = [];
-    var progress = 0;
-
-    for (const b of blocks) {
-      switch (b.status) {
-        case 4:
-          blocksJson.done++;
-          break;
-        case 3:
-          blocksJson.detailing++;
-          break;
-        case 2:
-          blocksJson.building++;
-          break;
-        case 1:
-          blocksJson.reserved++;
-          break;
-        default:
-          blocksJson.not_started++;
-          break;
-      }
-
-      const buildersSplit =
-        b.builder === "" || b.builder === null ? [] : b.builder.split(",");
-
-      blocksJson.blocks.push({
-        uid: b.uid,
-        id: b.id,
-        location: b.location,
-        district: b.district,
-        status: b.status,
-        progress: b.progress,
-        details: b.details,
-        builders: buildersSplit,
-        completionDate:
-          b.completionDate === null
-            ? null
-            : b.completionDate.toLocaleDateString(),
-      });
-
-      for (var i = 0; i < buildersSplit.length; i++) {
-        if (builders.some((e) => e.name === buildersSplit[i])) {
-          builders.some((e) => {
-            if (e.name === buildersSplit[i]) {
-              e.blocks++;
-            }
-          });
-        } else {
-          builders.push({ name: buildersSplit[i], blocks: 1 });
-        }
-      }
-
-      progress += b.progress;
-    }
-    progress /= blocks.length;
-    builders.sort(dynamicSort("blocks"));
-
-    var status = 0;
-    if (blocksJson.done === blocks.length) {
-      status = 4;
-    } else if (progress === 100) {
-      status = 3;
-    } else if (progress > 0) {
-      status = 2;
-    }
-
-    return {
-      id: district.id,
-      name: district.name,
-      status: status,
-      progress: progress,
-      completionDate:
-        district.completionDate === null
-          ? null
-          : new Date(district.completionDate).toLocaleDateString(),
-      builders: builders,
-      blocks: blocksJson,
-      image: district.image,
-      map: district.map,
-      about: district.about,
-      area: district.area,
-    };
+    return await district.toJson();
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
@@ -284,20 +187,4 @@ export class DistrictController {
       `${districtCounter} Districts and ${blocksCounter} Blocks imported`
     );
   }
-}
-
-function dynamicSort(property: string) {
-  var sortOrder = 1;
-  if (property[0] === "-") {
-    sortOrder = -1;
-    property = property.substr(1);
-  }
-  return function (a, b) {
-    /* next line works with strings and numbers,
-     * and you may want to customize it to your needs
-     */
-    var result =
-      a[property] > b[property] ? -1 : a[property] < b[property] ? 1 : 0;
-    return result * sortOrder;
-  };
 }

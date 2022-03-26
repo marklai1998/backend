@@ -1,21 +1,20 @@
-import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
-import { Webhook } from "../entity/Webhook";
-import { User } from "../entity/User";
+
 import * as index from "../index";
 
-export class WebhookController {
-  private webhookRepository = getRepository(Webhook);
+import { User } from "../entity/User";
+import { Webhook } from "../entity/Webhook";
 
+export class WebhookController {
   async create(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name || !request.body.link) {
       return index.generateError("Specify name and link");
     }
-    let webhook = await this.webhookRepository.findOne({
+    let webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
-    if (webhook !== undefined) {
+    if (webhook) {
       return index.generateError("Webhook with this name already exists");
     }
 
@@ -25,11 +24,7 @@ export class WebhookController {
     webhook.message = request.body.message;
     webhook.enabled = request.body.enabled;
 
-    return index.getValidation(
-      webhook,
-      this.webhookRepository,
-      "Webhook created"
-    );
+    return index.getValidation(webhook, "Webhook created");
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
@@ -37,61 +32,53 @@ export class WebhookController {
       return index.generateError("Specify the name of the webhook to delete");
     }
 
-    let webhook = await this.webhookRepository.findOne({
+    let webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
-    if (webhook === undefined) {
+    if (!webhook) {
       return index.generateError("No webhook found with this name");
     }
 
-    this.webhookRepository.delete(webhook);
+    await webhook.remove();
     return index.generateSuccess("Webhook deleted");
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let webhook = await this.webhookRepository.findOne({
+    let webhook = await Webhook.findOne({
       name: request.params.name,
     });
 
-    if (webhook === undefined) {
+    if (!webhook) {
       return index.generateError("Webhook not found");
     }
     return index.generateSuccess(undefined, webhook);
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    return await this.webhookRepository.find();
+    return await Webhook.find();
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    if (
-      request.body.name === undefined ||
-      request.body.type === undefined ||
-      request.body.value === undefined
-    ) {
+    if (!request.body.name || !request.body.type || !request.body.value) {
       return index.generateError("Specify name, type and value");
     }
 
-    let webhook = await this.webhookRepository.findOne({
+    let webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
-    if (webhook === undefined) {
+    if (!webhook) {
       return index.generateError("Webhook not found");
     }
 
-    if (webhook[request.body.type] === undefined) {
+    if (!webhook[request.body.type]) {
       return index.generateError("Invalid type");
     }
 
     webhook[request.body.type] = request.body.value;
 
-    return index.getValidation(
-      webhook,
-      this.webhookRepository,
-      "Webhook updated"
-    );
+    return index.getValidation(webhook, "Webhook updated");
   }
 
   async send(request: Request, response: Response, next: NextFunction) {
@@ -109,11 +96,11 @@ export class WebhookController {
       return index.generateError("Invalid body");
     }
 
-    let webhook = await this.webhookRepository.findOne({
+    let webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
-    if (webhook === undefined) {
+    if (!webhook) {
       return index.generateError("No webhook found with this name");
     }
 
@@ -121,7 +108,7 @@ export class WebhookController {
       let user = await User.findOne({
         apikey: request.body.key || request.query.key,
       });
-      if (user === undefined) {
+      if (!user) {
         return index.generateError("Invalid or missing API-Key");
       }
       if (user.permission < webhook.permission) {
@@ -129,33 +116,6 @@ export class WebhookController {
       }
     }
 
-    if (!webhook.enabled) {
-      return index.generateError("Webhook disabled");
-    }
-
-    if (
-      request.body.method.toLowerCase() === "patch" &&
-      webhook.message === null
-    ) {
-      return index.generateError("No messageID set for this webhook");
-    }
-
-    const link =
-      webhook.link +
-      (request.body.method.toLowerCase() === "patch"
-        ? `/messages/${webhook.message}`
-        : "");
-    await index
-      .fetch(link, {
-        method: request.body.method.toUpperCase(),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request.body.body),
-      })
-      .catch((error) => {
-        return index.generateError("Error occurred sending the message", error);
-      });
-    return index.generateSuccess("Message sent");
+    return await webhook.send(request.body);
   }
 }

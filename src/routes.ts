@@ -1,11 +1,11 @@
-import { Permissions } from "./utils/Permissions";
-import { GeneralController } from "./controller/GeneralController";
-import { UserController } from "./controller/UserController";
+import { AdminSettingController } from "./controller/AdminSettingController";
 import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
+import { GeneralController } from "./controller/GeneralController";
 import { MinecraftController } from "./controller/MinecraftController";
-import { AdminSettingController } from "./controller/AdminSettingController";
+import { Permissions } from "./utils/Permissions";
 import { ProjectCountController } from "./controller/ProjectCountController";
+import { UserController } from "./controller/UserController";
 import { WebhookController } from "./controller/WebhookController";
 
 const Routes = [
@@ -66,14 +66,14 @@ const Routes = [
     route: "/api/admin/settings/get/:setting",
     controller: AdminSettingController,
     action: "getOne",
-    permission: Permissions.default,
+    permission: Permissions.default, // Permissions handled later
   },
   {
     method: "get",
     route: "/api/admin/settings/get",
     controller: AdminSettingController,
     action: "getAll",
-    permission: Permissions.default, // Permissions handled later
+    permission: Permissions.admin,
   },
   {
     method: "post",
@@ -138,6 +138,13 @@ const Routes = [
     route: "/api/blocks/delete",
     controller: BlockController,
     action: "delete",
+    permission: Permissions.admin,
+  },
+  {
+    method: "post",
+    route: "/api/blocks/setLocation",
+    controller: BlockController,
+    action: "setLocation",
     permission: Permissions.admin,
   },
   {

@@ -1,15 +1,14 @@
-import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
-import { MinecraftUser } from "../entity/MinecraftUser";
+
 import * as index from "../index";
 
+import { MinecraftUser } from "../entity/MinecraftUser";
+
 export class MinecraftController {
-  private mcRepository = getRepository(MinecraftUser);
-
   async create(request: Request, response: Response, next: NextFunction) {
-    let user = await this.mcRepository.findOne({ uuid: request.body.uuid });
+    let user = await MinecraftUser.findOne({ uuid: request.body.uuid });
 
-    if (user !== undefined) {
+    if (user) {
       return index.generateError("UUID already exists");
     }
 
@@ -19,107 +18,76 @@ export class MinecraftController {
     user.rank = request.body.rank;
     user.settings = request.body.settings;
 
-    return index.getValidation(
-      user,
-      this.mcRepository,
-      "Minecraft User registered"
-    );
+    return index.getValidation(user, "Minecraft User registered");
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
-    if (request.body.uuid === undefined) {
+    if (!request.body.uuid) {
       return index.generateError("Specify UUID");
     }
-    let user = await this.mcRepository.findOne({ uuid: request.body.uuid });
+    const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
 
-    if (user === undefined) {
+    if (!user) {
       return index.generateError("UUID not found");
     }
 
-    await this.mcRepository.remove(user);
+    await MinecraftUser.remove(user);
     return index.generateSuccess("Minecraft User deleted");
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    return this.mcRepository.find();
+    const players = await MinecraftUser.find();
+
+    const res = [];
+    for (const player of players) {
+      res.push(player.toJson());
+    }
+
+    return index.generateSuccess(undefined, res);
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let res = this.mcRepository.find({ username: request.params.user });
+    const player =
+      (await MinecraftUser.findOne({ username: request.params.user })) ||
+      (await MinecraftUser.findOne({ uuid: request.params.user }));
 
-    if ((await res).length === 0) {
-      res = this.mcRepository.find({ uuid: request.params.user });
+    if (!player) {
+      return index.generateError("Player not found");
     }
-    return res;
+    return index.generateSuccess(undefined, player.toJson());
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    if (request.body.uuid === undefined) {
+    if (!request.body.uuid) {
       return index.generateError("Specify UUID");
     }
-    const type = request.body.type;
-    let user = await this.mcRepository.findOne({ uuid: request.body.uuid });
+    if (!request.body.type || !request.body.value) {
+      return index.generateError("Specify a type and a value");
+    }
 
-    if (user === undefined) {
+    const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
+
+    if (!user) {
       return index.generateError("UUID not found");
     }
-    if (request.body.value === undefined) {
-      return index.generateError("Specify a value");
-    }
 
-    if (typeof type === "string" && type.toLowerCase() === "name") {
-      user.username = request.body.value;
-      return index.getValidation(
-        user,
-        this.mcRepository,
-        "Minecraft Username updated"
-      );
-    } else if (typeof type === "string" && type.toLowerCase() === "rank") {
-      user.rank = request.body.value;
-      return index.getValidation(
-        user,
-        this.mcRepository,
-        "Minecraft Rank updated"
-      );
-    } else {
-      return index.generateError(
-        "Invalid type. Available types: 'name', 'rank'"
-      );
-    }
+    return user.update(request.body.type, request.body.value);
   }
 
   async setSettings(request: Request, response: Response, next: NextFunction) {
-    if (request.body.uuid === undefined) {
+    if (!request.body.uuid) {
       return index.generateError("Specify UUID");
     }
-    let user = await this.mcRepository.findOne({ uuid: request.body.uuid });
+    if (!request.body.type || !request.body.value) {
+      return index.generateError("Specify a type and a value");
+    }
 
-    if (user === undefined) {
+    const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
+
+    if (!user) {
       return index.generateError("UUID not found");
     }
-    if (request.body.type === undefined) {
-      return index.generateError("Specify a type");
-    }
-    if (request.body.value === undefined) {
-      return index.generateError("Specify a value");
-    }
 
-    const settings = JSON.parse(user.settings);
-    setAttributeJson(settings, request.body.type, request.body.value);
-    user.settings = JSON.stringify(settings);
-
-    return index.getValidation(
-      user,
-      this.mcRepository,
-      "Minecraft Settings updated"
-    );
+    return user.setSetting(request.body.type, request.body.value);
   }
-}
-
-function setAttributeJson(json: object, path: string, value: any) {
-  var k = json;
-  var steps = path.split(".");
-  var last = steps.pop();
-  steps.forEach((e) => (k[e] = k[e] || {}) && (k = k[e]));
-  k[last] = value;
 }

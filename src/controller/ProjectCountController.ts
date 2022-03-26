@@ -1,15 +1,14 @@
-import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
+
 import * as index from "../index";
 import * as google from "../utils/SheetUtils";
 import * as date from "../utils/TimeUtils";
+
 import { ProjectCount } from "../entity/ProjectCount";
 
 export class ProjectCountController {
-  private projectRepository = getRepository(ProjectCount);
-
   async getOne(request: Request, response: Response, next: NextFunction) {
-    if (request.params.date === undefined) {
+    if (!request.params.date) {
       return index.generateError("Specify date");
     }
 
@@ -20,11 +19,11 @@ export class ProjectCountController {
       isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
     }
 
-    let projectCount = await this.projectRepository.findOne({
+    const projectCount = await ProjectCount.findOne({
       date: isoDate === null ? date : isoDate,
     });
 
-    if (projectCount === undefined) {
+    if (!projectCount) {
       return index.generateError("No entry found for this date");
     }
 
@@ -35,31 +34,27 @@ export class ProjectCountController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    return await this.projectRepository.find();
+    return await ProjectCount.find();
   }
 
   async set(request: Request, response: Response, next: NextFunction) {
-    if (request.body.projects === undefined) {
+    if (!request.body.projects) {
       return index.generateError("Specify projects");
     }
 
     const date = new Date();
-    let projectCount = await this.projectRepository.findOne({
+    let projectCount = await ProjectCount.findOne({
       date: date.toISOString().split("T")[0],
     });
 
-    if (projectCount === undefined) {
+    if (!projectCount) {
       projectCount = new ProjectCount();
       projectCount.date = date;
     }
 
     projectCount.projects = request.body.projects;
 
-    return index.getValidation(
-      projectCount,
-      this.projectRepository,
-      "Projects updated"
-    );
+    return index.getValidation(projectCount, "Projects updated");
   }
 
   async getMilestones(
@@ -73,7 +68,7 @@ export class ProjectCountController {
       return index.generateError("Scale must be 1000 or greater");
     }
 
-    let projects = await this.projectRepository.find();
+    const projects = await ProjectCount.find();
     const milestones = [];
 
     var lastDate = null;
@@ -87,12 +82,11 @@ export class ProjectCountController {
       });
       milestones.push({
         date: date.parseDate(project.date),
-        days:
-          lastDate === null
-            ? (new Date(project.date).getTime() -
-                new Date("2020-04-13").getTime()) /
-              8.64e7
-            : (new Date(project.date).getTime() - lastDate.getTime()) / 8.64e7,
+        days: !lastDate
+          ? (new Date(project.date).getTime() -
+              new Date("2020-04-13").getTime()) /
+            8.64e7
+          : (new Date(project.date).getTime() - lastDate.getTime()) / 8.64e7,
         projects: project.projects,
       });
       lastDate = new Date(project.date);
@@ -110,18 +104,18 @@ export class ProjectCountController {
     const projects = getData.data.values;
     var counter = 0;
 
-    await this.projectRepository.clear();
+    await ProjectCount.clear();
     for (const p of projects) {
-      if (p[1] === undefined || p[1] === null || p[1] === "") break;
+      if (!p[1]) break;
 
       const dateSplit = p[0].split(".");
       const isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
 
-      let project = new ProjectCount();
+      const project = new ProjectCount();
       project.date = new Date(isoDate);
       project.projects = p[1];
 
-      await this.projectRepository.save(project);
+      await project.save();
       counter++;
     }
 

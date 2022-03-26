@@ -1,34 +1,33 @@
-import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
+
+import * as index from "../index";
 import * as google from "../utils/SheetUtils";
+
+import { getClaims } from "../utils/JsonUtils";
+import { statusToNumber } from "../utils/DistrictUtils";
+
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
-import * as index from "../index";
-import * as date from "../utils/TimeUtils";
-import { getClaims } from "../utils/JsonUtils";
 
 export class BlockController {
-  private blockRepository = getRepository(Block);
-  private districtRepository = getRepository(District);
-
   async create(request: Request, response: Response, next: NextFunction) {
-    if (request.body.district === undefined) {
+    if (!request.body.district) {
       return index.generateError("Specify a district");
     }
-    if (request.body.blockID === undefined) {
+    if (!request.body.blockID) {
       return index.generateError("Specify a blockID");
     }
 
-    let district = await District.findOne({ name: request.body.district });
-    if (district === undefined) {
+    const district = await District.findOne({ name: request.body.district });
+    if (!district) {
       return index.generateError("District not found");
     }
 
-    let block = await this.blockRepository.findOne({
+    let block = await Block.findOne({
       id: request.body.blockID,
       district: district.id,
     });
-    if (block !== undefined) {
+    if (block) {
       return index.generateError("Block already exists");
     }
 
@@ -36,7 +35,7 @@ export class BlockController {
     block.id = request.body.blockID;
     block.district = district.id;
 
-    return index.getValidation(block, this.blockRepository, "Block created");
+    return index.getValidation(block, "Block created");
   }
 
   async createMultiple(
@@ -54,12 +53,12 @@ export class BlockController {
       return index.generateError("Invalid number");
     }
 
-    let district = await District.findOne({ name: request.body.district });
-    if (district === undefined) {
+    const district = await District.findOne({ name: request.body.district });
+    if (!district) {
       return index.generateError("District not found");
     }
 
-    let blocks = await this.blockRepository.find({
+    const blocks = await Block.find({
       where: { district: district.id },
       order: { id: "ASC" },
     });
@@ -77,7 +76,7 @@ export class BlockController {
         block.details = true;
       }
 
-      await this.blockRepository.save(block);
+      await block.save();
       counter++;
     }
 
@@ -85,48 +84,41 @@ export class BlockController {
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
-    if (request.body.district === undefined) {
+    if (!request.body.district) {
       return index.generateError("Specify a District Name");
     }
-    if (request.body.blockID === undefined) {
+    if (!request.body.blockID) {
       return index.generateError("Specify a BlockID");
     }
 
-    let district = await District.findOne({ name: request.body.district });
-    if (district === undefined) {
+    const district = await District.findOne({ name: request.body.district });
+    if (!district) {
       return index.generateError("District not found");
     }
-    let block = await this.blockRepository.findOne({
+    const block = await Block.findOne({
       id: request.body.blockID,
       district: district.id,
     });
 
-    if (block === undefined) {
+    if (!block) {
       return index.generateError("Block not found");
     }
 
-    await this.blockRepository.remove(block);
+    await block.remove();
     return index.generateSuccess("Block deleted");
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let block = await getBlock(request.params.district, request.params.blockID);
+    const block = await getBlock(
+      request.params.district,
+      request.params.blockID
+    );
 
-    if (block === null) {
+    if (!block) {
       return index.generateError("Block not found");
     }
 
-    return {
-      uid: block.uid,
-      id: block.id,
-      location: block.location,
-      district: block.district,
-      status: block.status,
-      progress: block.progress,
-      details: block.details,
-      builder: block.builder,
-      completionDate: date.parseDate(block.completionDate),
-    };
+    return block.toJson();
   }
 
   async getClaims(request: Request, response: Response, next: NextFunction) {
@@ -134,53 +126,43 @@ export class BlockController {
   }
 
   async setLocation(request: Request, response: Response, next: NextFunction) {
-    // TODO
+    const block = await getBlock(request.body.district, request.body.blockID);
+
+    if (!block) {
+      return index.generateError("Block not found");
+    }
+
+    return block.setLocation(request.body.location);
   }
 
   async setProgress(request: Request, response: Response, next: NextFunction) {
-    let block = await getBlock(request.body.district, request.body.blockID);
+    const block = await getBlock(request.body.district, request.body.blockID);
 
-    if (block === null) {
+    if (!block) {
       return index.generateError("Block not found");
     }
 
-    block.progress = request.body.progress;
-    setStatus(block);
-
-    return index.getValidation(block, this.blockRepository, "Progress updated");
+    return block.setProgress(request.body.progress);
   }
 
   async setDetails(request: Request, response: Response, next: NextFunction) {
-    let block = await getBlock(request.body.district, request.body.blockID);
+    const block = await getBlock(request.body.district, request.body.blockID);
 
-    if (block === null) {
+    if (!block) {
       return index.generateError("Block not found");
     }
 
-    block.details = request.body.details;
-    setStatus(block);
-
-    return index.getValidation(block, this.blockRepository, "Details updated");
+    return block.setDetails(request.body.details);
   }
 
   async addBuilder(request: Request, response: Response, next: NextFunction) {
-    let block = await getBlock(request.body.district, request.body.blockID);
+    const block = await getBlock(request.body.district, request.body.blockID);
 
-    if (block === null) {
+    if (!block) {
       return index.generateError("Block not found");
     }
-    if (block.builder.includes(request.body.builder)) {
-      return index.generateError("Builder already added");
-    }
 
-    if (block.builder === "" || block.builder === null) {
-      block.builder = request.body.builder;
-      setStatus(block);
-    } else {
-      block.builder += `,${request.body.builder}`;
-    }
-
-    return index.getValidation(block, this.blockRepository, "Builder added");
+    return block.addBuilder(request.body.builder);
   }
 
   async removeBuilder(
@@ -188,31 +170,21 @@ export class BlockController {
     response: Response,
     next: NextFunction
   ) {
-    let block = await getBlock(request.body.district, request.body.blockID);
+    const block = await getBlock(request.body.district, request.body.blockID);
 
-    if (block === null) {
+    if (!block) {
       return index.generateError("Block not found");
     }
-    if (!block.builder.includes(request.body.builder)) {
-      return index.generateError("Builder not found for this block");
-    }
 
-    const builderSplit = block.builder.split(",");
-    if (builderSplit[0].toLowerCase() === request.body.builder) {
-      block.builder.replace(`${request.body.builder},`, "");
-    } else {
-      block.builder.replace(`,${request.body.builder}`, "");
-    }
-
-    return index.getValidation(block, this.blockRepository, "Builder removed");
+    return block.removeBuilder(request.body.builder);
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
-    let district = await this.districtRepository.findOne({
+    const district = await District.findOne({
       name: request.params.district,
     });
 
-    if (district === undefined) {
+    if (!district) {
       return index.generateError("District not found in database");
     }
 
@@ -226,20 +198,17 @@ export class BlockController {
       const data = getData.data.values;
 
       for (const d of data) {
-        if (d[0] === undefined || d[0] === null || d[0] === "") break;
+        if (!d[0]) break;
 
-        let block = new Block();
+        const block = new Block();
         block.id = parseInt(d[0]);
         block.district = district.id;
         block.status = statusToNumber(d[1]);
-        block.progress =
-          d[2] === undefined || d[2] === null || d[2] === ""
-            ? 0.0
-            : parseFloat(d[2].replace(",", "."));
+        block.progress = !d[2] ? 0.0 : parseFloat(d[2].replace(",", "."));
         block.details = d[3] === "TRUE" ? true : false;
-        block.builder = d[4] === undefined || d[4] === null ? "" : d[4];
+        block.builder = !d[4] ? "" : d[4];
 
-        if (d[5] === undefined || d[5] === null) {
+        if (!d[5]) {
           block.completionDate = null;
         } else {
           const dateSplit = d[5].split(".");
@@ -264,83 +233,14 @@ export class BlockController {
 }
 
 async function getBlock(districtName: string, blockID: number) {
-  let district = await District.findOne({ name: districtName });
-  if (district === undefined) {
+  const district = await District.findOne({ name: districtName });
+  if (!district) {
     return null;
   }
 
-  let block = await Block.findOne({ id: blockID, district: district.id });
-  if (block === undefined) {
+  const block = await Block.findOne({ id: blockID, district: district.id });
+  if (!block) {
     return null;
   }
   return block;
-}
-
-async function setStatus(block: Block) {
-  const oldStatus = block.status;
-  if (oldStatus !== 4 && block.progress === 100 && block.details) {
-    block.status = 4;
-    block.completionDate = new Date();
-  } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
-    block.status = 3;
-    block.completionDate = null;
-  } else if (oldStatus !== 2 && (block.progress > 0 || block.details)) {
-    block.status = 2;
-    block.completionDate = null;
-  } else if (
-    oldStatus !== 1 &&
-    block.progress === 0 &&
-    !block.details &&
-    block.builder !== "" &&
-    block.builder !== null
-  ) {
-    block.status = 1;
-    block.completionDate = null;
-  } else if (oldStatus !== 0) {
-    block.status = 0;
-    block.completionDate = null;
-  }
-
-  // Update on change
-  if (oldStatus !== block.status) {
-    await Block.save(block);
-
-    if (block.status === 4) {
-      let blocks = await Block.find({ district: block.district });
-      var done = 0;
-      for (const b of blocks) {
-        if (b.status === 4) {
-          done++;
-        }
-      }
-
-      if (done === blocks.length) {
-        // District completed
-        let district = await District.findOne({ id: block.district });
-        district.completionDate = new Date();
-        await district.save();
-      }
-    } else {
-      let district = await District.findOne({ id: block.district });
-      if (district.completionDate !== null) {
-        district.completionDate = null;
-        await district.save();
-      }
-    }
-  }
-}
-
-function statusToNumber(status: string) {
-  switch (status) {
-    case "Done":
-      return 4;
-    case "Detailing":
-      return 3;
-    case "Building":
-      return 2;
-    case "Reserved":
-      return 1;
-    default:
-      return 0;
-  }
 }
