@@ -4,6 +4,7 @@ import { DistrictController } from "./controller/DistrictController";
 import { GeneralController } from "./controller/GeneralController";
 import { MinecraftController } from "./controller/MinecraftController";
 import { Permissions } from "./utils/Permissions";
+import { PlayerStatController } from "./controller/PlayerStatController";
 import { ProjectCountController } from "./controller/ProjectCountController";
 import { UserController } from "./controller/UserController";
 import { WebhookController } from "./controller/WebhookController";
@@ -183,6 +184,14 @@ const Routes = [
     action: "getClaims",
     permission: Permissions.default,
   },
+  // PlayerStats
+  {
+    method: "get",
+    route: "/api/playerstats/get/:date",
+    controller: PlayerStatController,
+    action: "getPlayerStat",
+    permission: Permissions.default,
+  },
   // Projects
   {
     method: "get",
@@ -303,6 +312,13 @@ const Routes = [
     method: "get",
     route: "/api/import/projects",
     controller: ProjectCountController,
+    action: "import",
+    permission: Permissions.admin,
+  },
+  {
+    method: "get",
+    route: "/api/import/playerstats",
+    controller: PlayerStatController,
     action: "import",
     permission: Permissions.admin,
   },
