@@ -15,7 +15,6 @@ import { AdminSettings } from "./adminsettings";
 import { Routes } from "./routes";
 
 import { AdminSetting } from "./entity/AdminSetting";
-import { ProjectCount } from "./entity/ProjectCount";
 import { User } from "./entity/User";
 
 var cors = require("cors");
@@ -102,26 +101,7 @@ createConnection()
       }
     });
 
-    // Add new project count for today
-    date.executeEveryXMinutes(
-      0,
-      0,
-      0,
-      0,
-      async function () {
-        let allProjects = await getRepository(ProjectCount).find({
-          order: { date: "ASC" },
-        });
-        let last = allProjects[allProjects.length - 1];
-
-        const projectCount = new ProjectCount();
-        projectCount.date = new Date();
-        projectCount.projects = last.projects;
-
-        getRepository(ProjectCount).save(projectCount);
-      },
-      1440
-    );
+    date.startIntervals();
 
     // start express server
     app.listen(port);
@@ -155,4 +135,4 @@ export function generateUUID() {
   return uuidv4();
 }
 
-export { fetch, axios };
+export { fetch, axios, port };
