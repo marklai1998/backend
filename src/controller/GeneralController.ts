@@ -415,9 +415,17 @@ export class GeneralController {
     const release = process.release.name;
     const version = process.version;
     const now = new Date();
+    const db = {
+      version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
+      status: (await manager.query("SHOW ENGINE INNODB STATUS"))[0]["Status"].split("\n"),
+      databases: (await manager.query("SHOW TABLES")).map((e) => { return e["Tables_in_"+ormconfig.database] }),
+      rows: (await manager.query("SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"+ormconfig.database+"'"))[0]["SUM(TABLE_ROWS)"],
+    };
     return {
+      status: date.calculateStatus(ram,cpu,db.status),
       ram,
       cpu,
+      history: date.memoryUsage,
       uptime: {
         processStart: new Date(now.getTime() - uptime * 1000).toLocaleString(),
         raw: uptime,
@@ -427,12 +435,7 @@ export class GeneralController {
       arch,
       release,
       version,
-      database: {
-        version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
-        status: (await manager.query("SHOW ENGINE INNODB STATUS"))[0]["Status"].split("\n"),
-        databases: (await manager.query("SHOW TABLES")).map((e) => { return e["Tables_in_"+ormconfig.database] }),
-        rows: (await manager.query("SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"+ormconfig.database+"'"))[0]["SUM(TABLE_ROWS)"],
-      }
+      database: db
     };
 
 

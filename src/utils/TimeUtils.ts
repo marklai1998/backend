@@ -1,7 +1,7 @@
 import { fetch, port } from "../index";
 
-import { ProjectCount } from "../entity/ProjectCount";
 import { PlayerStat } from "../entity/PlayerStat";
+import { ProjectCount } from "../entity/ProjectCount";
 
 export function parseDate(date: string | Date, locale?: string) {
   if (date === null) {
@@ -9,6 +9,8 @@ export function parseDate(date: string | Date, locale?: string) {
   }
   return new Date(date).toLocaleDateString(locale);
 }
+
+export var memoryUsage = { cpu: [], ram: [] };
 
 export function executeEveryXMinutes(
   startHour: number,
@@ -90,6 +92,30 @@ export function startIntervals() {
   );
 
   trackPlayerCount();
+
+  // Track system memory
+
+  const now = new Date();
+  executeEveryXMinutes(
+
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds(),
+    async function () {
+      const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+      const cpu = Math.round(process.cpuUsage().user / 1000 / 1000) + "%";
+      if (memoryUsage.ram.length >= 15) {
+        memoryUsage.cpu.shift();
+        memoryUsage.ram.shift();
+      }
+      memoryUsage.cpu.push(cpu);
+      memoryUsage.ram.push(ram);
+    },
+    1
+  );
+
+
 }
 
 function trackPlayerCount() {
@@ -140,4 +166,30 @@ function trackPlayerCount() {
     },
     1
   );
+}
+
+export function calculateStatus(cpu,ram,dbstatus) {
+  if(!dbstatus) {
+    return "outage";
+  }
+  if(cpu >= 70) {
+    return "overload";
+  }
+  if(cpu >= 60) {
+    return "danger";
+  }
+  if(cpu >= 50) {
+    return "waring";
+  }
+  if(ram >= 90) {
+    return "danger";
+  }
+  if(ram >= 80) {
+    return "overload";
+  }
+  if(ram >= 70) {
+    return "warning";
+  }
+  return "ok";
+
 }
