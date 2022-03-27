@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
-import { IsString, IsInt } from "class-validator";
+import { IsString, IsInt, IsNumber, Min, Max } from "class-validator";
 
 import { parseDate } from "../utils/TimeUtils";
 import { dynamicSort } from "../utils/JsonUtils";
@@ -19,6 +19,26 @@ export class District extends BaseEntity {
   @Column("text")
   area: string;
 
+  @Column({ default: 0 })
+  @Min(0, { message: "Status must be between 0 and 4" })
+  @Max(4, { message: "Status must be between 0 and 4" })
+  @IsInt({ message: "Invalid Status" })
+  status: number;
+
+  @Column({ default: 0 })
+  @IsInt({ message: "Invalid Blocks Done" })
+  blocksDone: number;
+
+  @Column({ default: 0 })
+  @IsInt({ message: "Invalid Blocks Left" })
+  blocksLeft: number;
+
+  @Column("double", { default: 0.0 })
+  @Min(0.0, { message: "Progress must be between 0 and 100" })
+  @Max(100.0, { message: "Progress must be between 0 and 100" })
+  @IsNumber({}, { message: "Progress must be a number" })
+  progress: number;
+
   @Column({ nullable: true })
   completionDate: Date;
 
@@ -35,20 +55,25 @@ export class District extends BaseEntity {
   @Column("text")
   about: string;
 
-  async toJson(): Promise<object> {
-    const data = await this.getData();
+  toJson({ onlyProgress = true }: { onlyProgress?: boolean } = {}): object {
+    //const data = await this.getData();
     return {
       id: this.id,
       name: this.name,
       completionDate: parseDate(this.completionDate),
-      status: data.status,
-      progress: data.progress,
-      builders: data.builders,
-      blocks: data.blocks,
-      image: this.image,
-      map: this.map,
-      about: this.about,
-      area: this.area,
+      status: this.status,
+      progress: this.progress,
+      builders: [],
+      blocks: {
+        total: this.blocksDone + this.blocksLeft,
+        done: this.blocksDone,
+        left: this.blocksLeft,
+        blocks: [],
+      },
+      image: onlyProgress ? undefined : this.image,
+      map: onlyProgress ? undefined : this.map,
+      about: onlyProgress ? undefined : this.about,
+      area: onlyProgress ? undefined : this.area,
     };
   }
 
