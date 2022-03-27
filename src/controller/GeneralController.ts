@@ -1,14 +1,22 @@
-import { getRepository } from "typeorm";
-import { NextFunction, Request, Response } from "express";
-
+import * as date from "../utils/TimeUtils";
+import * as index from "../index";
 import * as minecraftUtil from "minecraft-server-util";
 
-import * as index from "../index";
-import * as date from "../utils/TimeUtils";
+import { NextFunction, Request, Response } from "express";
+import { getManager, getRepository } from "typeorm";
 
 import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+
+const ormconfig = require("../../ormconfig.json");
+
+
+
+
+
+
+
 
 export class GeneralController {
   private configRepository = getRepository(AdminSetting);
@@ -166,9 +174,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-        Object.keys(ips).find(
-          (key) => key.toLowerCase() === serverName.toLowerCase()
-        )
+      Object.keys(ips).find(
+        (key) => key.toLowerCase() === serverName.toLowerCase()
+      )
       ];
 
     if (server === undefined) {
@@ -396,6 +404,40 @@ export class GeneralController {
 
     return nyc;
   }
+
+  async adminOverview(request: Request, respone: Response, next: NextFunction) {
+    const manager = getManager();
+    const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+    const cpu = Math.round(process.cpuUsage().user / 1000 / 1000) + "%";
+    const uptime = process.uptime();
+    const platform = process.platform;
+    const arch = process.arch;
+    const release = process.release.name;
+    const version = process.version;
+    const now = new Date();
+    return {
+      ram,
+      cpu,
+      uptime: {
+        processStart: new Date(now.getTime() - uptime * 1000).toLocaleString(),
+        raw: uptime,
+        formatted: uptime < 3600 ? new Date(process.uptime() * 1000).toISOString().substr(14, 5) : new Date(process.uptime() * 1000).toISOString().substr(11, 8)
+      },
+      platform,
+      arch,
+      release,
+      version,
+      database: {
+        version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
+        status: (await manager.query("SHOW ENGINE INNODB STATUS"))[0]["Status"].split("\n"),
+        databases: (await manager.query("SHOW TABLES")).map((e) => { return e["Tables_in_"+ormconfig.database] }),
+        rows: (await manager.query("SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"+ormconfig.database+"'"))[0]["SUM(TABLE_ROWS)"],
+      }
+    };
+
+
+  }
+
 }
 
 function createDistrictObject(district: District, blocks?: any) {

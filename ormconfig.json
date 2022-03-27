@@ -6,7 +6,8 @@
    "password": "progress",
    "database": "progress",
    "synchronize": true,
-   "logging": false,
+   "logging":  ["error","schema","explain","info","warn"],
+   "logger":"file",
    "entities": [
       "src/entity/**/*.ts"
    ],
