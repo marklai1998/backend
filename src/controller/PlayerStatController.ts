@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from "express";
-
-import * as index from "../index";
 import * as google from "../utils/SheetUtils";
+import * as index from "../index";
+
+import { NextFunction, Request, Response } from "express";
 
 import { PlayerStat } from "../entity/PlayerStat";
 
@@ -47,6 +47,39 @@ export class PlayerStatController {
       peaks: JSON.parse(playerStat.max),
       averages: avg,
     };
+  }
+  async getAllPlayerStats(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const playerStats = await PlayerStat.find();
+
+    const stats = [];
+    for (const s of playerStats) {
+      const date = new Date(s.date);
+      const dateString = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+
+      const avgData = JSON.parse(s.avg);
+      const avg = {};
+      for (const key in avgData) {
+        if (key === "counter") continue;
+
+        if (avgData.counter === 0) {
+          avg[key] = 0;
+        } else {
+          avg[key] = avgData[key] / avgData.counter;
+        }
+      }
+
+      stats.push({
+        date: dateString,
+        peaks: JSON.parse(s.max),
+        averages: avg,
+      });
+    }
+
+    return stats;
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
