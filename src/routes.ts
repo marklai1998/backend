@@ -192,6 +192,13 @@ const Routes = [
     action: "getPlayerStat",
     permission: Permissions.default,
   },
+  {
+    method: "get",
+    route: "/api/playerstats/get",
+    controller: PlayerStatController,
+    action: "getAllPlayerStats",
+    permission: Permissions.default,
+  },
   // Projects
   {
     method: "get",
