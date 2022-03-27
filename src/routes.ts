@@ -67,7 +67,7 @@ const Routes = [
     route: "/api/admin/status",
     controller: GeneralController,
     action: "adminOverview",
-    permission: Permissions.default, 
+    permission: Permissions.admin, 
   },
   {
     method: "get",
