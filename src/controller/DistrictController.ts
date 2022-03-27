@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 
 import * as index from "../index";
 import * as google from "../utils/SheetUtils";
+import { statusToNumber } from "../utils/DistrictUtils";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
@@ -64,7 +65,14 @@ export class DistrictController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    return this.districtRepository.find();
+    const districts = await District.find();
+
+    const array = [];
+    for (const d of districts) {
+      array.push(d.toJson());
+    }
+
+    return array;
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -76,7 +84,7 @@ export class DistrictController {
       return index.generateError("District not found");
     }
 
-    return await district.toJson();
+    return district.toJson();
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
@@ -111,6 +119,10 @@ export class DistrictController {
 
       let district = new District();
       district.name = d[1];
+      district.status = statusToNumber(d[2]);
+      district.blocksDone = parseInt(d[3]);
+      district.blocksLeft = parseInt(d[4]);
+      district.progress = parseFloat(d[5].replace("%", "").replace(",", "."));
 
       if (isBorough) {
         district.parent = currentParent;
