@@ -1,6 +1,6 @@
 import { fetch, port } from "../index";
 
-import { PlayerStat } from "../entity/PlayerStat";
+import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
 import { ProjectCount } from "../entity/ProjectCount";
 
 export function parseDate(date: string | Date, locale?: string) {
@@ -97,13 +97,13 @@ export function startIntervals() {
 
   const now = new Date();
   executeEveryXMinutes(
-
     now.getHours(),
     now.getMinutes(),
     now.getSeconds(),
     now.getMilliseconds(),
     async function () {
-      const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+      const ram =
+        Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
       const cpu = Math.round(process.cpuUsage().user / 1000 / 1000) + "%";
       if (memoryUsage.ram.length >= 15) {
         memoryUsage.cpu.shift();
@@ -114,8 +114,6 @@ export function startIntervals() {
     },
     1
   );
-
-
 }
 
 function trackPlayerCount() {
@@ -136,11 +134,21 @@ function trackPlayerCount() {
       if (!players) return;
 
       const date = new Date();
-      const playerStat = await PlayerStat.findOne({
+      let playerStat = await PlayerStat.findOne({
         date: new Date(
           `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
         ),
       });
+
+      if (!playerStat) {
+        await createMissingDayEntries();
+        playerStat = await PlayerStat.findOne({
+          date: new Date(
+            `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+          ),
+        });
+      }
+
       const maxJson = JSON.parse(playerStat.max);
       const avgJson = JSON.parse(playerStat.avg);
 
@@ -168,28 +176,27 @@ function trackPlayerCount() {
   );
 }
 
-export function calculateStatus(cpu,ram,dbstatus) {
-  if(!dbstatus) {
+export function calculateStatus(cpu, ram, dbstatus) {
+  if (!dbstatus) {
     return "outage";
   }
-  if(cpu >= 70) {
+  if (cpu >= 70) {
     return "overload";
   }
-  if(cpu >= 60) {
+  if (cpu >= 60) {
     return "danger";
   }
-  if(cpu >= 50) {
-    return "waring";
+  if (cpu >= 50) {
+    return "warning";
   }
-  if(ram >= 90) {
+  if (ram >= 90) {
     return "danger";
   }
-  if(ram >= 80) {
+  if (ram >= 80) {
     return "overload";
   }
-  if(ram >= 70) {
+  if (ram >= 70) {
     return "warning";
   }
   return "ok";
-
 }
