@@ -1,10 +1,21 @@
-import * as date from "./TimeUtils";
-
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 
 export async function getBlocksOfDistrict(district: District) {
   return await Block.find({ district: district.id });
+}
+
+export async function countGenerations(district: District): Promise<number> {
+  let generations = 0;
+
+  let children = await getDirectChildren(district);
+  while (children.length > 0) {
+    generations++;
+    district = children[0];
+    children = await getDirectChildren(children[0]);
+  }
+
+  return generations;
 }
 
 // Children
@@ -40,62 +51,6 @@ export async function countBlocks(district: District) {
   }
   return counter;
 }
-export async function calculateProgressForDistrict2(district: District) {
-  const blocksAll = await Block.find();
-  let children = await getDirectChildren(district);
-
-  while (true) {
-    if (children.length === 0) {
-      const blocks = blocksAll.filter((block) => {
-        return block.district === district.id;
-      });
-      let totalProgress = 0;
-      for (const block of blocks) {
-        totalProgress += block.progress;
-      }
-      return totalProgress / blocks.length;
-    } else {
-      // TODO
-    }
-  }
-}
-export async function calculateProgressForDistrict(district: District) {
-  let children = await getDirectChildren(district);
-
-  if (children.length === 0) {
-    const blocks = await Block.find({ where: { district: district.id } });
-    let totalProgress = 0;
-    for (const block of blocks) {
-      totalProgress += block.progress;
-    }
-    return totalProgress / blocks.length;
-  }
-
-  let totalProgress = 0;
-  for (const child of children) {
-    const numberBlocks = await countBlocks(child);
-
-    if (numberBlocks === 0) continue;
-
-    totalProgress += (await calculateProgressForDistrict(child)) * numberBlocks;
-  }
-  return totalProgress / (await countBlocks(district));
-}
-export function getBuildersOfDistrict(district: District) {}
-
-// To JSON
-export function blockToJson(block: Block, timezone?: string) {
-  return {
-    uid: block.uid,
-    id: block.id,
-    location: block.location,
-    status: block.status,
-    progress: block.progress,
-    details: block.details,
-    builders: block.builder.split(","),
-    completionDate: date.parseDate(block.completionDate, timezone),
-  };
-}
 
 // Converting
 export async function districtIdToName(id: number) {
@@ -106,6 +61,9 @@ export async function districtIdToName(id: number) {
     }
   }
   return null;
+}
+export async function districtIdToDistrict(id: number): Promise<District> {
+  return await District.findOne({ id: id });
 }
 export function statusToName(status: number) {
   switch (status) {

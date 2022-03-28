@@ -69,7 +69,7 @@ export class DistrictController {
 
     const array = [];
     for (const d of districts) {
-      array.push(d.toJson());
+      array.push(await d.toJson({ showDetails: false }));
     }
 
     return array;
@@ -84,7 +84,7 @@ export class DistrictController {
       return index.generateError("District not found");
     }
 
-    return district.toJson();
+    return await district.toJson();
   }
 
   async import(request: Request, response: Response, next: NextFunction) {

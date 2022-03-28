@@ -13,6 +13,11 @@ import {
 import * as index from "../index";
 
 import { districtIdToName } from "../utils/DistrictUtils";
+import {
+  recalculateDistrictProgress,
+  recalculateDistrictBlocksDoneLeft,
+  recalculateDistrictStatus,
+} from "../utils/ProgressCalculation";
 import { parseDate } from "../utils/TimeUtils";
 
 import { District } from "./District";
@@ -94,6 +99,7 @@ export class Block extends BaseEntity {
   setProgress(progress: number): object {
     this.progress = progress;
     setStatus(this);
+    recalculateDistrictProgress(this.district);
     return index.getValidation(this, "Progress updated");
   }
 
@@ -147,12 +153,27 @@ async function setStatus(block: Block) {
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
     block.status = 4;
     block.completionDate = new Date();
+
+    // Update Block Counts & District Status
+    recalculateDistrictBlocksDoneLeft(block.district);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
     block.status = 3;
     block.completionDate = null;
+
+    // Update Block Counts & District Status
+    if (oldStatus === 4) {
+      recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.status);
+    }
   } else if (oldStatus !== 2 && (block.progress > 0 || block.details)) {
     block.status = 2;
     block.completionDate = null;
+
+    // Update Block Counts & District Status
+    if (oldStatus === 4) {
+      recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.status);
+    }
   } else if (
     oldStatus !== 1 &&
     block.progress === 0 &&
@@ -162,9 +183,21 @@ async function setStatus(block: Block) {
   ) {
     block.status = 1;
     block.completionDate = null;
+
+    // Update Block Counts & District Status
+    if (oldStatus === 4) {
+      recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.status);
+    }
   } else if (oldStatus !== 0) {
     block.status = 0;
     block.completionDate = null;
+
+    // Update Block Counts & District Status
+    if (oldStatus === 4) {
+      recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.status);
+    }
   }
 
   // Update on change

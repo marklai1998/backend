@@ -1,4 +1,4 @@
-import { blockToJson, districtIdToName, statusToName } from "./DistrictUtils";
+import { districtIdToName, statusToName } from "./DistrictUtils";
 
 import { Block } from "../entity/Block";
 
@@ -52,12 +52,14 @@ export async function getClaims(user: string) {
       return d.id === block.district;
     });
     if (index !== -1) {
-      json.claims.districts[index].blocks.push(blockToJson(block));
+      json.claims.districts[index].blocks.push(
+        await block.toJson({ showDistrict: false })
+      );
     } else {
       json.claims.districts.push({
         id: block.district,
         name: districtName,
-        blocks: [blockToJson(block)],
+        blocks: [await block.toJson({ showDistrict: false })],
       });
     }
   }
