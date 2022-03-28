@@ -3,7 +3,10 @@ import { IsString, IsInt, IsNumber, Min, Max } from "class-validator";
 
 import { parseDate } from "../utils/TimeUtils";
 import { dynamicSort } from "../utils/JsonUtils";
-import { calculateProgressForDistrict } from "../utils/DistrictUtils";
+import {
+  calculateProgressForDistrict,
+  getBlocksOfDistrict,
+} from "../utils/DistrictUtils";
 
 import { Block } from "./Block";
 
@@ -55,26 +58,60 @@ export class District extends BaseEntity {
   @Column("text")
   about: string;
 
-  toJson({ onlyProgress = true }: { onlyProgress?: boolean } = {}): object {
-    //const data = await this.getData();
+  async toJson({
+    onlyProgress = true,
+  }: { onlyProgress?: boolean } = {}): Promise<object> {
     return {
       id: this.id,
       name: this.name,
       completionDate: parseDate(this.completionDate),
       status: this.status,
       progress: this.progress,
-      builders: [],
+      builders: await this.getBuilders(),
       blocks: {
         total: this.blocksDone + this.blocksLeft,
         done: this.blocksDone,
         left: this.blocksLeft,
-        blocks: [],
+        blocks: await this.getBlocks(),
       },
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
       about: onlyProgress ? undefined : this.about,
       area: onlyProgress ? undefined : this.area,
     };
+  }
+
+  async getBuilders(): Promise<object> {
+    const blocks = await getBlocksOfDistrict(this);
+
+    const builders = [];
+    for (const block of blocks) {
+      const buildersSplit = block.builder ? block.builder.split(",") : [];
+
+      for (let i = 0; i < buildersSplit.length; i++) {
+        if (builders.some((e) => e.name === buildersSplit[i])) {
+          builders.some((e) => {
+            if (e.name === buildersSplit[i]) {
+              e.blocks++;
+            }
+          });
+        } else {
+          builders.push({ name: buildersSplit[i], blocks: 1 });
+        }
+      }
+    }
+    builders.sort(dynamicSort("blocks"));
+    return builders;
+  }
+
+  async getBlocks(): Promise<object> {
+    const blocksRaw = await getBlocksOfDistrict(this);
+
+    const blocks = [];
+    for (const block of blocksRaw) {
+      blocks.push(await block.toJson({ showDistrict: false }));
+    }
+    return blocks;
   }
 
   async getData({

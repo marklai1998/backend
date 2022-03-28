@@ -3,6 +3,10 @@ import * as date from "./TimeUtils";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 
+export async function getBlocksOfDistrict(district: District) {
+  return await Block.find({ district: district.id });
+}
+
 // Children
 export async function isChild(toCheck: District, parent: District) {
   if (toCheck.parent === null) return false;
