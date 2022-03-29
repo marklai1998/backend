@@ -26,6 +26,20 @@ const Routes = [
     permission: Permissions.default,
   },
   {
+    method: "get",
+    route: "/api/users/get/:user",
+    controller: UserController,
+    action: "getOne",
+    permission: Permissions.admin,
+  },
+  {
+    method: "get",
+    route: "/api/users/get",
+    controller: UserController,
+    action: "getAll",
+    permission: Permissions.admin,
+  },
+  {
     method: "post",
     route: "/api/createKey",
     controller: UserController,
@@ -67,7 +81,7 @@ const Routes = [
     route: "/api/admin/status",
     controller: GeneralController,
     action: "adminOverview",
-    permission: Permissions.admin, 
+    permission: Permissions.admin,
   },
   {
     method: "get",

@@ -1,28 +1,26 @@
-import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 
 import * as index from "../index";
 import * as jwt from "../utils/JsonWebToken";
 
 import { User } from "../entity/User";
+import { MinecraftUser } from "../entity/MinecraftUser";
 
 export class UserController {
-  private userRepository = getRepository(User);
-
   async register(request: Request, response: Response, next: NextFunction) {
     if (
-      request.body.username === undefined ||
-      request.body.password === undefined ||
-      request.body.email === undefined
+      !request.body.username ||
+      !request.body.password ||
+      !request.body.email
     ) {
       return index.generateError("Specify E-Mail, Username and Password");
     }
 
-    let user = await this.userRepository.findOne({
+    let user = await User.findOne({
       username: request.body.username,
     });
 
-    if (user !== undefined) {
+    if (user) {
       return index.generateError("Username already exists");
     }
 
@@ -34,18 +32,18 @@ export class UserController {
       jwt.secretInternal
     );
 
-    this.userRepository.save(user);
+    user.save();
     return index.generateSuccess("User registered", {
       user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
     });
   }
 
   async login(request: Request, response: Response, next: NextFunction) {
-    let user = await this.userRepository.findOne({
+    const user = await User.findOne({
       username: request.body.username,
     });
 
-    if (user === undefined) {
+    if (!user) {
       return index.generateError("There is no user matching this username");
     }
 
@@ -68,25 +66,50 @@ export class UserController {
     );
   }
 
+  async getAll(request: Request, response: Response, next: NextFunction) {
+    const userRaw = await User.find();
+
+    const users = [];
+    for (const user of userRaw) {
+      users.push(await user.toJson({ showAPIKey: true }));
+    }
+    return index.generateSuccess(undefined, users);
+  }
+
+  async getOne(request: Request, response: Response, next: NextFunction) {
+    const user =
+      (await User.findOne({ uid: request.params.user })) ||
+      (await User.findOne({ username: request.params.user }));
+
+    if (!user) {
+      return index.generateError("User not found");
+    }
+
+    return index.generateSuccess(
+      undefined,
+      await user.toJson({ showAPIKey: true })
+    );
+  }
+
   async generateAPIKey(
     request: Request,
     response: Response,
     next: NextFunction
   ) {
-    if (request.body.uid === undefined) {
+    if (!request.body.uid) {
       return index.generateError("Specify the UID of the User");
     }
 
-    let user = await this.userRepository.findOne({ uid: request.body.uid });
+    const user = await User.findOne({ uid: request.body.uid });
 
-    if (user === undefined) {
+    if (!user) {
       return index.generateError("User not found");
     }
 
     const key = index.generateUUID();
     user.apikey = key;
 
-    this.userRepository.save(user);
+    user.save();
 
     return index.generateSuccess("API Key created", {
       uid: user.uid,
@@ -95,18 +118,18 @@ export class UserController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    if (
-      request.body.uid === undefined ||
-      request.body.type === undefined ||
-      request.body.value === undefined
-    ) {
+    if (!request.body.uid || !request.body.type || !request.body.value) {
       return index.generateError("Specify uid, type and value");
     }
 
-    let user = await this.userRepository.findOne({ uid: request.body.uid });
+    const user = await User.findOne({ uid: request.body.uid });
 
-    if (user === undefined) {
+    if (!user) {
       return index.generateError("User not found");
+    }
+
+    if (user[request.body.type] === undefined) {
+      return index.generateError("Invalid type");
     }
 
     user[request.body.type] = request.body.value;
