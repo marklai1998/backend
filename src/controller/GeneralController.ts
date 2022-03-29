@@ -9,14 +9,8 @@ import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 
+const os = require("os");
 const ormconfig = require("../../ormconfig.json");
-
-
-
-
-
-
-
 
 export class GeneralController {
   private configRepository = getRepository(AdminSetting);
@@ -174,9 +168,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-      Object.keys(ips).find(
-        (key) => key.toLowerCase() === serverName.toLowerCase()
-      )
+        Object.keys(ips).find(
+          (key) => key.toLowerCase() === serverName.toLowerCase()
+        )
       ];
 
     if (server === undefined) {
@@ -408,6 +402,7 @@ export class GeneralController {
   async adminOverview(request: Request, respone: Response, next: NextFunction) {
     const manager = getManager();
     const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+    const maxRam = Math.round(os.totalmem() / 1024 / 1024) + "MB";
     const cpu = Math.round(process.cpuUsage().user / 1000 / 1000) + "%";
     const uptime = process.uptime();
     const platform = process.platform;
@@ -417,30 +412,43 @@ export class GeneralController {
     const now = new Date();
     const db = {
       version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
-      status: (await manager.query("SHOW ENGINE INNODB STATUS"))[0]["Status"].split("\n"),
-      databases: (await manager.query("SHOW TABLES")).map((e) => { return e["Tables_in_"+ormconfig.database] }),
-      rows: (await manager.query("SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"+ormconfig.database+"'"))[0]["SUM(TABLE_ROWS)"],
+      status: (await manager.query("SHOW ENGINE INNODB STATUS"))[0][
+        "Status"
+      ].split("\n"),
+      databases: (await manager.query("SHOW TABLES")).map((e) => {
+        return e["Tables_in_" + ormconfig.database];
+      }),
+      rows: (
+        await manager.query(
+          "SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" +
+            ormconfig.database +
+            "'"
+        )
+      )[0]["SUM(TABLE_ROWS)"],
     };
     return {
-      status: date.calculateStatus(ram,cpu,db.status),
-      ram,
+      status: date.calculateStatus(ram, cpu, db.status),
+      ram: {
+        usage: ram,
+        max: maxRam,
+      },
       cpu,
       history: date.memoryUsage,
       uptime: {
         processStart: new Date(now.getTime() - uptime * 1000).toLocaleString(),
         raw: uptime,
-        formatted: uptime < 3600 ? new Date(process.uptime() * 1000).toISOString().substr(14, 5) : new Date(process.uptime() * 1000).toISOString().substr(11, 8)
+        formatted:
+          uptime < 3600
+            ? new Date(process.uptime() * 1000).toISOString().substr(14, 5)
+            : new Date(process.uptime() * 1000).toISOString().substr(11, 8),
       },
       platform,
       arch,
       release,
       version,
-      database: db
+      database: db,
     };
-
-
   }
-
 }
 
 function createDistrictObject(district: District, blocks?: any) {
