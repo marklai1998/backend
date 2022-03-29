@@ -13,17 +13,17 @@ const Routes = [
   // Users
   {
     method: "post",
-    route: "/register",
-    controller: UserController,
-    action: "register",
-    permission: Permissions.default,
-  },
-  {
-    method: "post",
     route: "/login",
     controller: UserController,
     action: "login",
     permission: Permissions.default,
+  },
+  {
+    method: "post",
+    route: "/api/users/create",
+    controller: UserController,
+    action: "create",
+    permission: Permissions.moderator,
   },
   {
     method: "get",

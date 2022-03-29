@@ -4,40 +4,8 @@ import * as index from "../index";
 import * as jwt from "../utils/JsonWebToken";
 
 import { User } from "../entity/User";
-import { MinecraftUser } from "../entity/MinecraftUser";
 
 export class UserController {
-  async register(request: Request, response: Response, next: NextFunction) {
-    if (
-      !request.body.username ||
-      !request.body.password ||
-      !request.body.email
-    ) {
-      return index.generateError("Specify E-Mail, Username and Password");
-    }
-
-    let user = await User.findOne({
-      username: request.body.username,
-    });
-
-    if (user) {
-      return index.generateError("Username already exists");
-    }
-
-    user = new User();
-    user.username = request.body.username;
-    user.email = request.body.email;
-    user.password = jwt.generateToken(
-      request.body.password,
-      jwt.secretInternal
-    );
-
-    user.save();
-    return index.generateSuccess("User registered", {
-      user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
-    });
-  }
-
   async login(request: Request, response: Response, next: NextFunction) {
     const user = await User.findOne({
       username: request.body.username,
@@ -64,6 +32,32 @@ export class UserController {
         }
       }
     );
+  }
+
+  async create(request: Request, response: Response, next: NextFunction) {
+    if (!request.body.username || !request.body.email) {
+      return index.generateError("Specify Email and Username");
+    }
+
+    let user =
+      (await User.findOne({ email: request.body.email })) ||
+      (await User.findOne({ username: request.body.username }));
+
+    if (user) {
+      return index.generateError("Email or username already in use");
+    }
+
+    user = new User();
+    user.email = request.body.email;
+    user.username = request.body.username;
+    user.permission = 1;
+    user.password = jwt.generateToken(
+      generatePassword(8, 16),
+      jwt.secretUserData
+    );
+    user.apikey = index.generateUUID();
+
+    return await index.getValidation(user, "User registered");
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
@@ -136,4 +130,17 @@ export class UserController {
 
     return index.getValidation(user, "User updated");
   }
+}
+
+function generatePassword(min: number, max: number): string {
+  let password = "";
+  const length = Math.random() * (max - min) + min;
+  const charset =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?#_-§$%&";
+
+  for (let i = 0; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+
+  return password;
 }

@@ -11,7 +11,7 @@ export class User extends BaseEntity {
   uid: number;
 
   @Column({ unique: true })
-  @IsEmail()
+  @IsEmail({}, { message: "Invalid email address" })
   email: string;
 
   @Column({ unique: true })
@@ -39,6 +39,7 @@ export class User extends BaseEntity {
 
   @Column("text", { default: "{}" })
   @IsJSON({ message: "Settings must be a valid JSON-String" })
+  @IsOptional()
   settings: string;
 
   @Column("text")
