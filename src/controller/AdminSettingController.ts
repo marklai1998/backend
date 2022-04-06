@@ -34,7 +34,7 @@ export class AdminSettingController {
 
     const res = [];
     for (var i = 0; i < settings.length; i++) {
-      res.push(settings[i].toJson({ showPermission: true }));
+      res.push(settings[i].toJson());
     }
     return res;
   }
@@ -49,7 +49,7 @@ export class AdminSettingController {
       config.key = request.body.key;
     }
 
-    if (typeof request.body.value === "string") {
+    if (typeof request.body.value !== "object") {
       config.value = request.body.value;
     } else {
       config.value = JSON.stringify(request.body.value);

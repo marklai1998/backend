@@ -17,7 +17,7 @@ export class AdminSetting extends BaseEntity {
   @IsInt({ message: "Invalid Permission" })
   permission: number;
 
-  toJson({ showPermission }): object {
+  toJson({ showPermission = true }: { showPermission?: boolean } = {}): object {
     return {
       key: this.key,
       value: JSON.parse(this.value),
