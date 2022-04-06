@@ -112,8 +112,8 @@ export class UserController {
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
-    if (!request.body.uid || !request.body.type || !request.body.value) {
-      return index.generateError("Specify uid, type and value");
+    if (!request.body.uid || !request.body.values) {
+      return index.generateError("Specify uid and values");
     }
 
     const user = await User.findOne({ uid: request.body.uid });
@@ -122,13 +122,15 @@ export class UserController {
       return index.generateError("User not found");
     }
 
-    if (user[request.body.type] === undefined) {
-      return index.generateError("Invalid type");
+    let counter = 0;
+    for (const [key, value] of Object.entries(request.body.values)) {
+      if (user[key] !== undefined) {
+        user[key] = value;
+        counter++;
+      }
     }
 
-    user[request.body.type] = request.body.value;
-
-    return index.getValidation(user, "User updated");
+    return index.getValidation(user, `${counter} columns updated`);
   }
 }
 
