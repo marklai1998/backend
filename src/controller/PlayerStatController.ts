@@ -48,6 +48,7 @@ export class PlayerStatController {
       averages: avg,
     };
   }
+
   async getAllPlayerStats(
     request: Request,
     response: Response,
@@ -58,7 +59,9 @@ export class PlayerStatController {
     const stats = [];
     for (const s of playerStats) {
       const date = new Date(s.date);
-      const dateString = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+      const dateString = `${date.getDate()}.${
+        date.getMonth() + 1
+      }.${date.getFullYear()}`;
 
       const avgData = JSON.parse(s.avg);
       const avg = {};

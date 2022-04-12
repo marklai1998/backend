@@ -9,27 +9,25 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 
 export class DistrictController {
-  private districtRepository = getRepository(District);
-
   async create(request: Request, response: Response, next: NextFunction) {
-    if (request.body.name === undefined) {
+    if (!request.body.name) {
       return index.generateError("Specify a name");
     }
-    if (request.body.parent === undefined) {
+    if (!request.body.parent) {
       return index.generateError("Specify a parent");
     }
 
-    let district = await this.districtRepository.findOne({
+    let district = await District.findOne({
       name: request.body.name,
     });
-    if (district !== undefined) {
+    if (district) {
       return index.generateError("District already exists");
     }
 
-    let parent = await this.districtRepository.findOne({
+    const parent = await District.findOne({
       name: request.body.parent,
     });
-    if (parent === undefined) {
+    if (!parent) {
       return index.generateError("Parent District not found");
     }
 
@@ -41,26 +39,26 @@ export class DistrictController {
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
-    if (request.body.name === undefined) {
+    if (!request.body.name) {
       return index.generateError("Specify a name");
     }
     if (request.body.name.toLowerCase() === "new york city") {
       return index.generateError("You cannot delete initial district");
     }
-    let district = await this.districtRepository.findOne({
+    const district = await District.findOne({
       name: request.body.name,
     });
-    if (district === undefined) {
+    if (!district) {
       return index.generateError("District not found");
     }
 
-    let blocks = await Block.find({ district: district.id });
+    const blocks = await Block.find({ district: district.id });
 
     if (blocks.length > 0) {
       return index.generateError("Cannot delete district with existing blocks");
     }
 
-    await this.districtRepository.remove(district);
+    await district.remove();
     return index.generateSuccess("District deleted");
   }
 
@@ -76,11 +74,11 @@ export class DistrictController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let district = await this.districtRepository.findOne({
+    const district = await District.findOne({
       name: request.params.name,
     });
 
-    if (district === undefined) {
+    if (!district) {
       return index.generateError("District not found");
     }
 
@@ -98,8 +96,8 @@ export class DistrictController {
     var districtCounter = 0;
     var blocksCounter = 0;
 
-    this.districtRepository.clear();
-    this.districtRepository.query("ALTER TABLE districts AUTO_INCREMENT = 1");
+    District.clear();
+    District.query("ALTER TABLE districts AUTO_INCREMENT = 1");
 
     if (blocks) {
       Block.clear();
@@ -143,7 +141,7 @@ export class DistrictController {
         district.completionDate = null;
       }
 
-      let parent = await this.districtRepository.save(district);
+      let parent = await district.save();
 
       if (d[0] === "P") {
         currentParent = parent.id;
@@ -157,7 +155,7 @@ export class DistrictController {
             await index.axios
               .get(`http://localhost:8080/api/import/blocks/${d[1]}?key=${key}`)
               .then(async (res) => {
-                if (res.data.success) {
+                if (!res.data.error) {
                   blocksCounter += parseInt(
                     res.data.message.replace(" Blocks imported", "")
                   );
@@ -172,7 +170,7 @@ export class DistrictController {
                       done: d[2] === "Done",
                     })
                     .then((res) => {
-                      if (res.data.success) {
+                      if (!res.data.error) {
                         blocksCounter += parseInt(
                           res.data.message.replace(" Blocks imported", "")
                         );

@@ -15,8 +15,8 @@ export class MinecraftController {
     user = new MinecraftUser();
     user.uuid = request.body.uuid;
     user.username = request.body.username;
-    user.rank = request.body.rank;
-    user.settings = request.body.settings;
+    user.rank = request.body.rank || "Player";
+    user.settings = request.body.settings || "{}";
 
     return index.getValidation(user, "Minecraft User registered");
   }
@@ -43,7 +43,7 @@ export class MinecraftController {
       res.push(player.toJson());
     }
 
-    return index.generateSuccess(undefined, res);
+    return res;
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -54,7 +54,7 @@ export class MinecraftController {
     if (!player) {
       return index.generateError("Player not found");
     }
-    return index.generateSuccess(undefined, player.toJson());
+    return player.toJson();
   }
 
   async update(request: Request, response: Response, next: NextFunction) {

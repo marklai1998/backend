@@ -67,7 +67,7 @@ export class UserController {
     for (const user of userRaw) {
       users.push(await user.toJson({ showAPIKey: true }));
     }
-    return index.generateSuccess(undefined, users);
+    return users;
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -79,36 +79,7 @@ export class UserController {
       return index.generateError("User not found");
     }
 
-    return index.generateSuccess(
-      undefined,
-      await user.toJson({ showAPIKey: true })
-    );
-  }
-
-  async generateAPIKey(
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) {
-    if (!request.body.uid) {
-      return index.generateError("Specify the UID of the User");
-    }
-
-    const user = await User.findOne({ uid: request.body.uid });
-
-    if (!user) {
-      return index.generateError("User not found");
-    }
-
-    const key = index.generateUUID();
-    user.apikey = key;
-
-    user.save();
-
-    return index.generateSuccess("API Key created", {
-      uid: user.uid,
-      apikey: jwt.generateToken(key, jwt.secretInternal),
-    });
+    return await user.toJson({ showAPIKey: true });
   }
 
   async update(request: Request, response: Response, next: NextFunction) {

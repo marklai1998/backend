@@ -5,51 +5,49 @@ export async function getBlocksOfDistrict(district: District) {
   return await Block.find({ district: district.id });
 }
 
-export async function countGenerations(district: District): Promise<number> {
-  let generations = 0;
+export async function getClaims(user: string) {
+  const blocks = await Block.createQueryBuilder("block")
+    .where("block.builder like :name", { name: `%${user}%` })
+    .orderBy("district", "ASC")
+    .getMany();
 
-  let children = await getDirectChildren(district);
-  while (children.length > 0) {
-    generations++;
-    district = children[0];
-    children = await getDirectChildren(children[0]);
+  const json = {
+    name: user,
+    claims: {
+      total: 0,
+      done: 0,
+      detailing: 0,
+      building: 0,
+      reserved: 0,
+      districts: [],
+    },
+  };
+  for (const block of blocks) {
+    json.claims.total++;
+    json.claims[statusToName(block.status)]++;
+
+    const districtName = await districtIdToName(block.district);
+    const index = json.claims.districts.findIndex((d) => {
+      return d.id === block.district;
+    });
+    if (index !== -1) {
+      json.claims.districts[index].blocks.push(
+        await block.toJson({ showDistrict: false })
+      );
+    } else {
+      json.claims.districts.push({
+        id: block.district,
+        name: districtName,
+        blocks: [await block.toJson({ showDistrict: false })],
+      });
+    }
   }
-
-  return generations;
+  return json;
 }
 
 // Children
-export async function isChild(toCheck: District, parent: District) {
-  if (toCheck.parent === null) return false;
-
-  const districts = await District.find();
-
-  let current = toCheck;
-  while (current.parent !== null) {
-    if (current.parent === parent.id) {
-      return true;
-    }
-    current = districts.find((district) => district.id === current.parent);
-  }
-  return false;
-}
 export async function getDirectChildren(district: District) {
   return await District.find({ where: { parent: district.id } });
-}
-
-// Iterative stuff
-export async function countBlocks(district: District) {
-  const children = await getDirectChildren(district);
-
-  if (children.length === 0) {
-    return (await Block.findAndCount({ where: { district: district.id } }))[1];
-  }
-
-  let counter = 0;
-  for (const child of children) {
-    counter += await countBlocks(child);
-  }
-  return counter;
 }
 
 // Converting

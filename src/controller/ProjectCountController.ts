@@ -34,7 +34,17 @@ export class ProjectCountController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    return await ProjectCount.find();
+    const projectsAll = await ProjectCount.find();
+
+    const projects = [];
+    for (const project of projectsAll) {
+      projects.push({
+        date: date.parseDate(project.date),
+        projects: project.projects,
+      });
+    }
+
+    return projects;
   }
 
   async set(request: Request, response: Response, next: NextFunction) {

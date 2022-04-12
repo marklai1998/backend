@@ -25,7 +25,7 @@ export class MinecraftUser extends BaseEntity {
   @Column({ default: "Player" })
   rank: string;
 
-  @Column("text")
+  @Column("text", { default: "{}" })
   @IsJSON({ message: "Settings must be a valid JSON-String" })
   settings: string;
 

@@ -124,11 +124,11 @@ export async function getValidation(
 }
 
 export function generateSuccess(message?: string, data?: object) {
-  return { success: true, message: message, data };
+  return { error: false, message: message, data };
 }
 
 export function generateError(message: string, error?: object) {
-  return { success: false, message: message, error };
+  return { error: true, message: message, stacktrace: error };
 }
 
 export function generateUUID() {

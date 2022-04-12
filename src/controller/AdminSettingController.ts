@@ -41,12 +41,13 @@ export class AdminSettingController {
 
   async set(request: Request, response: Response, next: NextFunction) {
     let config = await AdminSetting.findOne({
-      key: request.params.setting,
+      key: request.body.name,
     });
 
     if (!config) {
       config = new AdminSetting();
-      config.key = request.body.key;
+      config.key = request.body.name;
+      config.permission = request.body.permission || 4;
     }
 
     if (typeof request.body.value !== "object") {

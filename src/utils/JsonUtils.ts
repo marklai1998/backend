@@ -1,7 +1,3 @@
-import { districtIdToName, statusToName } from "./DistrictUtils";
-
-import { Block } from "../entity/Block";
-
 export function setAttributeJson(json: object, path: string, value: any) {
   var k = json;
   var steps = path.split(".");
@@ -24,44 +20,4 @@ export function dynamicSort(property: string) {
       a[property] > b[property] ? -1 : a[property] < b[property] ? 1 : 0;
     return result * sortOrder;
   };
-}
-
-export async function getClaims(user: string) {
-  const blocks = await Block.createQueryBuilder("block")
-    .where("block.builder like :name", { name: `%${user}%` })
-    .orderBy("district", "ASC")
-    .getMany();
-
-  const json = {
-    name: user,
-    claims: {
-      total: 0,
-      done: 0,
-      detailing: 0,
-      building: 0,
-      reserved: 0,
-      districts: [],
-    },
-  };
-  for (const block of blocks) {
-    json.claims.total++;
-    json.claims[statusToName(block.status)]++;
-
-    const districtName = await districtIdToName(block.district);
-    const index = json.claims.districts.findIndex((d) => {
-      return d.id === block.district;
-    });
-    if (index !== -1) {
-      json.claims.districts[index].blocks.push(
-        await block.toJson({ showDistrict: false })
-      );
-    } else {
-      json.claims.districts.push({
-        id: block.district,
-        name: districtName,
-        blocks: [await block.toJson({ showDistrict: false })],
-      });
-    }
-  }
-  return json;
 }

@@ -1,6 +1,7 @@
 import { fetch, port } from "../index";
 
 import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
+import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { ProjectCount } from "../entity/ProjectCount";
 
 export function parseDate(date: string | Date, locale?: string) {
@@ -41,6 +42,9 @@ export function executeEveryXMinutes(
 }
 
 export function startIntervals() {
+  // Add missing projects if backend was offline at 0:00
+  createMissingProjectEntries();
+
   // Add new Project Count at 0:00
   executeEveryXMinutes(
     0,

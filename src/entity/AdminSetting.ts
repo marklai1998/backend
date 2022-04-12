@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, BaseEntity } from "typeorm";
-import { IsString, IsJSON, IsInt } from "class-validator";
+import { IsString, IsInt } from "class-validator";
 
 import { Permissions } from "../utils/Permissions";
 
@@ -10,11 +10,10 @@ export class AdminSetting extends BaseEntity {
   key: string;
 
   @Column("text", { default: "{}" })
-  @IsJSON({ message: "Invalid Value" })
   value: string;
 
   @Column({ default: Permissions.admin })
-  @IsInt({ message: "Invalid Permission" })
+  @IsInt({ message: "Permission must be a number" })
   permission: number;
 
   toJson({ showPermission = true }: { showPermission?: boolean } = {}): object {

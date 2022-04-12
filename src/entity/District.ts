@@ -53,6 +53,7 @@ export class District extends BaseEntity {
   @Column("text")
   about: string;
 
+  // TODO: add blocks and builders for districts with children
   async toJson({
     onlyProgress = true,
     showDetails = true,
@@ -63,12 +64,18 @@ export class District extends BaseEntity {
       completionDate: parseDate(this.completionDate),
       status: this.status,
       progress: this.progress,
-      builders: showDetails ? await this.getBuilders() : undefined,
+      builders:
+        showDetails && (await this.getBuilders()).length > 0
+          ? await this.getBuilders()
+          : undefined,
       blocks: {
         total: this.blocksDone + this.blocksLeft,
         done: this.blocksDone,
         left: this.blocksLeft,
-        blocks: showDetails ? await this.getBlocks() : undefined,
+        blocks:
+          showDetails && (await this.getBlocks()).length > 0
+            ? await this.getBlocks()
+            : undefined,
       },
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
@@ -77,7 +84,7 @@ export class District extends BaseEntity {
     };
   }
 
-  async getBuilders(): Promise<object> {
+  async getBuilders(): Promise<object[]> {
     const blocks = await getBlocksOfDistrict(this);
 
     const builders = [];
@@ -100,7 +107,7 @@ export class District extends BaseEntity {
     return builders;
   }
 
-  async getBlocks(): Promise<object> {
+  async getBlocks(): Promise<object[]> {
     const blocksRaw = await getBlocksOfDistrict(this);
 
     const blocks = [];

@@ -16,11 +16,11 @@ export class PlayerStat extends BaseEntity {
 }
 
 export async function createMissingDayEntries() {
-  let allEntries = await PlayerStat.find({
+  const allEntries = await PlayerStat.find({
     order: { date: "ASC" },
   });
-  let lastEntry = allEntries[allEntries.length - 1];
-  let missingDays = Math.floor(
+  const lastEntry = allEntries[allEntries.length - 1];
+  const missingDays = Math.floor(
     (new Date().getTime() - new Date(lastEntry.date).getTime()) /
       (1000 * 3600 * 24)
   );

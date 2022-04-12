@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import * as index from "../index";
 import * as google from "../utils/SheetUtils";
 
-import { getClaims } from "../utils/JsonUtils";
+import { getClaims } from "../utils/DistrictUtils";
 import { statusToNumber } from "../utils/DistrictUtils";
 
 import { Block } from "../entity/Block";
@@ -119,6 +119,20 @@ export class BlockController {
     }
 
     return block.toJson();
+  }
+
+  async getAll(request: Request, response: Response, next: NextFunction) {
+    const blocksRaw = await getBlocks(request.params.district);
+
+    if (blocksRaw.length === 0) {
+      return index.generateError("No blocks found");
+    }
+
+    const blocks = [];
+    for (const block of blocksRaw) {
+      blocks.push(await block.toJson());
+    }
+    return blocks;
   }
 
   async getClaims(request: Request, response: Response, next: NextFunction) {
@@ -243,4 +257,14 @@ async function getBlock(districtName: string, blockID: number) {
     return null;
   }
   return block;
+}
+
+async function getBlocks(districtName: string) {
+  const district = await District.findOne({ name: districtName });
+
+  if (!district) {
+    return null;
+  }
+
+  return await Block.find({ district: district.id });
 }

@@ -21,8 +21,8 @@ export class WebhookController {
     webhook = new Webhook();
     webhook.name = request.body.name;
     webhook.link = request.body.link;
-    webhook.message = request.body.message;
-    webhook.enabled = request.body.enabled;
+    webhook.message = request.body.message || null;
+    webhook.enabled = request.body.enabled || false;
 
     return index.getValidation(webhook, "Webhook created");
   }
@@ -32,7 +32,7 @@ export class WebhookController {
       return index.generateError("Specify the name of the webhook to delete");
     }
 
-    let webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
@@ -45,14 +45,14 @@ export class WebhookController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    let webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOne({
       name: request.params.name,
     });
 
     if (!webhook) {
       return index.generateError("Webhook not found");
     }
-    return index.generateSuccess(undefined, webhook);
+    return webhook;
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
@@ -64,7 +64,7 @@ export class WebhookController {
       return index.generateError("Specify name, type and value");
     }
 
-    let webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
@@ -72,7 +72,7 @@ export class WebhookController {
       return index.generateError("Webhook not found");
     }
 
-    if (!webhook[request.body.type]) {
+    if (webhook[request.body.type] === undefined) {
       return index.generateError("Invalid type");
     }
 
@@ -96,7 +96,7 @@ export class WebhookController {
       return index.generateError("Invalid body");
     }
 
-    let webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
@@ -105,7 +105,7 @@ export class WebhookController {
     }
 
     if (webhook.permission > 0) {
-      let user = await User.findOne({
+      const user = await User.findOne({
         apikey: request.body.key || request.query.key,
       });
       if (!user) {

@@ -3,7 +3,7 @@ import * as index from "../index";
 import * as minecraftUtil from "minecraft-server-util";
 
 import { NextFunction, Request, Response } from "express";
-import { getManager, getRepository } from "typeorm";
+import { getManager } from "typeorm";
 
 import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
@@ -13,10 +13,6 @@ const os = require("os");
 const ormconfig = require("../../ormconfig.json");
 
 export class GeneralController {
-  private configRepository = getRepository(AdminSetting);
-  private districtRepository = getRepository(District);
-  private blockRepository = getRepository(Block);
-
   async pingNetwork(request: Request, response: Response, next: NextFunction) {
     const type = request.query.type;
 
@@ -157,9 +153,7 @@ export class GeneralController {
   }
 
   async pingServer(request: Request, response: Response, next: NextFunction) {
-    const ips = JSON.parse(
-      (await this.configRepository.findOne({ key: "ips" })).value
-    );
+    const ips = JSON.parse((await AdminSetting.findOne({ key: "ips" })).value);
 
     if (ips === undefined) {
       return index.generateError("Ips not set in Admin Settings");
@@ -222,10 +216,10 @@ export class GeneralController {
   }
 
   async overview(request: Request, response: Response, next: NextFunction) {
-    let districts = await this.districtRepository.find({
+    const districts = await District.find({
       order: { parent: "ASC" },
     });
-    let blocksAll = await this.blockRepository.find({
+    const blocksAll = await Block.find({
       order: { district: "ASC" },
     });
 
