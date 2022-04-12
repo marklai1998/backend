@@ -63,18 +63,18 @@ export async function districtIdToName(id: number) {
 export async function districtIdToDistrict(id: number): Promise<District> {
   return await District.findOne({ id: id });
 }
-export function statusToName(status: number) {
+export function statusToName(status: number, formatted = false) {
   switch (status) {
     case 4:
-      return "done";
+      return formatted ? "Done" : "done";
     case 3:
-      return "detailing";
+      return formatted ? "Detailing" : "detailing";
     case 2:
-      return "building";
+      return formatted ? "Building" : "building";
     case 1:
-      return "reserved";
+      return formatted ? "Reserved" : "reserved";
     default:
-      return "not_started";
+      return formatted ? "Not Started" : "not_started";
   }
 }
 export function statusToNumber(status: string) {

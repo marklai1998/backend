@@ -15,6 +15,7 @@ import { AdminSettings } from "./adminsettings";
 import { Routes } from "./routes";
 
 import { AdminSetting } from "./entity/AdminSetting";
+import { Block } from "./entity/Block";
 import { User } from "./entity/User";
 
 var cors = require("cors");
@@ -119,7 +120,8 @@ export async function getValidation(
     return generateError(Object.values(errors[0].constraints)[0]);
   }
 
-  object.save();
+  await object.save();
+
   return generateSuccess(successMessage);
 }
 

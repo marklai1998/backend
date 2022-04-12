@@ -19,6 +19,7 @@ import {
   recalculateDistrictStatus,
 } from "../utils/ProgressCalculation";
 import { parseDate } from "../utils/TimeUtils";
+import { sendDiscordChange } from "../utils/DiscordMessageSender";
 
 import { District } from "./District";
 
@@ -96,20 +97,44 @@ export class Block extends BaseEntity {
     return index.getValidation(this, "Location updated");
   }
 
-  setProgress(progress: number): object {
+  async setProgress(progress: number): Promise<object> {
+    if (this.progress === progress) {
+      return index.generateError("Nothing changed");
+    }
+    const oldValue = this.progress;
+
     this.progress = progress;
-    setStatus(this);
+    const oldStatus = await setStatus(this);
+
     recalculateDistrictProgress(this.district);
-    return index.getValidation(this, "Progress updated");
+    return await update({
+      block: this,
+      successMessage: "Progress Updated",
+      oldStatus: oldStatus,
+      oldValue: oldValue,
+      newValue: progress,
+    });
   }
 
-  setDetails(details: boolean): object {
+  async setDetails(details: boolean): Promise<object> {
+    if (this.details === details) {
+      return index.generateError("Nothing changed");
+    }
+    const oldValue = this.details;
+
     this.details = details;
-    setStatus(this);
-    return index.getValidation(this, "Details updated");
+    const oldStatus = await setStatus(this);
+
+    return await update({
+      block: this,
+      successMessage: "Details Updated",
+      oldStatus: oldStatus,
+      oldValue: oldValue,
+      newValue: details,
+    });
   }
 
-  addBuilder(builder: string): object {
+  async addBuilder(builder: string): Promise<object> {
     const builderSplit = this.builder === null ? [] : this.builder.split(",");
     for (const b of builderSplit) {
       if (b.toLowerCase() === builder.toLowerCase()) {
@@ -117,23 +142,30 @@ export class Block extends BaseEntity {
       }
     }
 
+    let oldStatus = -1;
     if (this.builder === "" || this.builder === null) {
       this.builder = builder;
-      setStatus(this);
+      oldStatus = await setStatus(this);
     } else {
       this.builder += `,${builder}`;
     }
 
-    return index.getValidation(this, "Builder added");
+    return await update({
+      block: this,
+      successMessage: "Builder Added",
+      oldStatus: oldStatus,
+      newValue: builder,
+    });
   }
 
-  removeBuilder(builder: string): object {
+  async removeBuilder(builder: string): Promise<object> {
     const builderSplit = this.builder === null ? [] : this.builder.split(",");
     for (const b of builderSplit) {
       if (b.toLowerCase() === builder.toLowerCase()) {
+        let oldStatus = -1;
         if (builderSplit.length === 1) {
           this.builder = null;
-          setStatus(this);
+          oldStatus = await setStatus(this);
         } else {
           if (builderSplit[0].toLowerCase() === builder.toLowerCase()) {
             this.builder.replace(`${builder},`, "");
@@ -141,24 +173,34 @@ export class Block extends BaseEntity {
             this.builder.replace(`,${builder}`, "");
           }
         }
-        return index.getValidation(this, "Builder removed");
+        return await update({
+          block: this,
+          successMessage: "Builder Removed",
+          oldStatus: oldStatus,
+          newValue: builder,
+        });
       }
     }
     return index.generateError("Builder not found for this block");
   }
 }
 
-async function setStatus(block: Block) {
+async function setStatus(block: Block): Promise<number> {
   const oldStatus = block.status;
+  let changed = false;
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
     block.status = 4;
     block.completionDate = new Date();
+
+    changed = true;
 
     // Update Block Counts & District Status
     recalculateDistrictBlocksDoneLeft(block.district);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
     block.status = 3;
     block.completionDate = null;
+
+    changed = true;
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
@@ -168,6 +210,8 @@ async function setStatus(block: Block) {
   } else if (oldStatus !== 2 && (block.progress > 0 || block.details)) {
     block.status = 2;
     block.completionDate = null;
+
+    changed = true;
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
@@ -184,6 +228,8 @@ async function setStatus(block: Block) {
     block.status = 1;
     block.completionDate = null;
 
+    changed = true;
+
     // Update Block Counts & District Status
     if (oldStatus === 4) {
       recalculateDistrictBlocksDoneLeft(block.district);
@@ -192,6 +238,8 @@ async function setStatus(block: Block) {
   } else if (oldStatus !== 0) {
     block.status = 0;
     block.completionDate = null;
+
+    changed = true;
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
@@ -227,4 +275,37 @@ async function setStatus(block: Block) {
       }
     }
   }
+  return changed ? oldStatus : -1;
+}
+
+async function update({
+  block = null,
+  successMessage = null,
+  oldStatus = -1,
+  oldValue = null,
+  newValue = null,
+}: {
+  block?: Block;
+  successMessage?: string;
+  oldStatus?: number;
+  oldValue?: string | number | boolean;
+  newValue?: string | number | boolean;
+} = {}): Promise<object> {
+  if (block === null || successMessage === null) return;
+
+  const result = await index.getValidation(block, successMessage);
+
+  if (!result["error"]) {
+    // Send Webhook
+    sendDiscordChange({
+      block,
+      title: successMessage,
+      statusChanged: oldStatus !== -1,
+      oldStatus: oldStatus,
+      oldValue: oldValue,
+      newValue: newValue,
+    });
+  }
+
+  return result;
 }

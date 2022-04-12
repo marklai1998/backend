@@ -156,7 +156,7 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return block.setProgress(request.body.progress);
+    return await block.setProgress(request.body.progress);
   }
 
   async setDetails(request: Request, response: Response, next: NextFunction) {
@@ -166,7 +166,7 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return block.setDetails(request.body.details);
+    return await block.setDetails(request.body.details);
   }
 
   async addBuilder(request: Request, response: Response, next: NextFunction) {
@@ -176,7 +176,7 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return block.addBuilder(request.body.builder);
+    return await block.addBuilder(request.body.builder);
   }
 
   async removeBuilder(
@@ -190,7 +190,7 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return block.removeBuilder(request.body.builder);
+    return await block.removeBuilder(request.body.builder);
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
