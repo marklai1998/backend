@@ -50,9 +50,6 @@ export class District extends BaseEntity {
   @IsInt({ message: "Invalid Parent" })
   parent: number;
 
-  @Column("text")
-  about: string;
-
   // TODO: add blocks and builders for districts with children
   async toJson({
     onlyProgress = true,
@@ -79,7 +76,6 @@ export class District extends BaseEntity {
       },
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
-      about: onlyProgress ? undefined : this.about,
       area: onlyProgress ? undefined : this.area,
     };
   }
