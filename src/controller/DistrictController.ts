@@ -82,7 +82,7 @@ export class DistrictController {
       return index.generateError("District not found");
     }
 
-    return await district.toJson();
+    return await district.toJson({ onlyProgress: false });
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
