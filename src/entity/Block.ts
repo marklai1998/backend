@@ -6,7 +6,6 @@ import {
   Max,
   IsBoolean,
   Matches,
-  IsLatLong,
   IsOptional,
 } from "class-validator";
 
@@ -31,11 +30,6 @@ export class Block extends BaseEntity {
   @Column()
   @IsInt({ message: "Invalid ID" })
   id: number;
-
-  @Column("text", { nullable: true })
-  @IsLatLong({ message: "Invalid location (latitude,longitude)" })
-  @IsOptional()
-  location: string;
 
   @Column()
   @IsInt({ message: "Invalid District ID" })
@@ -71,13 +65,15 @@ export class Block extends BaseEntity {
   @IsOptional()
   completionDate: Date;
 
+  @Column("text", { default: "[]" })
+  location: string;
+
   async toJson({
     showDistrict = true,
   }: { showDistrict?: boolean } = {}): Promise<object> {
     return {
       uid: this.uid,
       id: this.id,
-      location: this.location,
       district: showDistrict
         ? {
             id: this.district,
@@ -89,11 +85,19 @@ export class Block extends BaseEntity {
       details: this.details,
       builders: this.builder ? this.builder.split(",") : [],
       completionDate: parseDate(this.completionDate),
+      location: JSON.parse(this.location),
     };
   }
 
-  setLocation(location: string): object {
-    this.location = location;
+  setLocation(coords: string): object {
+    if (!this.validateCoords(coords))
+      return index.generateError("Invalid Coordinates");
+
+    const coordsNew = coords.split(",").map(function (e) {
+      return parseFloat(e);
+    });
+
+    this.location = JSON.stringify(coordsNew);
     return index.getValidation(this, "Location updated");
   }
 
@@ -182,6 +186,15 @@ export class Block extends BaseEntity {
       }
     }
     return index.generateError("Builder not found for this block");
+  }
+
+  private validateCoords(coords: string): boolean {
+    if (typeof coords !== "string") return false;
+
+    const array = coords.split(",");
+    if (array.length !== 2) return false;
+
+    return true;
   }
 }
 

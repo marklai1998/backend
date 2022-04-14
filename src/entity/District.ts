@@ -5,6 +5,8 @@ import { parseDate } from "../utils/TimeUtils";
 import { dynamicSort } from "../utils/JsonUtils";
 import { getBlocksOfDistrict } from "../utils/DistrictUtils";
 
+import { generateError, getValidation } from "../index";
+
 @Entity({ name: "districts" })
 export class District extends BaseEntity {
   @PrimaryGeneratedColumn()
@@ -13,9 +15,6 @@ export class District extends BaseEntity {
   @Column()
   @IsString({ message: "Invalid Name" })
   name: string;
-
-  @Column("text")
-  area: string;
 
   @Column({ default: 0 })
   @Min(0, { message: "Status must be between 0 and 4" })
@@ -45,6 +44,9 @@ export class District extends BaseEntity {
 
   @Column("text")
   map: string;
+
+  @Column("text", { default: "[]" })
+  area: string;
 
   @Column({ nullable: true })
   @IsInt({ message: "Invalid Parent" })
@@ -76,7 +78,7 @@ export class District extends BaseEntity {
       },
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
-      area: onlyProgress ? undefined : this.area,
+      area: onlyProgress ? undefined : JSON.parse(this.area),
     };
   }
 
@@ -111,5 +113,41 @@ export class District extends BaseEntity {
       blocks.push(await block.toJson({ showDistrict: false }));
     }
     return blocks;
+  }
+
+  addLocation(coords: string): object {
+    if (!this.validateCoords(coords))
+      return generateError("Invalid Coordinates");
+
+    const coordsNew = coords.split(",").map(function (e) {
+      return parseFloat(e);
+    });
+    const coordsArray = JSON.parse(this.area);
+    coordsArray.push(coordsNew);
+
+    this.area = JSON.stringify(coordsArray);
+    return getValidation(this, "Location added");
+  }
+
+  removeLocation(index: number): object {
+    if (typeof index !== "number") return generateError("Invalid index");
+
+    const coordsArray = JSON.parse(this.area);
+    if (index >= coordsArray.length)
+      return generateError("Index out of bounds");
+
+    coordsArray.splice(index, 1);
+
+    this.area = JSON.stringify(coordsArray);
+    return getValidation(this, "Location removed");
+  }
+
+  private validateCoords(coords: string): boolean {
+    if (typeof coords !== "string") return false;
+
+    const array = coords.split(",");
+    if (array.length !== 2) return false;
+
+    return true;
   }
 }

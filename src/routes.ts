@@ -126,6 +126,13 @@ const Routes = [
     action: "delete",
     permission: Permissions.admin,
   },
+  {
+    method: "post",
+    route: "/api/districts/edit",
+    controller: DistrictController,
+    action: "edit",
+    permission: Permissions.admin,
+  },
   // Blocks
   {
     method: "get",
