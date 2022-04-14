@@ -115,6 +115,23 @@ export class District extends BaseEntity {
     return blocks;
   }
 
+  edit(body: object): object {
+    let counter = 0;
+    for (const [key, value] of Object.entries(body)) {
+      if (key.toLowerCase() === "areaadd") {
+        this.addLocation(value);
+      } else if (key.toLowerCase() === "arearemove") {
+        this.removeLocation(value);
+      } else if (key !== "key" && key !== "name" && this[key] !== undefined) {
+        this[key] = value;
+      } else {
+        continue;
+      }
+      counter++;
+    }
+    return getValidation(this, `${counter} columns updated`);
+  }
+
   addLocation(coords: string): object {
     if (!this.validateCoords(coords))
       return generateError("Invalid Coordinates");

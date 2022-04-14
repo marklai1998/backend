@@ -93,23 +93,8 @@ export class DistrictController {
     if (!district) {
       return index.generateError("District not found");
     }
-    if (request.body.value === undefined) {
-      return index.generateError("Specify a value");
-    }
 
-    const type = request.body.type;
-
-    if (type.toLowerCase() === "area_add") {
-      return district.addLocation(request.body.value);
-    } else if (type.toLowerCase() === "area_remove") {
-      return district.removeLocation(request.body.value);
-    } else {
-      if (type.toLowerCase() === "area" || district[type] === undefined) {
-        return index.generateError("Invalid type");
-      }
-      district[type] = request.body.value;
-      return index.getValidation(district, `${type} updated`);
-    }
+    return district.edit(request.body);
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
