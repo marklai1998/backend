@@ -149,6 +149,13 @@ const Routes = [
     permission: Permissions.default,
   },
   {
+    method: "get",
+    route: "/api/blocks/get/",
+    controller: BlockController,
+    action: "getEvery",
+    permission: Permissions.default,
+  },
+  {
     method: "post",
     route: "/api/blocks/create",
     controller: BlockController,

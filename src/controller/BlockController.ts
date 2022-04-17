@@ -1,13 +1,12 @@
-import { NextFunction, Request, Response } from "express";
-
-import * as index from "../index";
 import * as google from "../utils/SheetUtils";
+import * as index from "../index";
 
-import { getClaims } from "../utils/DistrictUtils";
-import { statusToNumber } from "../utils/DistrictUtils";
+import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+import { getClaims } from "../utils/DistrictUtils";
+import { statusToNumber } from "../utils/DistrictUtils";
 
 export class BlockController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -134,6 +133,13 @@ export class BlockController {
     }
     return blocks;
   }
+
+  async getEvery(request: Request, response: Response, next: NextFunction) {
+    const blocksAll = await Block.find();
+
+    return blocksAll;
+  }
+
 
   async getClaims(request: Request, response: Response, next: NextFunction) {
     return getClaims(request.params.name);
