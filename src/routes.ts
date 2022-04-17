@@ -262,14 +262,14 @@ const Routes = [
     route: "/api/minecraft/users/get",
     controller: MinecraftController,
     action: "getAll",
-    permission: Permissions.admin,
+    permission: Permissions.default,
   },
   {
     method: "get",
     route: "/api/minecraft/users/get/:user",
     controller: MinecraftController,
     action: "getOne",
-    permission: Permissions.admin,
+    permission: Permissions.default,
   },
   {
     method: "post",
