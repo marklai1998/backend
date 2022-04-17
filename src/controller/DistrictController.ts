@@ -1,12 +1,12 @@
-import { getRepository } from "typeorm";
-import { NextFunction, Request, Response } from "express";
-
-import * as index from "../index";
 import * as google from "../utils/SheetUtils";
-import { statusToNumber } from "../utils/DistrictUtils";
+import * as index from "../index";
+
+import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+import { getRepository } from "typeorm";
+import { statusToNumber } from "../utils/DistrictUtils";
 
 export class DistrictController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -65,12 +65,8 @@ export class DistrictController {
   async getAll(request: Request, response: Response, next: NextFunction) {
     const districts = await District.find();
 
-    const array = [];
-    for (const d of districts) {
-      array.push(await d.toJson({ showDetails: false }));
-    }
 
-    return array;
+    return districts;
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
