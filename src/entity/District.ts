@@ -122,7 +122,11 @@ export class District extends BaseEntity {
         this.addLocation(value);
       } else if (key.toLowerCase() === "arearemove") {
         this.removeLocation(value);
-      } else if (key !== "key" && key !== "name" && this[key] !== undefined) {
+      } else if (
+        key !== "key" &&
+        key !== "district" &&
+        this[key] !== undefined
+      ) {
         this[key] = value;
       } else {
         continue;
