@@ -1,22 +1,20 @@
 import "reflect-metadata";
 
-import { validate } from "class-validator";
-import { v4 as uuidv4 } from "uuid";
-import { createConnection, getRepository, BaseEntity } from "typeorm";
+import * as bodyParser from "body-parser";
+import * as date from "./utils/TimeUtils";
+import * as express from "express";
+import * as jwt from "./utils/JsonWebToken";
+
+import { BaseEntity, createConnection, getRepository } from "typeorm";
 import { Request, Response } from "express";
 
-import * as bodyParser from "body-parser";
-import * as express from "express";
-
-import * as jwt from "./utils/JsonWebToken";
-import * as date from "./utils/TimeUtils";
-
-import { AdminSettings } from "./adminsettings";
-import { Routes } from "./routes";
-
 import { AdminSetting } from "./entity/AdminSetting";
+import { AdminSettings } from "./adminsettings";
 import { Block } from "./entity/Block";
+import { Routes } from "./routes";
 import { User } from "./entity/User";
+import { v4 as uuidv4 } from "uuid";
+import { validate } from "class-validator";
 
 var cors = require("cors");
 var helmet = require("helmet");
@@ -102,7 +100,7 @@ createConnection()
       }
     });
 
-    date.startIntervals();
+   // date.startIntervals();
 
     // start express server
     app.listen(port);

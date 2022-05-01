@@ -1,8 +1,7 @@
-import { Entity, PrimaryColumn, Column, BaseEntity } from "typeorm";
-import { IsUrl } from "class-validator";
-
+import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
 import { fetch, generateError, generateSuccess } from "../index";
 
+import { IsUrl } from "class-validator";
 import { Permissions } from "../utils/Permissions";
 
 @Entity({ name: "webhooks" })

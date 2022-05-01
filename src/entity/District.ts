@@ -1,11 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
-import { IsString, IsInt, IsNumber, Min, Max } from "class-validator";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { IsInt, IsNumber, IsString, Max, Min } from "class-validator";
+import { generateError, getValidation } from "../index";
 
-import { parseDate } from "../utils/TimeUtils";
 import { dynamicSort } from "../utils/JsonUtils";
 import { getBlocksOfDistrict } from "../utils/DistrictUtils";
-
-import { generateError, getValidation } from "../index";
+import { parseDate } from "../utils/TimeUtils";
 
 @Entity({ name: "districts" })
 export class District extends BaseEntity {
@@ -45,7 +44,7 @@ export class District extends BaseEntity {
   @Column("text")
   map: string;
 
-  @Column("text", { default: "[]" })
+  @Column("text", /*{ default: "[]" -}*/)
   area: string;
 
   @Column({ nullable: true })

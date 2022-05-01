@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
-import { IsEmail, IsUUID, IsJSON, Matches, IsOptional } from "class-validator";
-
 import * as jwt from "../utils/JsonWebToken";
+
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { IsEmail, IsJSON, IsOptional, IsUUID, Matches } from "class-validator";
 
 import { MinecraftUser } from "./MinecraftUser";
 
@@ -37,7 +37,7 @@ export class User extends BaseEntity {
   @Column("text")
   picture: string;
 
-  @Column("text", { default: "{}" })
+  @Column("text",/*{ default: "{}" }*/)
   @IsJSON({ message: "Settings must be a valid JSON-String" })
   @IsOptional()
   settings: string;
@@ -45,7 +45,7 @@ export class User extends BaseEntity {
   @Column("text")
   password: string;
 
-  @Column("text", { nullable: true, unique: true })
+  @Column({ nullable: true, unique: true,length: 36 })
   @IsOptional()
   @IsUUID("4", { message: "Invalid API Key set for user" })
   apikey: string;

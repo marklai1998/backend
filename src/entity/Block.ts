@@ -1,26 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
-import {
-  IsInt,
-  IsNumber,
-  Min,
-  Max,
-  IsBoolean,
-  Matches,
-  IsOptional,
-} from "class-validator";
-
 import * as index from "../index";
 
-import { districtIdToName } from "../utils/DistrictUtils";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import {
-  recalculateDistrictProgress,
+  IsBoolean,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  Matches,
+  Max,
+  Min,
+} from "class-validator";
+import {
   recalculateDistrictBlocksDoneLeft,
+  recalculateDistrictProgress,
   recalculateDistrictStatus,
 } from "../utils/ProgressCalculation";
-import { parseDate } from "../utils/TimeUtils";
-import { sendDiscordChange } from "../utils/DiscordMessageSender";
 
 import { District } from "./District";
+import { districtIdToName } from "../utils/DistrictUtils";
+import { parseDate } from "../utils/TimeUtils";
+import { sendDiscordChange } from "../utils/DiscordMessageSender";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -65,7 +64,7 @@ export class Block extends BaseEntity {
   @IsOptional()
   completionDate: Date;
 
-  @Column("text", { default: "[]" })
+  @Column("text", /*{ default: "[]" }*/)
   location: string;
 
   async toJson({

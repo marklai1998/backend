@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
-import { Length, IsJSON, IsUUID, Matches } from "class-validator";
-
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { IsJSON, IsUUID, Length, Matches } from "class-validator";
 import { generateError, getValidation } from "../index";
+
 import { setAttributeJson } from "../utils/JsonUtils";
 
 @Entity({ name: "minecraft" })
@@ -25,7 +25,7 @@ export class MinecraftUser extends BaseEntity {
   @Column({ default: "Player" })
   rank: string;
 
-  @Column("text", { default: "{}" })
+  @Column("text", /*{ default: "{}" }*/)
   @IsJSON({ message: "Settings must be a valid JSON-String" })
   settings: string;
 

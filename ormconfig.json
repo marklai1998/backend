@@ -1,10 +1,10 @@
 {
    "type": "mysql",
-   "host": "localhost",
+   "host": "db4free.net",
    "port": 3306,
    "username": "mfprogress",
-   "password": "progress",
-   "database": "progress",
+   "password": "progress2022",
+   "database": "mfprogress",
    "synchronize": true,
    "logging":  ["error","schema","explain","info","warn"],
    "logger":"file",

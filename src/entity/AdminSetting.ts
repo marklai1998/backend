@@ -1,5 +1,5 @@
-import { Entity, PrimaryColumn, Column, BaseEntity } from "typeorm";
-import { IsString, IsInt } from "class-validator";
+import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
+import { IsInt, IsString } from "class-validator";
 
 import { Permissions } from "../utils/Permissions";
 
@@ -9,7 +9,7 @@ export class AdminSetting extends BaseEntity {
   @IsString({ message: "Invalid Key" })
   key: string;
 
-  @Column("text", { default: "{}" })
+  @Column("text", /*{ default: "{}" }*/)
   value: string;
 
   @Column({ default: Permissions.admin })
