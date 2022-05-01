@@ -64,7 +64,18 @@ export class DistrictController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    const districts = await District.find();
+    const districtsRaw = await District.find();
+
+    if (districtsRaw.length === 0) {
+      return index.generateError("No districts found");
+    }
+
+    const districts = [];
+    for (const district of districtsRaw) {
+      districts.push(
+        await district.toJson({ onlyProgress: false, showDetails: false })
+      );
+    }
 
     return districts;
   }
