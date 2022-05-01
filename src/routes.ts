@@ -211,7 +211,7 @@ const Routes = [
     action: "removeBuilder",
     permission: Permissions.builder,
   },
-  // Claims
+  // Claims 
   {
     method: "get",
     route: "/api/claims/:name",
