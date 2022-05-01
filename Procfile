@@ -1,1 +1,1 @@
-web: node src/index.ts --i
+web: npm run start
