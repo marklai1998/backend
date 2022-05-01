@@ -66,7 +66,6 @@ export class DistrictController {
   async getAll(request: Request, response: Response, next: NextFunction) {
     const districts = await District.find();
 
-
     return districts;
   }
 
@@ -84,7 +83,7 @@ export class DistrictController {
 
   async edit(request: Request, response: Response, next: NextFunction) {
     const district = await District.findOne({
-      name: request.body.name,
+      name: request.body.district,
     });
 
     if (!district) {
@@ -131,8 +130,8 @@ export class DistrictController {
       district.blocksLeft = parseInt(d[4]);
       district.progress = parseFloat(d[5].replace("%", "").replace(",", "."));
       district.area = "[]";
-      district.image ="-";
-      district.map ="-";
+      district.image = "-";
+      district.map = "-";
 
       if (isBorough) {
         district.parent = currentParent;
