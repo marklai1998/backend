@@ -33,6 +33,7 @@ export class BlockController {
     block = new Block();
     block.id = request.body.blockID;
     block.district = district.id;
+    block.location = "[]";
 
     return index.getValidation(block, "Block created");
   }
@@ -68,6 +69,7 @@ export class BlockController {
       const block = new Block();
       block.id = i;
       block.district = district.id;
+      block.location = "[]";
 
       if (request.body.done) {
         block.status = 4;
@@ -227,6 +229,7 @@ export class BlockController {
         block.progress = !d[2] ? 0.0 : parseFloat(d[2].replace(",", "."));
         block.details = d[3] === "TRUE" ? true : false;
         block.builder = !d[4] ? "" : d[4];
+        block.location = "[]";
 
         if (!d[5]) {
           block.completionDate = null;

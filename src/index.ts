@@ -99,9 +99,12 @@ createConnection()
         await getRepository(AdminSetting).save(adminSetting);
       }
     });
-
-   // date.startIntervals();
-
+    if (process.argv.slice(2)[0] === "--i") {
+      console.log("API running with Intervals")
+      date.startIntervals();
+    }else {
+      console.log("API running without Intervals")
+    }
     // start express server
     app.listen(port);
     console.log(`Progress API running on port ${port}.`);
