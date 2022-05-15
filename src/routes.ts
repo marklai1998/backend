@@ -97,6 +97,13 @@ const Routes = [
     action: "set",
     permission: Permissions.admin,
   },
+  {
+    method: "get",
+    route: "/api/admin/getRandomImage",
+    controller: AdminSettingController,
+    action: "getRandomImage",
+    permission: Permissions.admin,
+  },
   // Districts
   {
     method: "get",
