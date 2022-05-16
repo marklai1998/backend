@@ -406,7 +406,7 @@ export class GeneralController {
     const now = new Date();
     const db = {
       version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
-      status: manager? "Connected" : "Disconnected",
+      status: [manager? "Connected" : "Disconnected"],
       databases: (await manager.query("SHOW TABLES")).map((e) => {
         return e["Tables_in_" + ormconfig.database];
       }),
