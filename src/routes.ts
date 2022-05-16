@@ -202,7 +202,7 @@ const Routes = [
     route: "/api/blocks/addLocation",
     controller: BlockController,
     action: "addLocation",
-    permission: Permissions.admin,
+    permission: Permissions.builder,
   },
   {
     method: "post",
