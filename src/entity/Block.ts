@@ -10,6 +10,7 @@ import {
   Max,
   Min,
 } from "class-validator";
+import { generateError, getValidation } from "../index";
 import {
   recalculateDistrictBlocksDoneLeft,
   recalculateDistrictProgress,
@@ -65,7 +66,7 @@ export class Block extends BaseEntity {
   completionDate: Date;
 
   @Column("text" /*{ default: "[]" }*/)
-  location: string;
+  area: string;
 
   async toJson({
     showDistrict = true,
@@ -84,20 +85,8 @@ export class Block extends BaseEntity {
       details: this.details,
       builders: this.builder ? this.builder.split(",") : [],
       completionDate: parseDate(this.completionDate),
-      location: JSON.parse(this.location),
+      area: JSON.parse(this.area),
     };
-  }
-
-  setLocation(coords: string): object {
-    if (!this.validateCoords(coords))
-      return index.generateError("Invalid Coordinates");
-
-    const coordsNew = coords.split(",").map(function (e) {
-      return parseFloat(e);
-    });
-
-    this.location = JSON.stringify(coordsNew);
-    return index.getValidation(this, "Location updated");
   }
 
   async setProgress(progress: number): Promise<object> {
@@ -187,6 +176,32 @@ export class Block extends BaseEntity {
     return index.generateError("Builder not found for this block");
   }
 
+  addLocation(coords: string): object {
+    if (!this.validateCoords(coords))
+      return generateError("Invalid Coordinates");
+
+    const coordsNew = coords.split(",").map(function (e) {
+      return parseFloat(e);
+    });
+    const coordsArray = JSON.parse(this.area);
+    coordsArray.push(coordsNew);
+
+    this.area = JSON.stringify(coordsArray);
+    return index.getValidation(this, "Location added");
+  }
+
+  removeLocation(index: number): object {
+    if (typeof index !== "number") return generateError("Invalid index");
+
+    const coordsArray = JSON.parse(this.area);
+    if (index >= coordsArray.length)
+      return generateError("Index out of bounds");
+
+    coordsArray.splice(index, 1);
+
+    this.area = JSON.stringify(coordsArray);
+    return getValidation(this, "Location removed");
+  }
   private validateCoords(coords: string): boolean {
     if (typeof coords !== "string") return false;
 
