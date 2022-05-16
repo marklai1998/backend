@@ -4,7 +4,6 @@ import * as index from "../index";
 import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
-import { BlockList } from "net";
 import { District } from "../entity/District";
 import { getClaims } from "../utils/DistrictUtils";
 import { statusToNumber } from "../utils/DistrictUtils";
@@ -155,7 +154,7 @@ export class BlockController {
 
     return block.addLocation(request.body.location);
   }async removeLocation(request: Request, response: Response, next: NextFunction) {
-    const block = await getBlock(request.body.district, request.body.blockID);
+    const block = await Block.findOne({where:{uid:request.body.uid}});
 
     if (!block) {
       return index.generateError("Block not found");
@@ -165,7 +164,7 @@ export class BlockController {
   }
 
   async setProgress(request: Request, response: Response, next: NextFunction) {
-    const block = await Block.findOne({where:{uid:request.body.uid}});
+    const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
       return index.generateError("Block not found");
