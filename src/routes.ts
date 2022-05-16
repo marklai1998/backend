@@ -206,6 +206,13 @@ const Routes = [
   },
   {
     method: "post",
+    route: "/api/blocks/removeLocation",
+    controller: BlockController,
+    action: "removeLocation",
+    permission: Permissions.builder,
+  },
+  {
+    method: "post",
     route: "/api/blocks/setProgress",
     controller: BlockController,
     action: "setProgress",
