@@ -58,4 +58,25 @@ export class AdminSettingController {
 
     return index.getValidation(config, "Setting updated");
   }
+
+  async getRandomImage(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const data = await AdminSetting.findOne({ key: "image_links" });
+
+    if (!data) {
+      return index.generateError("No images found");
+    }
+
+    const links = JSON.parse(data.value);
+
+    if (links.length === 0) {
+      return index.generateError("No images found");
+    }
+
+    const rand = Math.floor(Math.random() * links.length);
+    response.redirect(links[rand]);
+  }
 }
