@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from "express";
-
 import * as index from "../index";
 import * as jwt from "../utils/JsonWebToken";
+
+import { NextFunction, Request, Response } from "express";
 
 import { User } from "../entity/User";
 
@@ -51,6 +51,10 @@ export class UserController {
     user.email = request.body.email;
     user.username = request.body.username;
     user.permission = 1;
+    user.about = "";
+    user.picture = "";
+    user.image = "";
+    user.settings = "{}";
     user.password = jwt.generateToken(
       generatePassword(8, 16),
       jwt.secretUserData
@@ -102,6 +106,16 @@ export class UserController {
     }
 
     return index.getValidation(user, `${counter} columns updated`);
+  }
+  async delete(request: Request, response: Response, next: NextFunction) {
+    const user = await User.findOne({ uid: request.body.uid })
+    console.log(request.body.uid)
+
+    if (!user) {
+      return index.generateError("User not found");
+    }
+
+    return await User.remove(user);
   }
 }
 

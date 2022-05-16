@@ -46,6 +46,13 @@ const Routes = [
     action: "update",
     permission: Permissions.admin,
   },
+  {
+    method: "post",
+    route: "/api/users/delete",
+    controller: UserController,
+    action: "delete",
+    permission: Permissions.admin,
+  },
   // General
   {
     method: "get",
@@ -74,6 +81,13 @@ const Routes = [
     route: "/api/admin/status",
     controller: GeneralController,
     action: "adminOverview",
+    permission: Permissions.admin,
+  },
+  {
+    method: "get",
+    route: "/api/admin/query",
+    controller: GeneralController,
+    action: "adminQuery",
     permission: Permissions.admin,
   },
   {

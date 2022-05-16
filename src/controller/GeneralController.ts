@@ -3,11 +3,11 @@ import * as index from "../index";
 import * as minecraftUtil from "minecraft-server-util";
 
 import { NextFunction, Request, Response } from "express";
-import { getManager } from "typeorm";
 
 import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+import { getManager } from "typeorm";
 
 const os = require("os");
 const ormconfig = require("../../ormconfig.json");
@@ -162,9 +162,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-        Object.keys(ips).find(
-          (key) => key.toLowerCase() === serverName.toLowerCase()
-        )
+      Object.keys(ips).find(
+        (key) => key.toLowerCase() === serverName.toLowerCase()
+      )
       ];
 
     if (server === undefined) {
@@ -415,8 +415,8 @@ export class GeneralController {
       rows: (
         await manager.query(
           "SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" +
-            ormconfig.database +
-            "'"
+          ormconfig.database +
+          "'"
         )
       )[0]["SUM(TABLE_ROWS)"],
     };
@@ -442,6 +442,46 @@ export class GeneralController {
       version,
       database: db,
     };
+  }
+
+  async adminQuery(request: Request, respone: Response, next: NextFunction) {
+    // make query to typeorm
+    const now = new Date().getTime();
+    try {
+      const manager = getManager();
+      const query = request.body.query || request.query.query;
+      if (["ADD", "ALTER", "COLUMN", "DELETE", "CREATE", "DATABASE", "DROP", "FOREIGN KEY", "INSERT", "JOIN", "PRIMARY KEY", "SET", "TRUNCATE", "UNION", "UPDATE", "VIEW",].some(v => query.toUpperCase().includes(v + " "))) {
+        throw new Error("SQL Injection detected");
+      }
+      var result = await manager.query(query);
+      var parsed = result
+      if (query.includes("users")) {
+        parsed = result.map(element => {
+          return {
+            uid: element.uid,
+            username: element.username,
+            email: element.email,
+            permission: element.permission,
+            discord: element.discord,
+            minecraft: element.minecraft,
+            about: element.about,
+            image: element.image,
+            picture: element.picture,
+          }});
+      }
+
+      const diff = new Date().getTime() - now;
+      return {
+        result: parsed, time: {diff,start:new Date().toISOString()}, tables: (await manager.query("SHOW TABLES")).map((e) => {
+          return e["Tables_in_" + ormconfig.database];
+        }),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+      };
+    }
+
   }
 }
 
