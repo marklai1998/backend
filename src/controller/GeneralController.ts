@@ -406,9 +406,7 @@ export class GeneralController {
     const now = new Date();
     const db = {
       version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
-      status: (await manager.query("SHOW ENGINE INNODB STATUS"))[0][
-        "Status"
-      ].split("\n"),
+      status: manager? "Connected" : "Disconnected",
       databases: (await manager.query("SHOW TABLES")).map((e) => {
         return e["Tables_in_" + ormconfig.database];
       }),
