@@ -126,6 +126,24 @@ export class Block extends BaseEntity {
     });
   }
 
+  async setBuilder(builder: string) {
+    if (this.builder === builder) {
+      return index.generateError("Nothing changed");
+    }
+    const oldValue = this.builder;
+
+    this.builder = builder;
+    const oldStatus = await setStatus(this);
+
+    return await update({
+      block: this,
+      successMessage: "Builder Updated",
+      oldStatus: oldStatus,
+      oldValue: oldValue,
+      newValue: builder,
+    });
+  }
+
   async addBuilder(builder: string): Promise<object> {
     const builderSplit = this.builder === null ? [] : this.builder.split(",");
     for (const b of builderSplit) {

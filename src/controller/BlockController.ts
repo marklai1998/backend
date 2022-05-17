@@ -153,8 +153,13 @@ export class BlockController {
     }
 
     return block.addLocation(request.body.location);
-  }async removeLocation(request: Request, response: Response, next: NextFunction) {
-    const block = await Block.findOne({where:{uid:request.body.uid}});
+  }
+  async removeLocation(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const block = await Block.findOne({ where: { uid: request.body.uid } });
 
     if (!block) {
       return index.generateError("Block not found");
@@ -181,6 +186,16 @@ export class BlockController {
     }
 
     return await block.setDetails(request.body.details);
+  }
+
+  async setBuilder(request: Request, response: Response, next: NextFunction) {
+    const block = await getBlock(request.body.district, request.body.blockID);
+
+    if (!block) {
+      return index.generateError("Block not found");
+    }
+
+    return await block.setBuilder(request.body.builder);
   }
 
   async addBuilder(request: Request, response: Response, next: NextFunction) {
@@ -261,8 +276,11 @@ export class BlockController {
   }
 }
 
-async function getBlock(districtName: string|number, blockID: number) {
-  const district = typeof districtName === "string"?await District.findOne({ name: districtName }) : await District.findOne({ id: districtName });
+async function getBlock(districtName: string | number, blockID: number) {
+  const district =
+    typeof districtName === "string"
+      ? await District.findOne({ name: districtName })
+      : await District.findOne({ id: districtName });
   if (!district) {
     return null;
   }

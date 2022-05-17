@@ -227,6 +227,13 @@ const Routes = [
   },
   {
     method: "post",
+    route: "/api/blocks/setBuilder",
+    controller: BlockController,
+    action: "setBuilder",
+    permission: Permissions.builder,
+  },
+  {
+    method: "post",
     route: "/api/blocks/addBuilder",
     controller: BlockController,
     action: "addBuilder",
@@ -239,7 +246,7 @@ const Routes = [
     action: "removeBuilder",
     permission: Permissions.builder,
   },
-  // Claims 
+  // Claims
   {
     method: "get",
     route: "/api/claims/:name",
