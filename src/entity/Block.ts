@@ -262,7 +262,7 @@ async function setStatus(block: Block): Promise<number> {
       recalculateDistrictBlocksDoneLeft(block.district);
       recalculateDistrictStatus(block.status);
     }
-  } else if (oldStatus !== 0) {
+  } else if (oldStatus !== 0 && block.progress === 0 && !block.details) {
     block.status = 0;
     block.completionDate = null;
 
