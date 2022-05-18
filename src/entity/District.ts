@@ -44,7 +44,7 @@ export class District extends BaseEntity {
   @Column("text")
   map: string;
 
-  @Column("text", /*{ default: "[]" -}*/)
+  @Column("text" /*{ default: "[]" -}*/)
   area: string;
 
   @Column({ nullable: true })
@@ -59,7 +59,7 @@ export class District extends BaseEntity {
     return {
       id: this.id,
       name: this.name,
-      completionDate: parseDate(this.completionDate),
+      completionDate: this.completionDate,
       status: this.status,
       progress: this.progress,
       builders:

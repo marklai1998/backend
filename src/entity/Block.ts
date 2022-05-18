@@ -84,7 +84,7 @@ export class Block extends BaseEntity {
       progress: this.progress,
       details: this.details,
       builders: this.builder ? this.builder.split(",") : [],
-      completionDate: parseDate(this.completionDate),
+      completionDate: this.completionDate,
       center: this.getLocationCenter(),
       area: JSON.parse(this.area),
     };

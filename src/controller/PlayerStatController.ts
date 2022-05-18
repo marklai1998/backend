@@ -43,7 +43,7 @@ export class PlayerStatController {
     }
 
     return {
-      date: date,
+      date: playerStat.date,
       peaks: JSON.parse(playerStat.max),
       averages: avg,
     };
@@ -76,7 +76,7 @@ export class PlayerStatController {
       }
 
       stats.push({
-        date: dateString,
+        date: s.date,
         peaks: JSON.parse(s.max),
         averages: avg,
       });

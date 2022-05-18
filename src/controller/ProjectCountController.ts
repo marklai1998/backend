@@ -28,7 +28,7 @@ export class ProjectCountController {
     }
 
     return {
-      date: date,
+      date: projectCount.date,
       projects: projectCount.projects,
     };
   }
@@ -39,7 +39,7 @@ export class ProjectCountController {
     const projects = [];
     for (const project of projectsAll) {
       projects.push({
-        date: date.parseDate(project.date),
+        date: project.date,
         projects: project.projects,
       });
     }
@@ -91,7 +91,7 @@ export class ProjectCountController {
         return counter.projects >= i;
       });
       milestones.push({
-        date: date.parseDate(project.date),
+        date: project.date,
         days: !lastDate
           ? (new Date(project.date).getTime() -
               new Date("2020-04-13").getTime()) /
