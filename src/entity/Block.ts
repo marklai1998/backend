@@ -55,9 +55,9 @@ export class Block extends BaseEntity {
   details: boolean;
 
   @Column("text", { nullable: true })
-  @Matches(/^$|^(([a-zA-Z0-9_]{3,16}[,]?){1,})|Building Session$/, {
+  /*@Matches(/^$|^(([a-zA-Z0-9_]{3,16}[,]?){1,})|Building Session$/, {
     message: "Invalid Minecraft-Name found or not separated with a comma",
-  })
+  })*/
   @IsOptional()
   builder: string;
 
