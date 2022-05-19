@@ -289,7 +289,7 @@ const Routes = [
     route: "/api/projects/set",
     controller: ProjectCountController,
     action: "set",
-    permission: Permissions.admin,
+    permission: Permissions.builder,
   },
   {
     method: "get",
