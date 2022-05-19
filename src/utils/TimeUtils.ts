@@ -4,6 +4,8 @@ import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { ProjectCount } from "../entity/ProjectCount";
 
+const os = require("os");
+
 export function parseDate(date: string | Date, locale?: string) {
   if (date === null) {
     return null;
@@ -108,7 +110,9 @@ export function startIntervals() {
     async function () {
       const ram =
         Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
-      const cpu = Math.round(process.cpuUsage().user / 1000 / 1000) + "%";
+      const cpu =
+        Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
+        "%";
       if (memoryUsage.ram.length >= 15) {
         memoryUsage.cpu.shift();
         memoryUsage.ram.shift();

@@ -5,6 +5,7 @@ import * as minecraftUtil from "minecraft-server-util";
 import { NextFunction, Request, Response } from "express";
 
 import { AdminSetting } from "../entity/AdminSetting";
+import { Stats } from "../stats";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import { getManager } from "typeorm";
@@ -162,9 +163,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-      Object.keys(ips).find(
-        (key) => key.toLowerCase() === serverName.toLowerCase()
-      )
+        Object.keys(ips).find(
+          (key) => key.toLowerCase() === serverName.toLowerCase()
+        )
       ];
 
     if (server === undefined) {
@@ -394,10 +395,13 @@ export class GeneralController {
   }
 
   async adminOverview(request: Request, respone: Response, next: NextFunction) {
+    const backend_version = process.env.npm_package_version;
     const manager = getManager();
     const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
     const maxRam = Math.round(os.totalmem() / 1024 / 1024) + "MB";
-    const cpu = Math.round(process.cpuUsage().user / 1000 / 1000) + "%";
+    const cpu =
+      Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
+      "%";
     const uptime = process.uptime();
     const platform = process.platform;
     const arch = process.arch;
@@ -406,15 +410,15 @@ export class GeneralController {
     const now = new Date();
     const db = {
       version: (await manager.query("SELECT VERSION();"))[0]["VERSION()"],
-      status: [manager? "Connected" : "Disconnected"],
+      status: [manager ? "Connected" : "Disconnected"],
       databases: (await manager.query("SHOW TABLES")).map((e) => {
         return e["Tables_in_" + ormconfig.database];
       }),
       rows: (
         await manager.query(
           "SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" +
-          ormconfig.database +
-          "'"
+            ormconfig.database +
+            "'"
         )
       )[0]["SUM(TABLE_ROWS)"],
     };
@@ -438,7 +442,12 @@ export class GeneralController {
       arch,
       release,
       version,
+      backend_version,
       database: db,
+      stats: {
+        total_requests: Stats.total_requests,
+        successful_requests: Stats.successful_requests,
+      },
     };
   }
 
@@ -448,13 +457,32 @@ export class GeneralController {
     try {
       const manager = getManager();
       const query = request.body.query || request.query.query;
-      if (["ADD", "ALTER", "COLUMN", "DELETE", "CREATE", "DATABASE", "DROP", "FOREIGN KEY", "INSERT", "JOIN", "PRIMARY KEY", "SET", "TRUNCATE", "UNION", "UPDATE", "VIEW",].some(v => query.toUpperCase().includes(v + " "))) {
+      if (
+        [
+          "ADD",
+          "ALTER",
+          "COLUMN",
+          "DELETE",
+          "CREATE",
+          "DATABASE",
+          "DROP",
+          "FOREIGN KEY",
+          "INSERT",
+          "JOIN",
+          "PRIMARY KEY",
+          "SET",
+          "TRUNCATE",
+          "UNION",
+          "UPDATE",
+          "VIEW",
+        ].some((v) => query.toUpperCase().includes(v + " "))
+      ) {
         throw new Error("SQL Injection detected");
       }
       var result = await manager.query(query);
-      var parsed = result
+      var parsed = result;
       if (query.includes("users")) {
-        parsed = result.map(element => {
+        parsed = result.map((element) => {
           return {
             uid: element.uid,
             username: element.username,
@@ -465,12 +493,15 @@ export class GeneralController {
             about: element.about,
             image: element.image,
             picture: element.picture,
-          }});
+          };
+        });
       }
 
       const diff = new Date().getTime() - now;
       return {
-        result: parsed, time: {diff,start:new Date().toISOString()}, tables: (await manager.query("SHOW TABLES")).map((e) => {
+        result: parsed,
+        time: { diff, start: new Date().toISOString() },
+        tables: (await manager.query("SHOW TABLES")).map((e) => {
           return e["Tables_in_" + ormconfig.database];
         }),
       };
@@ -479,7 +510,6 @@ export class GeneralController {
         error: error.message,
       };
     }
-
   }
 }
 
