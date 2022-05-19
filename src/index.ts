@@ -10,7 +10,7 @@ import { Request, Response } from "express";
 
 import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
-import { Block } from "./entity/Block";
+import { Stats } from "./stats";
 import { Routes } from "./routes";
 import { User } from "./entity/User";
 import { v4 as uuidv4 } from "uuid";
@@ -21,7 +21,7 @@ var helmet = require("helmet");
 var fetch = require("node-fetch");
 var axios = require("axios");
 
-const port =  process.env.PORT||8080;
+const port = process.env.PORT || 8080;
 
 createConnection()
   .then(async (connection) => {
@@ -36,6 +36,7 @@ createConnection()
       (app as any)[route.method](
         route.route,
         async (req: Request, res: Response, next: Function) => {
+          Stats.total_requests++;
           if (route.permission > 0) {
             let user = await User.findOne({
               apikey: req.body.key || req.query.key,
@@ -49,6 +50,7 @@ createConnection()
               return;
             }
           }
+          Stats.successful_requests++;
           const result = new (route.controller as any)()[route.action](
             req,
             res,
@@ -76,7 +78,7 @@ createConnection()
           username: "root",
           permission: 4,
           discord: "Root#1234",
-          settings:"{}",
+          settings: "{}",
           about:
             "The Root user of the Website, only for development use. Please always use your right user.",
           image:
@@ -101,10 +103,10 @@ createConnection()
       }
     });
     if (process.argv.slice(2)[0] === "--i") {
-      console.log("API running with Intervals")
+      console.log("API running with Intervals");
       date.startIntervals();
-    }else {
-      console.log("API running without Intervals")
+    } else {
+      console.log("API running without Intervals");
     }
     // start express server
     app.listen(port);
