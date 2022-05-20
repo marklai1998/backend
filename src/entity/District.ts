@@ -78,6 +78,7 @@ export class District extends BaseEntity {
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
       area: onlyProgress ? undefined : JSON.parse(this.area),
+      parent: this.parent,
     };
   }
 
