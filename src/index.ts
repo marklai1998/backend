@@ -10,8 +10,8 @@ import { Request, Response } from "express";
 
 import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
-import { Stats } from "./stats";
 import { Routes } from "./routes";
+import { Stats } from "./stats";
 import { User } from "./entity/User";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
@@ -116,7 +116,8 @@ createConnection()
 
 export async function getValidation(
   object: BaseEntity,
-  successMessage: string
+  successMessage: string,
+  successData?: any,
 ) {
   const errors = await validate(object);
 
@@ -126,7 +127,7 @@ export async function getValidation(
 
   await object.save();
 
-  return generateSuccess(successMessage);
+  return generateSuccess(successMessage, successData);
 }
 
 export function generateSuccess(message?: string, data?: object) {
