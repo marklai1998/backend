@@ -4,6 +4,7 @@ import * as jwt from "../utils/JsonWebToken";
 import { NextFunction, Request, Response } from "express";
 
 import { User } from "../entity/User";
+import { Permissions } from "../utils/Permissions";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -91,7 +92,16 @@ export class UserController {
       return index.generateError("Specify uid and values");
     }
 
+    const key = request.body.key || request.query.key;
+    const requester = await User.findOne({ apikey: key });
     const user = await User.findOne({ uid: request.body.uid });
+
+    if (
+      requester.permission < Permissions.admin &&
+      requester.apikey !== user.apikey
+    ) {
+      return index.generateError("No permission");
+    }
 
     if (!user) {
       return index.generateError("User not found");
@@ -108,8 +118,8 @@ export class UserController {
     return index.getValidation(user, `${counter} columns updated`);
   }
   async delete(request: Request, response: Response, next: NextFunction) {
-    const user = await User.findOne({ uid: request.body.uid })
-    console.log(request.body.uid)
+    const user = await User.findOne({ uid: request.body.uid });
+    console.log(request.body.uid);
 
     if (!user) {
       return index.generateError("User not found");

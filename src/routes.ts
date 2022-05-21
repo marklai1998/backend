@@ -44,7 +44,7 @@ const Routes = [
     route: "/api/users/update",
     controller: UserController,
     action: "update",
-    permission: Permissions.admin,
+    permission: Permissions.builder, // only self updates allowed
   },
   {
     method: "post",
