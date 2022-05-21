@@ -233,34 +233,34 @@ export class GeneralController {
       }
     }
     // Subboroughs
-    for (var i = 0; i < districts.length; i++) {
-      for (var j = 0; j < nyc.children.length; j++) {
+    for (let i = 0; i < districts.length; i++) {
+      for (let j = 0; j < nyc.children.length; j++) {
         if (districts[i].parent === nyc.children[j].id) {
           nyc.children[j].children.push(createDistrictObject(districts[i]));
         }
       }
     }
-    // Districts & Blocks
-    for (var i = 0; i < districts.length; i++) {
-      for (var j = 0; j < nyc.children.length; j++) {
-        for (var k = 0; k < nyc.children[j].children.length; k++) {
+    //Districts & Blocks
+    for (let i = 0; i < districts.length; i++) {
+      for (let j = 0; j < nyc.children.length; j++) {
+        for (let k = 0; k < nyc.children[j].children.length; k++) {
           if (districts[i].parent === nyc.children[j].children[k].id) {
-            const blocks = blocksAll.filter(
+            const blocksRaw = blocksAll.filter(
               (e) => e.district === districts[i].id
             );
-            blocks.forEach((e) => {
-              // BlockCounts
-              // City
-              nyc.blocksCount.total++;
-              nyc.blocksCount[statusToName(e.status)]++;
-              // Boroughs
-              nyc.children[j].blocksCount.total++;
-              nyc.children[j].blocksCount[statusToName(e.status)]++;
-              // Subboroughs
-              nyc.children[j].children[k].blocksCount.total++;
-              nyc.children[j].children[k].blocksCount[statusToName(e.status)]++;
+            const blocks = blocksRaw.map((b) => {
+              return {
+                uid: b.uid,
+                id: b.id,
+                status: b.status,
+                progress: b.progress,
+                details: b.details,
+                builder: b.builder,
+                completionDate: b.completionDate,
+                center: b.getLocationCenter(),
+                area: JSON.parse(b.area),
+              };
             });
-
             nyc.children[j].children[k].children.push(
               createDistrictObject(districts[i], blocks)
             );
@@ -269,21 +269,15 @@ export class GeneralController {
       }
     }
 
-    // Progress, Status and Builders
-    // Total
-    var progressTotal = 0;
+    // Builders
     const buildersTotal = [];
     for (const borough of nyc.children) {
       // Boroughs
-      var progressBorough = 0;
       const buildersBorough = [];
       for (const subborough of borough.children) {
         // Subboroughs
-        var progressSubborough = 0;
         const buildersSubborough = [];
         for (const district of subborough.children) {
-          progressSubborough += district.progress * district.blocksCount.total;
-
           // Builder
           for (const b of district.builders) {
             if (buildersSubborough.some((e) => e.name === b.name)) {
@@ -300,14 +294,6 @@ export class GeneralController {
         buildersSubborough.sort(dynamicSort("blocks"));
         subborough.builders = buildersSubborough;
 
-        subborough.progress = isNaN(
-          progressSubborough / subborough.blocksCount.total
-        )
-          ? 0
-          : progressSubborough / subborough.blocksCount.total;
-
-        progressBorough += subborough.progress * subborough.blocksCount.total;
-
         // Builder
         for (const b of subborough.builders) {
           if (buildersBorough.some((e) => e.name === b.name)) {
@@ -320,29 +306,9 @@ export class GeneralController {
             buildersBorough.push({ name: b.name, blocks: b.blocks });
           }
         }
-
-        // Status
-        var status = 0;
-        if (
-          subborough.blocksCount.done === subborough.blocksCount.total &&
-          subborough.blocksCount.total > 0
-        ) {
-          status = 4;
-        } else if (subborough.progress === 100) {
-          status = 3;
-        } else if (subborough.progress > 0) {
-          status = 2;
-        }
-        subborough.status = status;
       }
       buildersBorough.sort(dynamicSort("blocks"));
       borough.builders = buildersBorough;
-
-      borough.progress = isNaN(progressBorough / borough.blocksCount.total)
-        ? 0
-        : progressBorough / borough.blocksCount.total;
-
-      progressTotal += borough.progress * borough.blocksCount.total;
 
       // Builder
       for (const b of borough.builders) {
@@ -356,41 +322,9 @@ export class GeneralController {
           buildersTotal.push({ name: b.name, blocks: b.blocks });
         }
       }
-
-      // Status
-      var status = 0;
-      if (
-        borough.blocksCount.done === borough.blocksCount.total &&
-        borough.blocksCount.total > 0
-      ) {
-        status = 4;
-      } else if (borough.progress === 100) {
-        status = 3;
-      } else if (borough.progress > 0) {
-        status = 2;
-      }
-      borough.status = status;
     }
     buildersTotal.sort(dynamicSort("blocks"));
     nyc.builders = buildersTotal;
-
-    nyc.progress = isNaN(progressTotal / nyc.blocksCount.total)
-      ? 0
-      : progressTotal / nyc.blocksCount.total;
-
-    var status = 0;
-    if (
-      nyc.blocksCount.done === nyc.blocksCount.total &&
-      nyc.blocksCount.total > 0
-    ) {
-      status = 4;
-    } else if (nyc.progress === 100) {
-      status = 3;
-    } else if (nyc.progress > 0) {
-      status = 2;
-    }
-    nyc.status = status;
-
     return nyc;
   }
 
@@ -517,40 +451,25 @@ function createDistrictObject(district: District, blocks?: any) {
   const json = {
     id: district.id,
     name: district.name,
-    status: null,
-    progress: null,
+    status: district.status,
+    progress: district.progress,
     blocksCount: {
-      total: 0,
-      done: 0,
-      detailing: 0,
-      building: 0,
-      reserved: 0,
-      not_started: 0,
+      total: district.blocksDone + district.blocksLeft,
+      done: district.blocksDone,
+      left: district.blocksLeft,
     },
-    completionDate: date.parseDate(district.completionDate),
+    completionDate: district.completionDate,
     builders: [],
     children: blocks || [],
   };
 
   if (blocks !== undefined) {
     const builders = [];
-    var progress = 0;
     blocks.forEach((e) => {
       const buildersSplit =
         e.builder === "" || e.builder === null ? [] : e.builder.split(",");
-      const completionDate = e.completionDate;
 
-      delete e.uid;
-      delete e.location;
-      delete e.builder;
-      delete e.completionDate;
-
-      e.builders = buildersSplit;
-      e.completionDate = date.parseDate(completionDate);
-
-      // BlocksCount
-      json.blocksCount.total++;
-      json.blocksCount[statusToName(e.status)]++;
+      e.builder = buildersSplit;
 
       // Builders
       for (var i = 0; i < buildersSplit.length; i++) {
@@ -565,23 +484,8 @@ function createDistrictObject(district: District, blocks?: any) {
         }
       }
       builders.sort(dynamicSort("blocks"));
-
-      // Progress
-      progress += e.progress;
     });
     json.builders = builders;
-    json.progress = blocks.length > 0 ? progress / blocks.length : 0;
-
-    // Status
-    var status = 0;
-    if (json.blocksCount.done === blocks.length && blocks.length > 0) {
-      status = 4;
-    } else if (json.progress === 100) {
-      status = 3;
-    } else if (json.progress > 0) {
-      status = 2;
-    }
-    json.status = status;
   }
   return json;
 }
