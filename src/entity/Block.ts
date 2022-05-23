@@ -18,8 +18,10 @@ import {
 } from "../utils/ProgressCalculation";
 
 import { District } from "./District";
-import { districtIdToName } from "../utils/DistrictUtils";
-import { parseDate } from "../utils/TimeUtils";
+import {
+  districtIdToName,
+  calculateCenterOfLatLong,
+} from "../utils/DistrictUtils";
 import { sendDiscordChange } from "../utils/DiscordMessageSender";
 
 @Entity({ name: "blocks" })
@@ -223,35 +225,7 @@ export class Block extends BaseEntity {
   }
 
   getLocationCenter() {
-    const locations = JSON.parse(this.area);
-    const length = locations.length;
-
-    if (length === 0) {
-      return [];
-    }
-
-    let x = 0,
-      y = 0,
-      z = 0;
-
-    for (const loc of locations) {
-      const lat = (loc[0] * Math.PI) / 180;
-      const lon = (loc[1] * Math.PI) / 180;
-
-      x += Math.cos(lat) * Math.cos(lon);
-      y += Math.cos(lat) * Math.sin(lon);
-      z += Math.sin(lat);
-    }
-
-    x /= length;
-    y /= length;
-    z /= length;
-
-    const lon = Math.atan2(y, x);
-    const hyp = Math.sqrt(x * x + y * y);
-    const lat = Math.atan2(z, hyp);
-
-    return [(lat * 180) / Math.PI, (lon * 180) / Math.PI];
+    return calculateCenterOfLatLong(JSON.parse(this.area));
   }
 
   private validateCoords(coords: string): boolean {

@@ -3,8 +3,10 @@ import { IsInt, IsNumber, IsString, Max, Min } from "class-validator";
 import { generateError, getValidation } from "../index";
 
 import { dynamicSort } from "../utils/JsonUtils";
-import { getBlocksOfDistrict } from "../utils/DistrictUtils";
-import { parseDate } from "../utils/TimeUtils";
+import {
+  getBlocksOfDistrict,
+  calculateCenterOfLatLong,
+} from "../utils/DistrictUtils";
 
 @Entity({ name: "districts" })
 export class District extends BaseEntity {
@@ -77,6 +79,7 @@ export class District extends BaseEntity {
       },
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
+      center: this.getLocationCenter(),
       area: onlyProgress ? undefined : JSON.parse(this.area),
       parent: this.parent,
     };
@@ -161,6 +164,10 @@ export class District extends BaseEntity {
 
     this.area = JSON.stringify(coordsArray);
     return getValidation(this, "Location removed");
+  }
+
+  getLocationCenter() {
+    return calculateCenterOfLatLong(JSON.parse(this.area));
   }
 
   private validateCoords(coords: string): boolean {

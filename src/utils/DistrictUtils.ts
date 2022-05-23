@@ -91,3 +91,34 @@ export function statusToNumber(status: string) {
       return 0;
   }
 }
+
+export function calculateCenterOfLatLong(locations: any[]) {
+  const length = locations.length;
+
+  if (length === 0) {
+    return [];
+  }
+
+  let x = 0,
+    y = 0,
+    z = 0;
+
+  for (const loc of locations) {
+    const lat = (loc[0] * Math.PI) / 180;
+    const lon = (loc[1] * Math.PI) / 180;
+
+    x += Math.cos(lat) * Math.cos(lon);
+    y += Math.cos(lat) * Math.sin(lon);
+    z += Math.sin(lat);
+  }
+
+  x /= length;
+  y /= length;
+  z /= length;
+
+  const lon = Math.atan2(y, x);
+  const hyp = Math.sqrt(x * x + y * y);
+  const lat = Math.atan2(z, hyp);
+
+  return [(lat * 180) / Math.PI, (lon * 180) / Math.PI];
+}
