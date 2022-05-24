@@ -64,18 +64,12 @@ export class District extends BaseEntity {
       completionDate: this.completionDate,
       status: this.status,
       progress: this.progress,
-      builders:
-        showDetails && (await this.getBuilders()).length > 0
-          ? await this.getBuilders()
-          : undefined,
+      builders: showDetails ? await this.getBuilders() : undefined,
       blocks: {
         total: this.blocksDone + this.blocksLeft,
         done: this.blocksDone,
         left: this.blocksLeft,
-        blocks:
-          showDetails && (await this.getBlocks()).length > 0
-            ? await this.getBlocks()
-            : undefined,
+        blocks: showDetails ? await this.getBlocks() : undefined,
       },
       image: onlyProgress ? undefined : this.image,
       map: onlyProgress ? undefined : this.map,
