@@ -75,7 +75,7 @@ export class ProjectCountController {
     var scale = 1000;
     const projects = await ProjectCount.find();
     if(request.params.scale=="recent") {
-      scale = Math.floor(projects[-1].projects/1000)*1000
+      scale = Math.floor(projects.at(-1).projects/1000)*1000
     } else {
       scale = parseInt(request.params.scale)
     }
