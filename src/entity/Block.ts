@@ -257,8 +257,8 @@ async function setStatus(block: Block): Promise<number> {
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
-      recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.status);
+      await recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.district);
     }
   } else if (oldStatus !== 2 && (block.progress > 0 || block.details)) {
     block.status = 2;
@@ -268,8 +268,8 @@ async function setStatus(block: Block): Promise<number> {
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
-      recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.status);
+      await recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.district);
     }
   } else if (
     oldStatus !== 1 &&
@@ -285,8 +285,8 @@ async function setStatus(block: Block): Promise<number> {
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
-      recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.status);
+      await recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.district);
     }
   } else if (oldStatus !== 0 && block.progress === 0 && !block.details) {
     block.status = 0;
@@ -296,8 +296,8 @@ async function setStatus(block: Block): Promise<number> {
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
-      recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.status);
+      await recalculateDistrictBlocksDoneLeft(block.district);
+      recalculateDistrictStatus(block.district);
     }
   }
 

@@ -90,20 +90,35 @@ export async function recalculateDistrictBlocksDoneLeft(districtID: number) {
 
 export async function recalculateDistrictStatus(districtID: number) {
   const district = await District.findOne({ id: districtID });
+  const oldStatus = district.status;
+  let changed = false;
 
   if (!district) return;
 
-  if (district.progress === 100 && district.blocksLeft === 0) {
+  if (
+    district.progress === 100 &&
+    district.blocksLeft === 0 &&
+    oldStatus !== 4
+  ) {
     district.status = 4;
-  } else if (district.progress === 100) {
+    district.completionDate = new Date();
+    changed = true;
+  } else if (district.progress === 100 && oldStatus !== 3) {
     district.status = 3;
-  } else if (district.progress > 0) {
+    changed = true;
+  } else if (district.progress > 0 && oldStatus !== 2) {
     district.status = 2;
-  } else {
+    changed = true;
+  } else if (oldStatus !== 0) {
     district.status = 0;
+    changed = true;
   }
-  await district.save();
-  if (district.parent) {
-    recalculateDistrictBlocksDoneLeft(district.parent);
+
+  if (changed) {
+    if (oldStatus === 4) {
+      district.completionDate = null;
+    }
+
+    await district.save();
   }
 }
