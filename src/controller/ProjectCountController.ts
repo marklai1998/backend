@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-
-import * as index from "../index";
-import * as google from "../utils/SheetUtils";
 import * as date from "../utils/TimeUtils";
+import * as google from "../utils/SheetUtils";
+import * as index from "../index";
+
+import { NextFunction, Request, Response } from "express";
 
 import { ProjectCount } from "../entity/ProjectCount";
 
@@ -72,13 +72,18 @@ export class ProjectCountController {
     response: Response,
     next: NextFunction
   ) {
-    const scale = parseInt(request.params.scale);
+    var scale = 1000;
+    const projects = await ProjectCount.find();
+    if(request.params.scale=="recent") {
+      scale = Math.floor(projects[-1].projects/1000)*1000
+    } else {
+      scale = parseInt(request.params.scale)
+    }
 
     if (scale < 1000) {
       return index.generateError("Scale must be 1000 or greater");
     }
 
-    const projects = await ProjectCount.find();
     const milestones = [];
 
     var lastDate = null;
