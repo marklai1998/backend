@@ -5,6 +5,7 @@ import * as index from "../index";
 import { NextFunction, Request, Response } from "express";
 
 import { ProjectCount } from "../entity/ProjectCount";
+import { sendOverview } from "../utils/DiscordMessageSender";
 
 export class ProjectCountController {
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -64,7 +65,13 @@ export class ProjectCountController {
 
     projectCount.projects = request.body.projects;
 
-    return index.getValidation(projectCount, "Projects updated");
+    const res = await index.getValidation(projectCount, "Projects updated");
+
+    if (!res.error) {
+      sendOverview();
+    }
+
+    return res;
   }
 
   async getMilestones(
@@ -74,10 +81,10 @@ export class ProjectCountController {
   ) {
     var scale = 1000;
     const projects = await ProjectCount.find();
-    if(request.params.scale=="recent") {
-      scale = Math.floor(projects.at(-1).projects/1000)*1000
+    if (request.params.scale == "recent") {
+      scale = Math.floor(projects.at(-1).projects / 1000) * 1000;
     } else {
-      scale = parseInt(request.params.scale)
+      scale = parseInt(request.params.scale);
     }
 
     if (scale < 1000) {
