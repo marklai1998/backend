@@ -47,8 +47,7 @@ export class UserController {
     if (user) {
       return index.generateError("Email or username already in use");
     }
-    const ssoPw =
-      generatePassword(8, 16);
+    const ssoPw = generatePassword(8, 16);
     user = new User();
     user.email = request.body.email;
     user.username = request.body.username;
@@ -57,13 +56,13 @@ export class UserController {
     user.picture = "";
     user.image = "";
     user.settings = "{}";
-    user.password = jwt.generateToken(
-      ssoPw,
-      jwt.secretInternal
-    );
+    user.password = jwt.generateToken(ssoPw, jwt.secretInternal);
     user.apikey = index.generateUUID();
 
-    return await index.getValidation(user, "New user registered", { password: ssoPw, username: user.username });
+    return await index.getValidation(user, "New user registered", {
+      password: ssoPw,
+      username: user.username,
+    });
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {

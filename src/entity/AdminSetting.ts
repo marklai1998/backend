@@ -9,7 +9,7 @@ export class AdminSetting extends BaseEntity {
   @IsString({ message: "Invalid Key" })
   key: string;
 
-  @Column("text", /*{ default: "{}" }*/)
+  @Column("text" /*{ default: "{}" }*/)
   value: string;
 
   @Column({ default: Permissions.admin })

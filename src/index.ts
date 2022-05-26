@@ -117,7 +117,7 @@ createConnection()
 export async function getValidation(
   object: BaseEntity,
   successMessage: string,
-  successData?: any,
+  successData?: any
 ) {
   const errors = await validate(object);
 
