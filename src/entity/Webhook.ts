@@ -22,25 +22,19 @@ export class Webhook extends BaseEntity {
   @Column({ default: Permissions.admin })
   permission: number;
 
-  async send(body: { method: string; body: object }): Promise<object> {
+  async send(body: object): Promise<object> {
     if (!this.enabled) {
       return generateError("Webhook disabled");
     }
-    if (body.method.toLowerCase() === "patch" && !this.message) {
-      return generateError("No messageID set for this webhook");
-    }
 
     const link =
-      this.link +
-      (body.method.toLowerCase() === "patch"
-        ? `/messages/${this.message}`
-        : "");
+      this.link + (this.message !== null ? `/messages/${this.message}` : "");
     await fetch(link, {
-      method: body.method.toUpperCase(),
+      method: this.message !== null ? "PATCH" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body.body),
+      body: JSON.stringify(body),
     }).catch((error) => {
       return generateError("Error occurred while sending the message", error);
     });

@@ -82,15 +82,8 @@ export class WebhookController {
   }
 
   async send(request: Request, response: Response, next: NextFunction) {
-    if (!request.body.name || !request.body.method) {
-      return index.generateError("Specify a name and a method");
-    }
-    if (
-      typeof request.body.method !== "string" ||
-      (request.body.method.toLowerCase() !== "post" &&
-        request.body.method.toLowerCase() !== "patch")
-    ) {
-      return index.generateError("Invalid method");
+    if (!request.body.name) {
+      return index.generateError("Specify the webhook name");
     }
     if (typeof request.body.body !== "object") {
       return index.generateError("Invalid body");
