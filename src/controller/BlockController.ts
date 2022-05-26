@@ -7,6 +7,7 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import { getClaims } from "../utils/DistrictUtils";
 import { statusToNumber } from "../utils/DistrictUtils";
+import { User } from "../entity/User";
 
 export class BlockController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -184,17 +185,21 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
+    const user = await User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
     let counter = 0;
     if (values.progress !== undefined) {
-      await block.setProgress(values.progress);
+      await block.setProgress(values.progress, user);
       counter++;
     }
     if (values.details !== undefined) {
-      await block.setDetails(values.details);
+      await block.setDetails(values.details, user);
       counter++;
     }
     if (values.builder !== undefined) {
-      await block.setBuilder(values.builder);
+      await block.setBuilder(values.builder, user);
       counter++;
     }
 
@@ -208,7 +213,11 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return await block.setProgress(request.body.progress);
+    const user = await User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
+    return await block.setProgress(request.body.progress, user);
   }
 
   async setDetails(request: Request, response: Response, next: NextFunction) {
@@ -218,7 +227,11 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return await block.setDetails(request.body.details);
+    const user = await User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
+    return await block.setDetails(request.body.details, user);
   }
 
   async setBuilder(request: Request, response: Response, next: NextFunction) {
@@ -228,7 +241,11 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    return await block.setBuilder(request.body.builder);
+    const user = await User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
+    return await block.setBuilder(request.body.builder, user);
   }
 
   async addBuilder(request: Request, response: Response, next: NextFunction) {
