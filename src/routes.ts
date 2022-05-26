@@ -2,7 +2,7 @@ import { AdminSettingController } from "./controller/AdminSettingController";
 import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
 import { GeneralController } from "./controller/GeneralController";
-import { MinecraftController } from "./controller/MinecraftController";
+// import { MinecraftController } from "./controller/MinecraftController";
 import { Permissions } from "./utils/Permissions";
 import { PlayerStatController } from "./controller/PlayerStatController";
 import { ProjectCountController } from "./controller/ProjectCountController";
@@ -306,48 +306,48 @@ const Routes = [
     permission: Permissions.default,
   },
   // Minecraft
-  {
-    method: "get",
-    route: "/api/minecraft/users/get",
-    controller: MinecraftController,
-    action: "getAll",
-    permission: Permissions.default,
-  },
-  {
-    method: "get",
-    route: "/api/minecraft/users/get/:user",
-    controller: MinecraftController,
-    action: "getOne",
-    permission: Permissions.default,
-  },
-  {
-    method: "post",
-    route: "/api/minecraft/users/register",
-    controller: MinecraftController,
-    action: "create",
-    permission: Permissions.admin,
-  },
-  {
-    method: "post",
-    route: "/api/minecraft/users/delete",
-    controller: MinecraftController,
-    action: "delete",
-    permission: Permissions.admin,
-  },
-  {
-    method: "post",
-    route: "/api/minecraft/users/set",
-    controller: MinecraftController,
-    action: "update",
-    permission: Permissions.admin,
-  },
-  {
-    method: "post",
-    route: "/api/minecraft/users/setSettings",
-    controller: MinecraftController,
-    action: "setSettings",
-    permission: Permissions.admin,
-  },
+  // {
+  //   method: "get",
+  //   route: "/api/minecraft/users/get",
+  //   controller: MinecraftController,
+  //   action: "getAll",
+  //   permission: Permissions.default,
+  // },
+  // {
+  //   method: "get",
+  //   route: "/api/minecraft/users/get/:user",
+  //   controller: MinecraftController,
+  //   action: "getOne",
+  //   permission: Permissions.default,
+  // },
+  // {
+  //   method: "post",
+  //   route: "/api/minecraft/users/register",
+  //   controller: MinecraftController,
+  //   action: "create",
+  //   permission: Permissions.admin,
+  // },
+  // {
+  //   method: "post",
+  //   route: "/api/minecraft/users/delete",
+  //   controller: MinecraftController,
+  //   action: "delete",
+  //   permission: Permissions.admin,
+  // },
+  // {
+  //   method: "post",
+  //   route: "/api/minecraft/users/set",
+  //   controller: MinecraftController,
+  //   action: "update",
+  //   permission: Permissions.admin,
+  // },
+  // {
+  //   method: "post",
+  //   route: "/api/minecraft/users/setSettings",
+  //   controller: MinecraftController,
+  //   action: "setSettings",
+  //   permission: Permissions.admin,
+  // },
   // Webhooks
   {
     method: "get",
