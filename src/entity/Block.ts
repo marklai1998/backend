@@ -26,6 +26,7 @@ import {
   sendDistrictChange,
   sendOverview,
 } from "../utils/DiscordMessageSender";
+import { User } from "./User";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -95,7 +96,7 @@ export class Block extends BaseEntity {
     };
   }
 
-  async setProgress(progress: number): Promise<object> {
+  async setProgress(progress: number, user: User): Promise<object> {
     if (this.progress === progress) {
       return index.generateError("Nothing changed");
     }
@@ -111,10 +112,11 @@ export class Block extends BaseEntity {
       oldStatus: oldStatus,
       oldValue: oldValue,
       newValue: progress,
+      user: user,
     });
   }
 
-  async setDetails(details: boolean): Promise<object> {
+  async setDetails(details: boolean, user: User): Promise<object> {
     if (this.details === details) {
       return index.generateError("Nothing changed");
     }
@@ -129,10 +131,11 @@ export class Block extends BaseEntity {
       oldStatus: oldStatus,
       oldValue: oldValue,
       newValue: details,
+      user: user,
     });
   }
 
-  async setBuilder(builder: string) {
+  async setBuilder(builder: string, user: User) {
     if (this.builder === builder) {
       return index.generateError("Nothing changed");
     }
@@ -147,6 +150,7 @@ export class Block extends BaseEntity {
       oldStatus: oldStatus,
       oldValue: oldValue,
       newValue: builder,
+      user: user,
     });
   }
 
@@ -340,12 +344,14 @@ async function update({
   oldStatus = -1,
   oldValue = null,
   newValue = null,
+  user = null,
 }: {
   block?: Block;
   successMessage?: string;
   oldStatus?: number;
   oldValue?: string | number | boolean;
   newValue?: string | number | boolean;
+  user?: User;
 } = {}): Promise<object> {
   if (block === null || successMessage === null) return;
 
@@ -360,6 +366,7 @@ async function update({
       oldStatus: oldStatus,
       oldValue: oldValue,
       newValue: newValue,
+      user: user,
     });
     sendOverview();
   }

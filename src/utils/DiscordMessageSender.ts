@@ -5,6 +5,7 @@ import { Webhook } from "../entity/Webhook";
 import { District } from "../entity/District";
 import { ProjectCount } from "../entity/ProjectCount";
 import { AdminSetting } from "../entity/AdminSetting";
+import { User } from "../entity/User";
 
 export const Colors = {
   MineFact_Green: 0x1d9e64,
@@ -108,6 +109,7 @@ export async function sendDistrictChange({
   oldStatus = null,
   oldValue = null,
   newValue = null,
+  user = null,
 }: {
   block?: Block;
   title?: string;
@@ -115,6 +117,7 @@ export async function sendDistrictChange({
   oldStatus?: number;
   oldValue?: string | number | boolean;
   newValue?: string | number | boolean;
+  user?: User;
 } = {}) {
   if (block === null) return;
 
@@ -195,6 +198,10 @@ export async function sendDistrictChange({
     content: "",
     embeds: [
       {
+        author: {
+          name: user.username,
+          icon_url: user.picture,
+        },
         title:
           statusChanged && block.status === 4
             ? "New Block Completed :tada:"
