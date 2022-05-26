@@ -3,6 +3,7 @@ import { fetch, port } from "../index";
 import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { ProjectCount } from "../entity/ProjectCount";
+import { sendOverview } from "./DiscordMessageSender";
 
 const os = require("os");
 
@@ -63,7 +64,8 @@ export function startIntervals() {
       projectCount.date = new Date();
       projectCount.projects = last.projects;
 
-      projectCount.save();
+      await projectCount.save();
+      sendOverview();
     },
     1440
   );

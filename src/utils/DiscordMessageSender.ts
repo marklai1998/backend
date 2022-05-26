@@ -2,6 +2,9 @@ import { districtIdToName, statusToName } from "../utils/DistrictUtils";
 
 import { Block } from "../entity/Block";
 import { Webhook } from "../entity/Webhook";
+import { District } from "../entity/District";
+import { ProjectCount } from "../entity/ProjectCount";
+import { AdminSetting } from "../entity/AdminSetting";
 
 export const Colors = {
   MineFact_Green: 0x1d9e64,
@@ -13,7 +16,92 @@ export const Colors = {
   Error: 0x8b0000,
 };
 
-export async function sendDiscordChange({
+function progressToColor(progress: number) {
+  if (progress >= 100) return ":green_circle:";
+  else if (progress >= 80) return ":yellow_circle:";
+  else if (progress >= 30) return ":orange_circle:";
+  else return ":red_circle:";
+}
+
+export async function sendOverview() {
+  const districtIDs = JSON.parse(
+    await (
+      await AdminSetting.findOne({ key: "nyc_overview_districts" })
+    ).value
+  );
+  const projects = await ProjectCount.find({ order: { projects: "DESC" } });
+  const embeds = [
+    {
+      title: "New York City Overview",
+      description:
+        "Click [here](http://142.44.137.53:3000/) to open the Progress Website of New York City",
+      color: Colors.MineFact_Green,
+      fields: [
+        {
+          name: "**Overall Projects**",
+          value: `» ${projects[0].projects}`,
+          inline: true,
+        },
+        {
+          name: "**Today's Projects**",
+          value: `» ${projects[0].projects - projects[1].projects}`,
+          inline: true,
+        },
+        {
+          name: "**Yesterday's Projects**",
+          value: `» ${projects[1].projects - projects[2].projects}`,
+          inline: true,
+        },
+      ],
+    },
+  ];
+
+  for (const id of districtIDs) {
+    const parent = await District.findOne({ id: id });
+    const children = await District.find({ parent: id });
+
+    if (children.length === 0) continue;
+
+    const fields = [
+      {
+        name: `__${parent.name}__`,
+        value: `${parent.progress.toFixed(2)}%`,
+        inline: false,
+      },
+    ];
+    for (const district of children) {
+      fields.push({
+        name: `${progressToColor(district.progress)} ${district.name}`,
+        value: `${district.progress.toFixed(2)}%`,
+        inline: true,
+      });
+    }
+
+    while (fields.length % 3 !== 1) {
+      fields.push({
+        name: "‎",
+        value: "‎",
+        inline: true,
+      });
+    }
+
+    embeds.push({
+      title: "",
+      description: "",
+      color: Colors.MineFact_Green,
+      fields,
+    });
+  }
+
+  const body = {
+    content: "",
+    embeds,
+  };
+
+  await sendWebhook("nyc_overview", body);
+}
+
+export async function sendDistrictChange({
   block = null,
   title = "No title set",
   statusChanged = false,
@@ -126,10 +214,10 @@ export async function sendDiscordChange({
     ],
   };
 
-  await sendWebhook("district_log", "POST", body);
+  await sendWebhook("district_log", body);
 }
 
-export async function sendWebhook(name: string, method: string, body: object) {
+export async function sendWebhook(name: string, body: object) {
   const webhook = await Webhook.findOne({ name: name });
 
   if (!webhook) {
@@ -137,5 +225,5 @@ export async function sendWebhook(name: string, method: string, body: object) {
     return;
   }
 
-  webhook.send({ method, body });
+  webhook.send(body);
 }

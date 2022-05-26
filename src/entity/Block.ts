@@ -22,7 +22,10 @@ import {
   districtIdToName,
   calculateCenterOfLatLong,
 } from "../utils/DistrictUtils";
-import { sendDiscordChange } from "../utils/DiscordMessageSender";
+import {
+  sendDistrictChange,
+  sendOverview,
+} from "../utils/DiscordMessageSender";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -350,7 +353,7 @@ async function update({
 
   if (!result["error"]) {
     // Send Webhook
-    sendDiscordChange({
+    sendDistrictChange({
       block,
       title: successMessage,
       statusChanged: oldStatus !== -1,
@@ -358,6 +361,7 @@ async function update({
       oldValue: oldValue,
       newValue: newValue,
     });
+    sendOverview();
   }
 
   return result;
