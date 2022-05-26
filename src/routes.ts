@@ -213,6 +213,13 @@ const Routes = [
   },
   {
     method: "post",
+    route: "/api/blocks/update",
+    controller: BlockController,
+    action: "update",
+    permission: Permissions.builder,
+  },
+  {
+    method: "post",
     route: "/api/blocks/setProgress",
     controller: BlockController,
     action: "setProgress",

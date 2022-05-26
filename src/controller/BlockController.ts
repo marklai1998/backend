@@ -168,6 +168,39 @@ export class BlockController {
     return block.removeLocation(request.body.index);
   }
 
+  async update(request: Request, response: Response, next: NextFunction) {
+    if (
+      !request.body.district ||
+      !request.body.blockID ||
+      !request.body.values
+    ) {
+      return index.generateError("Specify district, blockID and values");
+    }
+
+    const values = request.body.values;
+    const block = await getBlock(request.body.district, request.body.blockID);
+
+    if (!block) {
+      return index.generateError("Block not found");
+    }
+
+    let counter = 0;
+    if (values.progress !== undefined) {
+      await block.setProgress(values.progress);
+      counter++;
+    }
+    if (values.details !== undefined) {
+      await block.setDetails(values.details);
+      counter++;
+    }
+    if (values.builder !== undefined) {
+      await block.setBuilder(values.builder);
+      counter++;
+    }
+
+    return index.getValidation(block, `${counter} columns updated`);
+  }
+
   async setProgress(request: Request, response: Response, next: NextFunction) {
     const block = await getBlock(request.body.district, request.body.blockID);
 
