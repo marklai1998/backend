@@ -381,6 +381,7 @@ export class GeneralController {
       stats: {
         total_requests: Stats.total_requests,
         successful_requests: Stats.successful_requests,
+        error_requests: Stats.errors,
       },
     };
   }

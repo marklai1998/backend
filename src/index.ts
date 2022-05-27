@@ -34,36 +34,40 @@ createConnection()
     // register express routes from defined application routes
     Routes.forEach((route) => {
       (app as any)[route.method](
-        route.route,
         async (req: Request, res: Response, next: Function) => {
-          Stats.total_requests++;
-          if (route.permission > 0) {
-            let user = await User.findOne({
-              apikey: req.body.key || req.query.key,
-            });
-            if (user === undefined) {
-              res.send(generateError("Invalid or missing API-Key"));
-              return;
+          try {
+            Stats.total_requests++;
+            if (route.permission > 0) {
+              let user = await User.findOne({
+                apikey: req.body.key || req.query.key,
+              });
+              if (user === undefined) {
+                res.send(generateError("Invalid or missing API-Key"));
+                return;
+              }
+              if (user.permission < route.permission) {
+                res.send(generateError("No permission"));
+                return;
+              }
             }
-            if (user.permission < route.permission) {
-              res.send(generateError("No permission"));
-              return;
-            }
-          }
-          Stats.successful_requests++;
-          const result = new (route.controller as any)()[route.action](
-            req,
-            res,
-            next
-          );
-          if (result instanceof Promise) {
-            result.then((result) =>
-              result !== null && result !== undefined
-                ? res.send(result)
-                : undefined
+            const result = new (route.controller as any)()[route.action](
+              req,
+              res,
+              next
             );
-          } else if (result !== null && result !== undefined) {
-            res.json(result);
+            if (result instanceof Promise) {
+              result.then((result) =>
+                result !== null && result !== undefined
+                  ? res.send(result)
+                  : undefined
+              );
+            } else if (result !== null && result !== undefined) {
+              res.json(result);
+            }
+            Stats.successful_requests++;
+          } catch (err) {
+            Stats.errors++;
+            console.log(err);
           }
         }
       );
