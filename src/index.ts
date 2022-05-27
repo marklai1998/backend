@@ -34,6 +34,7 @@ createConnection()
     // register express routes from defined application routes
     Routes.forEach((route) => {
       (app as any)[route.method](
+        route.route,
         async (req: Request, res: Response, next: Function) => {
           try {
             Stats.total_requests++;
