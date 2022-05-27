@@ -7,7 +7,7 @@
     "start": "ts-node src/index.ts --i",
     "dev": "nodemon src/index.ts",
     "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
-    "serve":"ts-node src/index.ts --i"
+    "serve":"git pull && ts-node src/index.ts --i"
   },
   "author": "",
   "license": "ISC",
