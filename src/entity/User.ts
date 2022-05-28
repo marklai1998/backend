@@ -28,6 +28,9 @@ export class User extends BaseEntity {
   // @Column({ nullable: true })
   // minecraft: number;
 
+  @Column("text", { nullable: true })
+  rank: string;
+
   @Column("text")
   about: string;
 
@@ -75,6 +78,7 @@ export class User extends BaseEntity {
       email: this.email,
       username: this.username,
       permission: this.permission,
+      rank: this.rank,
       discord: this.discord,
       about: this.about,
       image: this.image,
