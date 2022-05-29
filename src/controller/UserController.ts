@@ -68,9 +68,18 @@ export class UserController {
   async getAll(request: Request, response: Response, next: NextFunction) {
     const userRaw = await User.find();
 
+    const requester = await User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
     const users = [];
     for (const user of userRaw) {
-      users.push(await user.toJson({ showAPIKey: true }));
+      users.push(
+        await user.toJson({
+          showAPIKey: true,
+          hasPermission: requester.permission >= Permissions.moderator,
+        })
+      );
     }
     return users;
   }
@@ -80,11 +89,18 @@ export class UserController {
       (await User.findOne({ uid: request.params.user })) ||
       (await User.findOne({ username: request.params.user }));
 
+    const requester = await User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
     if (!user) {
       return index.generateError("User not found");
     }
 
-    return await user.toJson({ showAPIKey: true });
+    return await user.toJson({
+      showAPIKey: true,
+      hasPermission: requester.permission >= Permissions.moderator,
+    });
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
