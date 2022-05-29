@@ -30,14 +30,14 @@ const Routes = [
     route: "/api/users/get/:user",
     controller: UserController,
     action: "getOne",
-    permission: Permissions.admin,
+    permission: Permissions.default,
   },
   {
     method: "get",
     route: "/api/users/get",
     controller: UserController,
     action: "getAll",
-    permission: Permissions.admin,
+    permission: Permissions.default,
   },
   {
     method: "post",
