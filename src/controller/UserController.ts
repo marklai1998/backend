@@ -51,7 +51,9 @@ export class UserController {
     user = new User();
     user.email = request.body.email;
     user.username = request.body.username;
-    user.permission = 1;
+    user.permission = request.body.permission ?? 1;
+    user.rank = request.body.rank || null;
+    user.discord = request.body.discord || null;
     user.about = "";
     user.picture = "";
     user.image = "";
