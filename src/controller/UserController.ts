@@ -3,8 +3,8 @@ import * as jwt from "../utils/JsonWebToken";
 
 import { NextFunction, Request, Response } from "express";
 
-import { User } from "../entity/User";
 import { Permissions } from "../utils/Permissions";
+import { User } from "../entity/User";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -20,6 +20,7 @@ export class UserController {
       user.password,
       jwt.secretInternal,
       function (err, decoded) {
+        console.log("Login error: ",err)
         if (err) {
           return index.generateError("Invalid Password");
         } else {
