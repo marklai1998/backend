@@ -56,7 +56,12 @@ export class User extends BaseEntity {
   async toJson({
     showAPIKey = false,
     showPassword = false,
-  }: { showAPIKey?: boolean; showPassword?: boolean } = {}): Promise<object> {
+    hasPermission = false,
+  }: {
+    showAPIKey?: boolean;
+    showPassword?: boolean;
+    hasPermission?: boolean;
+  } = {}): Promise<object> {
     // let minecraft = null;
     // if (this.minecraft) {
     //   const minecraftUser = await MinecraftUser.findOne({
@@ -72,10 +77,9 @@ export class User extends BaseEntity {
     //     };
     //   }
     // }
-
     return {
       uid: this.uid,
-      email: this.email,
+      email: hasPermission ? this.email : undefined,
       username: this.username,
       permission: this.permission,
       rank: this.rank,
@@ -83,12 +87,13 @@ export class User extends BaseEntity {
       about: this.about,
       image: this.image,
       picture: this.picture,
-      settings: JSON.parse(this.settings),
+      settings: hasPermission ? JSON.parse(this.settings) : undefined,
       // minecraft: minecraft,
       password: showPassword ? this.password : undefined,
-      apikey: showAPIKey
-        ? jwt.generateToken(this.apikey, jwt.secretUserData)
-        : undefined,
+      apikey:
+        showAPIKey && hasPermission
+          ? jwt.generateToken(this.apikey, jwt.secretUserData)
+          : undefined,
     };
   }
 }
