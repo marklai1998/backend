@@ -80,7 +80,7 @@ export class UserController {
       users.push(
         await user.toJson({
           showAPIKey: true,
-          hasPermission: requester.permission >= Permissions.moderator,
+          hasPermission: !requester ? false : requester.permission >= Permissions.moderator,
         })
       );
     }
@@ -102,7 +102,7 @@ export class UserController {
 
     return await user.toJson({
       showAPIKey: true,
-      hasPermission: (requester.permission||0) >= Permissions.moderator,
+      hasPermission: !requester ? false : requester.permission >= Permissions.moderator,
     });
   }
 
