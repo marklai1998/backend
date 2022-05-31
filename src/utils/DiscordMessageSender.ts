@@ -200,7 +200,8 @@ export async function sendDistrictChange({
       {
         author: {
           name: user.username,
-          icon_url: user.picture,
+          icon_url:
+            user.picture || `https://mc-heads.net/avatar/${user.username}`,
         },
         title:
           statusChanged && block.status === 4
@@ -222,6 +223,12 @@ export async function sendDistrictChange({
   };
 
   await sendWebhook("district_log", body);
+
+  // Modify embed for #new-york-city channel
+  body.embeds[0].description = `__**Last Change**__\n${body.embeds[0].title}`;
+  body.embeds[0].title = "";
+  delete body.embeds[0].author;
+  await sendWebhook("last_change", body);
 }
 
 export async function sendWebhook(name: string, body: object) {
