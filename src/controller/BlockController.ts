@@ -28,7 +28,9 @@ export class BlockController {
       district: district.id,
     });
     if (block) {
-      await Block.query(`UPDATE blocks SET id = id+1 WHERE id >= ${block.id}`);
+      await Block.query(
+        `UPDATE blocks SET id = id+1 WHERE id >= ${block.id} AND district = ${block.district}`
+      );
     }
 
     block = new Block();
@@ -106,7 +108,9 @@ export class BlockController {
       return index.generateError("Block not found");
     }
 
-    await Block.query(`UPDATE blocks SET id = id-1 WHERE id > ${block.id}`);
+    await Block.query(
+      `UPDATE blocks SET id = id-1 WHERE id > ${block.id} AND district = ${block.district}`
+    );
     await block.remove();
     return index.generateSuccess("Block deleted");
   }
