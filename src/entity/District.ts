@@ -40,10 +40,10 @@ export class District extends BaseEntity {
   @Column({ nullable: true })
   completionDate: Date;
 
-  @Column("text")
+  @Column("text", { nullable: true })
   image: string;
 
-  @Column("text")
+  @Column("text", { nullable: true })
   map: string;
 
   @Column("text" /*{ default: "[]" -}*/)

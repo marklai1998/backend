@@ -34,9 +34,16 @@ export class DistrictController {
     district = new District();
     district.name = request.body.name;
     district.parent = parent.id;
+    district.status = 0;
+    district.blocksDone = 0;
+    district.blocksLeft = 0;
+    district.progress = 0;
     district.area = "[]";
 
-    return index.getValidation(district, "District created");
+    return index.getValidation(district, "District created", {
+      name: district.name,
+      parent: district.parent,
+    });
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
