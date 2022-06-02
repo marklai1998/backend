@@ -5,7 +5,6 @@ import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
-import { getRepository } from "typeorm";
 import { statusToNumber } from "../utils/DistrictUtils";
 
 export class DistrictController {
@@ -25,7 +24,7 @@ export class DistrictController {
     }
 
     const parent = await District.findOne({
-      name: request.body.parent,
+      id: request.body.parent,
     });
     if (!parent) {
       return index.generateError("Parent District not found");
