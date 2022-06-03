@@ -38,6 +38,7 @@ export class DistrictController {
     district.blocksLeft = 0;
     district.progress = 0;
     district.area = "[]";
+    district.image = "[]";
 
     return index.getValidation(district, "District created", {
       name: district.name,
@@ -147,8 +148,7 @@ export class DistrictController {
       district.blocksLeft = parseInt(d[4]);
       district.progress = parseFloat(d[5].replace("%", "").replace(",", "."));
       district.area = "[]";
-      district.image = "-";
-      district.map = "-";
+      district.image = "[]";
 
       if (isBorough) {
         district.parent = currentParent;

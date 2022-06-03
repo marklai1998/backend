@@ -43,9 +43,6 @@ export class District extends BaseEntity {
   @Column("text", { nullable: true })
   image: string;
 
-  @Column("text", { nullable: true })
-  map: string;
-
   @Column("text" /*{ default: "[]" -}*/)
   area: string;
 
@@ -71,8 +68,7 @@ export class District extends BaseEntity {
         left: this.blocksLeft,
         blocks: showDetails ? await this.getBlocks() : undefined,
       },
-      image: onlyProgress ? undefined : this.image,
-      map: onlyProgress ? undefined : this.map,
+      image: onlyProgress ? undefined : JSON.parse(this.image),
       center: this.getLocationCenter(),
       area: onlyProgress ? undefined : JSON.parse(this.area),
       parent: this.parent,
