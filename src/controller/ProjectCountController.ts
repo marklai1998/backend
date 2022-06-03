@@ -96,7 +96,7 @@ export class ProjectCountController {
     var lastDate = null;
     for (
       var i = scale;
-      i < projects[projects.length - 1].projects;
+      i <= projects[projects.length - 1].projects;
       i += scale
     ) {
       var project = projects.find(function (counter) {
