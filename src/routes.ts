@@ -152,7 +152,7 @@ const Routes = [
     route: "/api/districts/edit",
     controller: DistrictController,
     action: "edit",
-    permission: Permissions.admin,
+    permission: Permissions.moderator,
   },
   // Blocks
   {
