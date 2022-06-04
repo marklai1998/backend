@@ -2,12 +2,18 @@ import { AdminSettingController } from "./controller/AdminSettingController";
 import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
 import { GeneralController } from "./controller/GeneralController";
-// import { MinecraftController } from "./controller/MinecraftController";
 import { Permissions } from "./utils/Permissions";
 import { PlayerStatController } from "./controller/PlayerStatController";
 import { ProjectCountController } from "./controller/ProjectCountController";
 import { UserController } from "./controller/UserController";
 import { WebhookController } from "./controller/WebhookController";
+
+// import { MinecraftController } from "./controller/MinecraftController";
+
+
+
+
+
 
 const Routes = [
   // Users
@@ -116,7 +122,7 @@ const Routes = [
     route: "/api/admin/getRandomImage",
     controller: AdminSettingController,
     action: "getRandomImage",
-    permission: Permissions.admin,
+    permission: Permissions.default,
   },
   // Districts
   {
