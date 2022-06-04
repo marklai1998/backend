@@ -77,6 +77,6 @@ export class AdminSettingController {
     }
 
     const rand = Math.floor(Math.random() * links.length);
-    response.redirect(links[rand]);
+    response.send({ error: false, link: links[rand] });
   }
 }
