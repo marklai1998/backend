@@ -249,6 +249,13 @@ async function setStatus(block: Block): Promise<number> {
   const oldStatus = block.status;
   let changed = false;
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
+    console.log(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 4, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 4;
     block.completionDate = new Date();
 
@@ -257,6 +264,13 @@ async function setStatus(block: Block): Promise<number> {
     // Update Block Counts & District Status
     recalculateDistrictBlocksDoneLeft(block.district);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
+    console.log(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 3, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 3;
     block.completionDate = null;
 
@@ -267,7 +281,18 @@ async function setStatus(block: Block): Promise<number> {
       await recalculateDistrictBlocksDoneLeft(block.district);
       recalculateDistrictStatus(block.district);
     }
-  } else if (oldStatus !== 2 && (block.progress > 0 || block.details)) {
+  } else if (
+    oldStatus !== 2 &&
+    ((block.progress > 0 && block.progress < 100) ||
+      (block.progress === 0 && block.details))
+  ) {
+    console.log(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 2, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 2;
     block.completionDate = null;
 
@@ -285,6 +310,13 @@ async function setStatus(block: Block): Promise<number> {
     block.builder !== "" &&
     block.builder !== null
   ) {
+    console.log(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 1, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 1;
     block.completionDate = null;
 
@@ -296,6 +328,13 @@ async function setStatus(block: Block): Promise<number> {
       recalculateDistrictStatus(block.district);
     }
   } else if (oldStatus !== 0 && block.progress === 0 && !block.details) {
+    console.log(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 0, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 0;
     block.completionDate = null;
 

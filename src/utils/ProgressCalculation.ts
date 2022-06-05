@@ -25,6 +25,10 @@ export async function recalculateDistrictProgress(districtID: number) {
     }
     progress /= blocks.length;
 
+    console.log(
+      `--> District Progress changed - District: ${district.name}, Progress: ${district.progress} -> ${progress}`
+    );
+
     district.progress = progress;
     await district.save();
   } else {
@@ -33,6 +37,10 @@ export async function recalculateDistrictProgress(districtID: number) {
       progress += child.progress * (child.blocksDone + child.blocksLeft);
     }
     progress /= district.blocksDone + district.blocksLeft;
+
+    console.log(
+      `--> Borough Progress changed - District: ${district.name}, Progress: ${district.progress} -> ${progress}`
+    );
 
     district.progress = progress;
     await district.save();
@@ -66,6 +74,11 @@ export async function recalculateDistrictBlocksDoneLeft(districtID: number) {
         blockCounts.left++;
       }
     }
+
+    console.log(
+      `--> District Blocks Done/Left changed - District: ${district.name}, Done: ${district.blocksDone} -> ${blockCounts.done}, Left: ${district.blocksLeft} -> ${blockCounts.left}`
+    );
+
     district.blocksDone = blockCounts.done;
     district.blocksLeft = blockCounts.left;
     await district.save();
@@ -78,6 +91,10 @@ export async function recalculateDistrictBlocksDoneLeft(districtID: number) {
       blockCounts.done += child.blocksDone;
       blockCounts.left += child.blocksLeft;
     }
+
+    console.log(
+      `--> Borough Blocks Done/Left changed - District: ${district.name}, Done: ${district.blocksDone} -> ${blockCounts.done}, Left: ${district.blocksLeft} -> ${blockCounts.left}`
+    );
 
     district.blocksDone = blockCounts.done;
     district.blocksLeft = blockCounts.left;
@@ -100,16 +117,28 @@ export async function recalculateDistrictStatus(districtID: number) {
     district.blocksLeft === 0 &&
     oldStatus !== 4
   ) {
+    console.log(
+      `--> District Status changed - District: ${district.name}, Status: ${oldStatus} -> 4, Progress: ${district.progress}`
+    );
     district.status = 4;
     district.completionDate = new Date();
     changed = true;
   } else if (district.progress === 100 && oldStatus !== 3) {
+    console.log(
+      `--> District Status changed - District: ${district.name}, Status: ${oldStatus} -> 3, Progress: ${district.progress}`
+    );
     district.status = 3;
     changed = true;
   } else if (district.progress > 0 && oldStatus !== 2) {
+    console.log(
+      `--> District Status changed - District: ${district.name}, Status: ${oldStatus} -> 2, Progress: ${district.progress}`
+    );
     district.status = 2;
     changed = true;
   } else if (oldStatus !== 0) {
+    console.log(
+      `--> District Status changed - District: ${district.name}, Status: ${oldStatus} -> 0, Progress: ${district.progress}`
+    );
     district.status = 0;
     changed = true;
   }
