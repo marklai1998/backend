@@ -6,26 +6,30 @@ export async function getBlocksOfDistrict(district: District) {
 }
 
 export async function getClaims(user: string) {
-  const blocks = await Block.createQueryBuilder("block")
-    .where("block.builder like :name", { name: `%${user}%` })
-    .orderBy("district", "ASC")
-    .getMany();
+  const blocksRaw = await Block.find();
+  const blocks = blocksRaw.filter((b: Block) => {
+    if (b.builder === null) return false;
+    const builders = b.builder.split(",");
+    for (const builder of builders) {
+      if (builder.toLowerCase() === user.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  });
 
   const json = {
     name: user,
     claims: {
-      total: 0,
-      done: 0,
-      detailing: 0,
-      building: 0,
-      reserved: 0,
+      total: blocks.length,
+      done: blocks.filter((b) => b.status === 4).length,
+      detailing: blocks.filter((b) => b.status === 3).length,
+      building: blocks.filter((b) => b.status === 2).length,
+      reserved: blocks.filter((b) => b.status === 1).length,
       districts: [],
     },
   };
   for (const block of blocks) {
-    json.claims.total++;
-    json.claims[statusToName(block.status)]++;
-
     const districtName = await districtIdToName(block.district);
     const index = json.claims.districts.findIndex((d) => {
       return d.id === block.district;
