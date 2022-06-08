@@ -172,6 +172,8 @@ export async function sendDistrictChange({
             builders += `- **${builder}**\n`;
           } else if (title.split(" ")[1] === "Removed") {
             builders += `- ~~${builder}~~\n`;
+          } else if (title.split(" ")[1] === "Updated") {
+            builders += `- ${builder}\n`;
           }
         } else {
           builders += `- ${builder}\n`;
