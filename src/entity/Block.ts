@@ -327,7 +327,12 @@ async function setStatus(block: Block): Promise<number> {
       await recalculateDistrictBlocksDoneLeft(block.district);
       recalculateDistrictStatus(block.district);
     }
-  } else if (oldStatus !== 0 && block.progress === 0 && !block.details) {
+  } else if (
+    oldStatus !== 0 &&
+    block.progress === 0 &&
+    !block.details &&
+    !block.builder
+  ) {
     console.log(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
         block.district
