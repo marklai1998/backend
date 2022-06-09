@@ -2,6 +2,7 @@ import { AdminSettingController } from "./controller/AdminSettingController";
 import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
 import { GeneralController } from "./controller/GeneralController";
+import { LandmarkController } from "./controller/LandmarkController";
 import { Permissions } from "./utils/Permissions";
 import { PlayerStatController } from "./controller/PlayerStatController";
 import { ProjectCountController } from "./controller/ProjectCountController";
@@ -9,11 +10,6 @@ import { UserController } from "./controller/UserController";
 import { WebhookController } from "./controller/WebhookController";
 
 // import { MinecraftController } from "./controller/MinecraftController";
-
-
-
-
-
 
 const Routes = [
   // Users
@@ -266,6 +262,28 @@ const Routes = [
     controller: BlockController,
     action: "getClaims",
     permission: Permissions.default,
+  },
+  // Landmarks
+  {
+    method: "post",
+    route: "/api/landmarks/create",
+    controller: LandmarkController,
+    action: "create",
+    permission: Permissions.moderator,
+  },
+  {
+    method: "post",
+    route: "/api/landmarks/delete",
+    controller: LandmarkController,
+    action: "delete",
+    permission: Permissions.moderator,
+  },
+  {
+    method: "post",
+    route: "/api/landmarks/edit",
+    controller: LandmarkController,
+    action: "edit",
+    permission: Permissions.moderator,
   },
   // PlayerStats
   {

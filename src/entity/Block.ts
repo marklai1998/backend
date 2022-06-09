@@ -27,6 +27,7 @@ import {
   sendOverview,
 } from "../utils/DiscordMessageSender";
 import { User } from "./User";
+import { Landmark } from "./Landmark";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -91,6 +92,7 @@ export class Block extends BaseEntity {
       details: this.details,
       builders: this.builder ? this.builder.split(",") : [],
       completionDate: this.completionDate,
+      landmarks: await this.getLandmarks(),
       center: this.getLocationCenter(),
       area: JSON.parse(this.area),
     };
@@ -229,6 +231,12 @@ export class Block extends BaseEntity {
 
     this.area = JSON.stringify(coordsArray);
     return getValidation(this, "Location removed");
+  }
+
+  async getLandmarks() {
+    const landmarksRaw = await Landmark.find({ blockID: this.uid });
+
+    return landmarksRaw.map((l: any) => l.toJson());
   }
 
   getLocationCenter() {
