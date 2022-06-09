@@ -50,6 +50,26 @@ export class LandmarkController {
     return generateSuccess("Landmark deleted");
   }
 
+  async getAll(request: Request, response: Response, next: NextFunction) {
+    const landmarksRaw = await Landmark.find();
+    const landmarks = [];
+
+    for (const landmark of landmarksRaw) {
+      landmarks.push(landmark.toJson());
+    }
+    return landmarks;
+  }
+
+  async getOne(request: Request, response: Response, next: NextFunction) {
+    const landmark = await Landmark.findOne({ id: request.params.id });
+
+    if (!landmark) {
+      return generateError("Landmark not found");
+    }
+
+    return landmark.toJson();
+  }
+
   async edit(request: Request, response: Response, next: NextFunction) {
     if (!request.body.id) {
       return generateError("Specify ID");

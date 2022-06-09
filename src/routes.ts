@@ -279,6 +279,20 @@ const Routes = [
     permission: Permissions.moderator,
   },
   {
+    method: "get",
+    route: "/api/landmarks/get",
+    controller: LandmarkController,
+    action: "getAll",
+    permission: Permissions.moderator,
+  },
+  {
+    method: "get",
+    route: "/api/landmarks/get/:id",
+    controller: LandmarkController,
+    action: "getOne",
+    permission: Permissions.moderator,
+  },
+  {
     method: "post",
     route: "/api/landmarks/edit",
     controller: LandmarkController,
