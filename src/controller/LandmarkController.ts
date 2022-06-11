@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { Landmark } from "../entity/Landmark";
+import { User } from "../entity/User";
 
 export class LandmarkController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -51,23 +52,40 @@ export class LandmarkController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
+    const users = await User.find();
     const landmarksRaw = await Landmark.find();
     const landmarks = [];
 
     for (const landmark of landmarksRaw) {
-      landmarks.push(landmark.toJson());
+      const l = landmark.toJson();
+      l["requests"] = l["requests"].map(
+        (r: number) => users.find((u: User) => u.uid === r).username
+      );
+      l["builder"] = l["builder"].map(
+        (b: number) => users.find((u: User) => u.uid === b).username
+      );
+      landmarks.push(l);
     }
     return landmarks;
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
+    const users = await User.find();
     const landmark = await Landmark.findOne({ id: request.params.id });
 
     if (!landmark) {
       return generateError("Landmark not found");
     }
 
-    return landmark.toJson();
+    const l = landmark.toJson();
+    l["requests"] = l["requests"].map(
+      (r: number) => users.find((u: User) => u.uid === r).username
+    );
+    l["builder"] = l["builder"].map(
+      (b: number) => users.find((u: User) => u.uid === b).username
+    );
+
+    return l;
   }
 
   async edit(request: Request, response: Response, next: NextFunction) {
