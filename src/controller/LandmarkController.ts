@@ -42,7 +42,12 @@ export class LandmarkController {
     landmark.weight = request.body.weight;
     landmark.location = request.body.location;
 
-    return getValidation(landmark, "Landmark created");
+    return getValidation(landmark, "Landmark created", {
+      name: landmark.name,
+      blockID: landmark.blockID,
+      weight: landmark.weight,
+      location: landmark.location,
+    });
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
