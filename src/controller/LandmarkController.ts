@@ -5,19 +5,27 @@ import { NextFunction, Request, Response } from "express";
 import { Block } from "../entity/Block";
 import { Landmark } from "../entity/Landmark";
 import { User } from "../entity/User";
+import { District } from "../entity/District";
 
 export class LandmarkController {
   async create(request: Request, response: Response, next: NextFunction) {
     if (
       !request.body.name ||
+      !request.body.district ||
       !request.body.blockID ||
       !request.body.weight ||
       !request.body.location
     ) {
-      return generateError("Specify name, blockID, weight and location");
+      return generateError(
+        "Specify name, district, blockID, weight and location"
+      );
     }
 
-    const block = await Block.findOne({ uid: request.body.blockID });
+    const district = await District.findOne({ name: request.body.district });
+    const block = await Block.findOne({
+      district: district.id,
+      id: request.body.blockID,
+    });
 
     if (!block) {
       return generateError("Block not found");
@@ -30,7 +38,7 @@ export class LandmarkController {
 
     landmark = new Landmark();
     landmark.name = request.body.name;
-    landmark.blockID = request.body.blockID;
+    landmark.blockID = block.uid;
     landmark.weight = request.body.weight;
     landmark.location = request.body.location;
 
