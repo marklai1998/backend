@@ -17,11 +17,11 @@ export class LandmarkController {
       !request.body.location
     ) {
       return generateError(
-        "Specify name, district, blockID, weight and location"
+        "Specify name, district (ID), blockID, weight and location"
       );
     }
 
-    const district = await District.findOne({ name: request.body.district });
+    const district = await District.findOne({ id: request.body.district });
     const block = await Block.findOne({
       district: district.id,
       id: request.body.blockID,
