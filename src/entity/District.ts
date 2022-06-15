@@ -103,9 +103,9 @@ export class District extends BaseEntity {
 
     const blocks = [];
     for (const block of blocksRaw) {
-      blocks.push(await block.toJson({ showDistrict: false }));
+      blocks.push(block.toJson({ showDistrict: false }));
     }
-    return blocks;
+    return await Promise.all(blocks);
   }
 
   edit(body: object): object {

@@ -2,7 +2,10 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 
 export async function getBlocksOfDistrict(district: District) {
-  return await Block.find({ district: district.id });
+  return await Block.find({
+    where: { district: district.id },
+    order: { id: "ASC" },
+  });
 }
 
 export async function getClaims(user: string) {
@@ -125,4 +128,27 @@ export function calculateCenterOfLatLong(locations: any[]) {
   const lat = Math.atan2(z, hyp);
 
   return [(lat * 180) / Math.PI, (lon * 180) / Math.PI];
+}
+
+export function calculateAreaOfLatLong(locations: any[]) {
+  locations.push(locations[0]);
+  const R = 6378137;
+  let area = 0.0;
+  if (locations.length > 2) {
+    for (let i = 0; i < locations.length - 1; i++) {
+      const p1 = locations[i];
+      const p2 = locations[i + 1];
+      area +=
+        convert2Radian(p2[1] - p1[1]) *
+        (2 + Math.sin(convert2Radian(p1[0])) + Math.sin(convert2Radian(p2[0])));
+    }
+
+    area = (area * R * R) / 2.0;
+  }
+
+  return Math.abs(area);
+}
+
+function convert2Radian(input: number) {
+  return (input * Math.PI) / 180;
 }

@@ -6,7 +6,6 @@ import {
   IsInt,
   IsNumber,
   IsOptional,
-  Matches,
   Max,
   Min,
 } from "class-validator";
@@ -21,6 +20,7 @@ import { District } from "./District";
 import {
   districtIdToName,
   calculateCenterOfLatLong,
+  calculateAreaOfLatLong,
 } from "../utils/DistrictUtils";
 import {
   sendDistrictChange,
@@ -94,6 +94,7 @@ export class Block extends BaseEntity {
       completionDate: this.completionDate,
       landmarks: await this.getLandmarks(),
       center: this.getLocationCenter(),
+      size: this.getAreaSize(),
       area: JSON.parse(this.area),
     };
   }
@@ -241,6 +242,10 @@ export class Block extends BaseEntity {
 
   getLocationCenter() {
     return calculateCenterOfLatLong(JSON.parse(this.area));
+  }
+
+  getAreaSize() {
+    return calculateAreaOfLatLong(JSON.parse(this.area));
   }
 
   private validateCoords(coords: string): boolean {

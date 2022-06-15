@@ -354,5 +354,8 @@ async function getBlocks(districtName: string) {
     return null;
   }
 
-  return await Block.find({ district: district.id });
+  return await Block.find({
+    where: { district: district.id },
+    order: { id: "ASC" },
+  });
 }
