@@ -55,18 +55,28 @@ export class District extends BaseEntity {
     onlyProgress = true,
     showDetails = true,
   }: { onlyProgress?: boolean; showDetails?: boolean } = {}): Promise<object> {
+    let builders = undefined;
+    let blocks = undefined;
+
+    if (showDetails) {
+      builders = this.getBuilders();
+      blocks = this.getBlocks();
+    }
+
+    const [res1, res2] = await Promise.all([builders, blocks]);
+
     return {
       id: this.id,
       name: this.name,
       completionDate: this.completionDate,
       status: this.status,
       progress: this.progress,
-      builders: showDetails ? await this.getBuilders() : undefined,
+      builders: res1,
       blocks: {
         total: this.blocksDone + this.blocksLeft,
         done: this.blocksDone,
         left: this.blocksLeft,
-        blocks: showDetails ? await this.getBlocks() : undefined,
+        blocks: res2,
       },
       image: onlyProgress ? undefined : JSON.parse(this.image),
       center: this.getLocationCenter(),

@@ -137,9 +137,9 @@ export class BlockController {
 
     const blocks = [];
     for (const block of blocksRaw) {
-      blocks.push(await block.toJson());
+      blocks.push(block.toJson());
     }
-    return blocks;
+    return await Promise.all(blocks);
   }
 
   async getEvery(request: Request, response: Response, next: NextFunction) {
@@ -340,7 +340,7 @@ async function getBlock(districtName: string | number, blockID: number) {
     return null;
   }
 
-  const block = await Block.findOne({ id: blockID, district: district.id });
+  const block = Block.findOne({ id: blockID, district: district.id });
   if (!block) {
     return null;
   }

@@ -2,7 +2,7 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 
 export async function getBlocksOfDistrict(district: District) {
-  return await Block.find({
+  return Block.find({
     where: { district: district.id },
     order: { id: "ASC" },
   });
@@ -59,13 +59,7 @@ export async function getDirectChildren(district: District) {
 
 // Converting
 export async function districtIdToName(id: number) {
-  const districts = await District.find();
-  for (const district of districts) {
-    if (district.id === id) {
-      return district.name;
-    }
-  }
-  return null;
+  return (await District.findOne({ id: id })).name;
 }
 export async function districtIdToDistrict(id: number): Promise<District> {
   return await District.findOne({ id: id });

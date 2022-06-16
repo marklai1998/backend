@@ -80,11 +80,11 @@ export class DistrictController {
     const districts = [];
     for (const district of districtsRaw) {
       districts.push(
-        await district.toJson({ onlyProgress: false, showDetails: false })
+        district.toJson({ onlyProgress: false, showDetails: false })
       );
     }
 
-    return districts;
+    return await Promise.all(districts);
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -95,8 +95,7 @@ export class DistrictController {
     if (!district) {
       return index.generateError("District not found");
     }
-
-    return await district.toJson({ onlyProgress: false });
+    return district.toJson({ onlyProgress: false });
   }
 
   async edit(request: Request, response: Response, next: NextFunction) {
