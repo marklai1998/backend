@@ -5,9 +5,10 @@ import * as minecraftUtil from "minecraft-server-util";
 import { NextFunction, Request, Response } from "express";
 
 import { AdminSetting } from "../entity/AdminSetting";
-import { Stats } from "../stats";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+import Logger from "../utils/Logger";
+import { Stats } from "../stats";
 import { getManager } from "typeorm";
 
 const os = require("os");
@@ -390,6 +391,7 @@ export class GeneralController {
     // make query to typeorm
     const now = new Date().getTime();
     try {
+      Logger.info("Executing admin query: " + request.body.query);
       const manager = getManager();
       const query = request.body.query || request.query.query;
       if (
@@ -412,6 +414,7 @@ export class GeneralController {
           "VIEW",
         ].some((v) => query.toUpperCase().includes(v + " "))
       ) {
+        Logger.warn("SQL Injection detected");
         throw new Error("SQL Injection detected");
       }
       var result = await manager.query(query);
@@ -441,6 +444,8 @@ export class GeneralController {
         }),
       };
     } catch (error) {
+      Logger.error("Error executing admin query");
+      Logger.error(error);
       return {
         error: error.message,
       };

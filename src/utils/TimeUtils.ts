@@ -1,8 +1,9 @@
+import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
 import { fetch, port } from "../index";
 
-import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
-import { createMissingProjectEntries } from "../entity/ProjectCount";
+import Logger from "./Logger";
 import { ProjectCount } from "../entity/ProjectCount";
+import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 
 const os = require("os");
@@ -55,6 +56,7 @@ export function startIntervals() {
     0,
     0,
     async function () {
+      Logger.info("Adding new Project Count for today");
       const allProjects = await ProjectCount.find({
         order: { date: "ASC" },
       });
@@ -77,6 +79,7 @@ export function startIntervals() {
     0,
     0,
     async function () {
+      Logger.info("Adding new Player Count for today");
       const playerStat = new PlayerStat();
       playerStat.date = new Date();
       playerStat.max = JSON.stringify({
@@ -121,6 +124,20 @@ export function startIntervals() {
       }
       memoryUsage.cpu.push(cpu);
       memoryUsage.ram.push(ram);
+      if (parseInt(cpu.split("%")[0]) > 50) {
+        if (parseInt(cpu.split("%")[0]) > 80) {
+          Logger.warn("System is overloaded, please change memory allocation or restart the process. A long state of high CPU usage is not recommended. Current CPU usage: " + cpu + "%");
+          Logger.warn("")
+          Logger.warn("")
+          Logger.error("----------------------")
+          Logger.error("CPU usage is over 80%");
+          Logger.error("----------------------")
+          Logger.warn("")
+          Logger.warn("")
+        } else {
+          Logger.warn("CPU usage is over 50% (" + cpu + "%)");
+        }
+      }
     },
     1
   );
@@ -144,6 +161,7 @@ function trackPlayerCount() {
       if (!players) return;
 
       const date = new Date();
+      Logger.info(`Updating Player Count for ${date.toISOString().split("T")[0]}`);
       let playerStat = await PlayerStat.findOne({
         date: new Date(
           `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`

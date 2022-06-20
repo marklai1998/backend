@@ -9,25 +9,26 @@ import {
   Max,
   Min,
 } from "class-validator";
+import {
+  calculateAreaOfLatLong,
+  calculateCenterOfLatLong,
+  districtIdToName,
+} from "../utils/DistrictUtils";
 import { generateError, getValidation } from "../index";
 import {
   recalculateDistrictBlocksDoneLeft,
   recalculateDistrictProgress,
   recalculateDistrictStatus,
 } from "../utils/ProgressCalculation";
-
-import { District } from "./District";
-import {
-  districtIdToName,
-  calculateCenterOfLatLong,
-  calculateAreaOfLatLong,
-} from "../utils/DistrictUtils";
 import {
   sendDistrictChange,
   sendOverview,
 } from "../utils/DiscordMessageSender";
-import { User } from "./User";
+
+import { District } from "./District";
 import { Landmark } from "./Landmark";
+import Logger from "../utils/Logger";
+import { User } from "./User";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -83,9 +84,9 @@ export class Block extends BaseEntity {
       id: this.id,
       district: showDistrict
         ? {
-            id: this.district,
-            name: await districtIdToName(this.district),
-          }
+          id: this.district,
+          name: await districtIdToName(this.district),
+        }
         : undefined,
       status: this.status,
       progress: this.progress,
@@ -262,13 +263,9 @@ async function setStatus(block: Block): Promise<number> {
   const oldStatus = block.status;
   let changed = false;
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
-    console.log(
-      `[${new Date().toLocaleString()}] Block Status changed - District: ${
-        block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 4, Progress: ${
-        block.progress
-      }, Details: ${block.details}`
-    );
+    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 4, Progress: ${block.progress
+      }, Details: ${block.details}`);
     block.status = 4;
     block.completionDate = new Date();
 
@@ -277,13 +274,9 @@ async function setStatus(block: Block): Promise<number> {
     // Update Block Counts & District Status
     recalculateDistrictBlocksDoneLeft(block.district);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
-    console.log(
-      `[${new Date().toLocaleString()}] Block Status changed - District: ${
-        block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 3, Progress: ${
-        block.progress
-      }, Details: ${block.details}`
-    );
+    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 3, Progress: ${block.progress
+      }, Details: ${block.details}`)
     block.status = 3;
     block.completionDate = null;
 
@@ -299,13 +292,9 @@ async function setStatus(block: Block): Promise<number> {
     ((block.progress > 0 && block.progress < 100) ||
       (block.progress === 0 && block.details))
   ) {
-    console.log(
-      `[${new Date().toLocaleString()}] Block Status changed - District: ${
-        block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 2, Progress: ${
-        block.progress
-      }, Details: ${block.details}`
-    );
+    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 2, Progress: ${block.progress
+      }, Details: ${block.details}`)
     block.status = 2;
     block.completionDate = null;
 
@@ -323,13 +312,9 @@ async function setStatus(block: Block): Promise<number> {
     block.builder !== "" &&
     block.builder !== null
   ) {
-    console.log(
-      `[${new Date().toLocaleString()}] Block Status changed - District: ${
-        block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 1, Progress: ${
-        block.progress
-      }, Details: ${block.details}`
-    );
+    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 1, Progress: ${block.progress
+      }, Details: ${block.details}`)
     block.status = 1;
     block.completionDate = null;
 
@@ -346,13 +331,9 @@ async function setStatus(block: Block): Promise<number> {
     !block.details &&
     !block.builder
   ) {
-    console.log(
-      `[${new Date().toLocaleString()}] Block Status changed - District: ${
-        block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 0, Progress: ${
-        block.progress
-      }, Details: ${block.details}`
-    );
+    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 0, Progress: ${block.progress
+      }, Details: ${block.details}`)
     block.status = 0;
     block.completionDate = null;
 

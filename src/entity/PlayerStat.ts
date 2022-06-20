@@ -1,5 +1,7 @@
-import { Entity, PrimaryColumn, Column, BaseEntity } from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
+
 import { IsJSON } from "class-validator";
+import Logger from "../utils/Logger";
 
 @Entity({ name: "playerstats" })
 export class PlayerStat extends BaseEntity {
@@ -22,10 +24,13 @@ export async function createMissingDayEntries() {
   const lastEntry = allEntries[allEntries.length - 1];
   const missingDays = Math.floor(
     (new Date().getTime() - new Date(lastEntry.date).getTime()) /
-      (1000 * 3600 * 24)
+    (1000 * 3600 * 24)
   );
 
   for (let i = 0; i < missingDays; i++) {
+    Logger.info(`Creating missing day entry for ${new Date(
+      new Date(lastEntry.date).getTime() + 86400000 * (i + 1)
+    ).toISOString().split("T")[0]}`);
     const stat = new PlayerStat();
     stat.date = new Date(
       new Date(lastEntry.date).getTime() + 86400000 * (i + 1)

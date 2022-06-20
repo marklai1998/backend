@@ -1,11 +1,11 @@
+import { NextFunction, Request, Response } from "express";
 import { generateError, generateSuccess, getValidation } from "../index";
 
-import { NextFunction, Request, Response } from "express";
-
 import { Block } from "../entity/Block";
-import { Landmark } from "../entity/Landmark";
-import { User } from "../entity/User";
 import { District } from "../entity/District";
+import { Landmark } from "../entity/Landmark";
+import Logger from "../utils/Logger";
+import { User } from "../entity/User";
 
 export class LandmarkController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -41,6 +41,7 @@ export class LandmarkController {
     landmark.blockID = block.uid;
     landmark.weight = request.body.weight;
     landmark.location = request.body.location;
+    Logger.info(`Creating landmark ${landmark.name}`);
 
     return getValidation(landmark, "Landmark created", {
       name: landmark.name,
@@ -60,6 +61,7 @@ export class LandmarkController {
       return generateError("Landmark not found");
     }
 
+    Logger.warn(`Deleting landmark ${landmark.name}`);
     await landmark.remove();
     return generateSuccess("Landmark deleted");
   }

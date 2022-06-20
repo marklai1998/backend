@@ -10,6 +10,7 @@ import { Request, Response } from "express";
 
 import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
+import Logger from "./utils/Logger";
 import { Routes } from "./routes";
 import { Stats } from "./stats";
 import { User } from "./entity/User";
@@ -23,31 +24,39 @@ var axios = require("axios");
 
 const port = process.env.PORT || 8080;
 
+Logger.debug("Connecting to database...");
 createConnection()
   .then(async (connection) => {
+    Logger.debug("Connected to database");
+
     // create express app
     const app = express();
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
+    Logger.debug("Loaded middleware");
 
     // register express routes from defined application routes
+    Logger.debug("Registering routes...");
     Routes.forEach((route) => {
       (app as any)[route.method](
         route.route,
         async (req: Request, res: Response, next: Function) => {
           try {
             Stats.total_requests++;
+            Logger.http(`${req.method} ${req.path}`);
             if (route.permission > 0) {
               let user = await User.findOne({
                 apikey: req.body.key || req.query.key,
               });
               if (user === undefined) {
                 res.send(generateError("Invalid or missing API-Key"));
+                Logger.info("Requested with invalid API-Key");
                 return;
               }
               if (user.permission < route.permission) {
                 res.send(generateError("No permission"));
+                Logger.info("Requested without Permission");
                 return;
               }
             }
@@ -68,15 +77,17 @@ createConnection()
             Stats.successful_requests++;
           } catch (err) {
             Stats.errors++;
-            console.log(err);
+            Logger.error(err);
           }
         }
       );
     });
+    Logger.debug("Registered routes");
 
     // Create root user
     let root = await User.findOne({ username: "root" });
     if (root === undefined) {
+      Logger.debug("Creating root user...");
       await connection.manager.save(
         connection.manager.create(User, {
           email: "root@roo.com",
@@ -94,12 +105,14 @@ createConnection()
           apikey: generateUUID(),
         })
       );
+      Logger.debug("Created root user");
     }
 
     // Set default admin settings
     let settings = await getRepository(AdminSetting).find();
     AdminSettings.forEach(async (setting) => {
       if (!settings.some((e) => e.key === setting.key)) {
+        Logger.debug(`Creating default setting ${setting.key}`);
         const adminSetting = new AdminSetting();
         adminSetting.key = setting.key;
         adminSetting.value = JSON.stringify(setting.value);
@@ -108,16 +121,16 @@ createConnection()
       }
     });
     if (process.argv.slice(2)[0] === "--i") {
-      console.log("API running with Intervals");
+      Logger.info("Running with Intervalls");
       date.startIntervals();
     } else {
-      console.log("API running without Intervals");
+      Logger.info("Running without Intervalls");
     }
     // start express server
     app.listen(port);
-    console.log(`Progress API running on port ${port}.`);
+    Logger.info(`Server started on port ${port}`);
   })
-  .catch((error) => console.log(error));
+  .catch((error) => Logger.error(error));
 
 export async function getValidation(
   object: BaseEntity,

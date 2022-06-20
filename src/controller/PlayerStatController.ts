@@ -3,6 +3,7 @@ import * as index from "../index";
 
 import { NextFunction, Request, Response } from "express";
 
+import Logger from "../utils/Logger";
 import { PlayerStat } from "../entity/PlayerStat";
 
 export class PlayerStatController {
@@ -86,6 +87,7 @@ export class PlayerStatController {
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
+    Logger.info("Importing player stats");
     const getData = await google.googleSheets.spreadsheets.values.get({
       auth: google.authGoogle,
       spreadsheetId: google.sheetID,

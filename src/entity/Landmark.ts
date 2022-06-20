@@ -1,14 +1,15 @@
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import {
-  Min,
-  Max,
   IsBoolean,
   IsInt,
   IsOptional,
   Matches,
+  Max,
+  Min,
 } from "class-validator";
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-
 import { generateError, getValidation } from "../index";
+
+import Logger from "../utils/Logger";
 
 @Entity({ name: "landmarks" })
 export class Landmark extends BaseEntity {
@@ -66,6 +67,8 @@ export class Landmark extends BaseEntity {
   edit(body: object): object {
     let counter = 0;
     for (const [key, value] of Object.entries(body)) {
+      
+      Logger.info("Editing landmark " + this.name + " (" + key.toLocaleUpperCase()+": "+this[key]+" -> "+value+")");
       if (key.toLowerCase() === "done" && typeof value === "boolean") {
         this.setDone(value);
       } else if (

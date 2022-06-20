@@ -5,6 +5,7 @@ import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+import Logger from "../utils/Logger";
 import { statusToNumber } from "../utils/DistrictUtils";
 
 export class DistrictController {
@@ -39,6 +40,7 @@ export class DistrictController {
     district.progress = 0;
     district.area = "[]";
     district.image = "[]";
+    Logger.info(`Creating district ${district.name}`);
 
     return index.getValidation(district, "District created", {
       name: district.name,
@@ -66,6 +68,7 @@ export class DistrictController {
       return index.generateError("Cannot delete district with existing blocks");
     }
 
+    Logger.warn(`Deleting district ${district.name}`);
     await district.remove();
     return index.generateSuccess("District deleted");
   }
@@ -134,6 +137,7 @@ export class DistrictController {
     var currentParent = null;
     var boroughCounter = -1;
     for (const d of data) {
+      Logger.info(`Importing district ${d[1]}`);
       if (d[1] === undefined || d[1] === null || d[1] === "") {
         isBorough = false;
         boroughCounter++;
@@ -186,7 +190,7 @@ export class DistrictController {
                   blocksCounter += parseInt(
                     res.data.message.replace(" Blocks imported", "")
                   );
-                  console.log(`Blocks of ${d[1]} imported`);
+                  Logger.info(`Blocks of ${d[1]} imported`);
                 } else {
                   // No blocks found in sheet --> Create new blocks
                   await index.axios
@@ -201,18 +205,20 @@ export class DistrictController {
                         blocksCounter += parseInt(
                           res.data.message.replace(" Blocks imported", "")
                         );
-                        console.log(`Blocks of ${d[1]} imported`);
+                        Logger.info(`Blocks of ${d[1]} imported`);
                       } else {
-                        console.log(`No data found for ${d[1]}`);
+                        Logger.warn(`No data found for ${d[1]}`);
                       }
                     })
                     .catch((error) => {
-                      console.log(`Error occurred for district ${d[1]}`, error);
+                      Logger.warn(`Error occurred for district ${d[1]}`);
+                      Logger.warn(error)
                     });
                 }
               })
               .catch((error) => {
-                console.log(`Error occurred for district ${d[1]}`, error);
+                Logger.warn(`Error occurred for district ${d[1]}`);
+                Logger.warn(error)
               });
           }
         }

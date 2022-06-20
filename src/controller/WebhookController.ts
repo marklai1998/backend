@@ -1,7 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-
 import * as index from "../index";
 
+import { NextFunction, Request, Response } from "express";
+
+import Logger from "../utils/Logger";
 import { User } from "../entity/User";
 import { Webhook } from "../entity/Webhook";
 
@@ -23,6 +24,7 @@ export class WebhookController {
     webhook.link = request.body.link;
     webhook.message = request.body.message || null;
     webhook.enabled = request.body.enabled || false;
+    Logger.info(`Created webhook ${webhook.name}`);
 
     return index.getValidation(webhook, "Webhook created");
   }
@@ -39,7 +41,7 @@ export class WebhookController {
     if (!webhook) {
       return index.generateError("No webhook found with this name");
     }
-
+    Logger.warn(`Deleted webhook ${webhook.name}`);
     await webhook.remove();
     return index.generateSuccess("Webhook deleted");
   }
@@ -76,6 +78,7 @@ export class WebhookController {
       return index.generateError("Invalid type");
     }
 
+    Logger.info("Editing webhook " + webhook.name + " (" + request.body.type.toLocaleUpperCase() + ": " + webhook[request.body.type] + " -> " + request.body.valu + ")");
     webhook[request.body.type] = request.body.value;
 
     return index.getValidation(webhook, "Webhook updated");

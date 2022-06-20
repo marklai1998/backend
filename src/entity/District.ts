@@ -1,12 +1,13 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { IsInt, IsNumber, IsString, Max, Min } from "class-validator";
+import {
+  calculateCenterOfLatLong,
+  getBlocksOfDistrict,
+} from "../utils/DistrictUtils";
 import { generateError, getValidation } from "../index";
 
+import Logger from "../utils/Logger";
 import { dynamicSort } from "../utils/JsonUtils";
-import {
-  getBlocksOfDistrict,
-  calculateCenterOfLatLong,
-} from "../utils/DistrictUtils";
 
 @Entity({ name: "districts" })
 export class District extends BaseEntity {
@@ -121,6 +122,7 @@ export class District extends BaseEntity {
   edit(body: object): object {
     let counter = 0;
     for (const [key, value] of Object.entries(body)) {
+      Logger.info("Editing district " + this.name + " (" + key.toLocaleUpperCase()+": "+this[key]+" -> "+value+")");
       if (key.toLowerCase() === "areaadd") {
         this.addLocation(value);
       } else if (key.toLowerCase() === "arearemove") {

@@ -1,8 +1,9 @@
-import { NextFunction, Request, Response } from "express";
-
 import * as index from "../index";
 
+import { NextFunction, Request, Response } from "express";
+
 import { AdminSetting } from "../entity/AdminSetting";
+import Logger from "../utils/Logger";
 import { User } from "../entity/User";
 
 export class AdminSettingController {
@@ -45,14 +46,17 @@ export class AdminSettingController {
     });
 
     if (!config) {
+      Logger.info("Creating new setting "+request.body.name);
       config = new AdminSetting();
       config.key = request.body.name;
       config.permission = request.body.permission || 4;
     }
 
     if (typeof request.body.value !== "object") {
+      Logger.info("Set setting "+request.body.name+" from "+config.value+" to "+request.body.value);
       config.value = request.body.value;
     } else {
+      Logger.info("Set setting "+request.body.name+" from "+config.value+" to "+JSON.stringify(request.body.value));
       config.value = JSON.stringify(request.body.value);
     }
 

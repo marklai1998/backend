@@ -4,6 +4,7 @@ import * as index from "../index";
 
 import { NextFunction, Request, Response } from "express";
 
+import Logger from "../utils/Logger";
 import { ProjectCount } from "../entity/ProjectCount";
 import { sendOverview } from "../utils/DiscordMessageSender";
 
@@ -62,7 +63,7 @@ export class ProjectCountController {
       projectCount = new ProjectCount();
       projectCount.date = date;
     }
-
+    Logger.info(`Setting projects from ${projectCount.projects} to ${request.body.projects} (${projectCount.date})`);	
     projectCount.projects = request.body.projects;
 
     const res = await index.getValidation(projectCount, "Projects updated");
@@ -118,6 +119,7 @@ export class ProjectCountController {
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
+    Logger.info("Importing project counts");
     const getData = await google.googleSheets.spreadsheets.values.get({
       auth: google.authGoogle,
       spreadsheetId: google.sheetID,

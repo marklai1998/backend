@@ -5,9 +5,10 @@ import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
+import Logger from "../utils/Logger";
+import { User } from "../entity/User";
 import { getClaims } from "../utils/DistrictUtils";
 import { statusToNumber } from "../utils/DistrictUtils";
-import { User } from "../entity/User";
 
 export class BlockController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -37,6 +38,7 @@ export class BlockController {
     block.id = request.body.blockID;
     block.district = district.id;
     block.area = "[]";
+    Logger.info(`Creating block ${block.uid}`);
 
     return index.getValidation(block, "Block created");
   }
@@ -82,6 +84,7 @@ export class BlockController {
 
       await block.save();
       counter++;
+      Logger.info(`Creating block ${block.uid}`);
     }
 
     return index.generateSuccess(`${counter} Blocks created`);
@@ -112,6 +115,8 @@ export class BlockController {
       `UPDATE blocks SET id = id-1 WHERE id > ${block.id} AND district = ${block.district}`
     );
     await block.remove();
+    
+    Logger.warn(`Deleting block ${block.uid} (ID: ${block.id}, District: ${block.district})`);
     return index.generateSuccess("Block deleted");
   }
 
@@ -157,7 +162,7 @@ export class BlockController {
     if (!block) {
       return index.generateError("Block not found");
     }
-
+    Logger.info(`Adding location to block ${block.uid}`);
     return block.addLocation(request.body.location);
   }
   async removeLocation(
@@ -170,7 +175,7 @@ export class BlockController {
     if (!block) {
       return index.generateError("Block not found");
     }
-
+    Logger.warn(`Removing location from block ${block.uid}`);
     return block.removeLocation(request.body.index);
   }
 
@@ -207,7 +212,7 @@ export class BlockController {
       await block.setBuilder(values.builder, user);
       counter++;
     }
-
+    Logger.info(`Updating block ${block.uid} (${counter} columns updated)`);
     return index.getValidation(block, `${counter} columns updated`);
   }
 
@@ -221,6 +226,7 @@ export class BlockController {
     const user = await User.findOne({
       apikey: request.body.key || request.query.key,
     });
+    Logger.info(`Updating block ${block.uid} (Progress: ${block.progress}% -> ${request.body.progress}%)`);
 
     return await block.setProgress(request.body.progress, user);
   }
@@ -235,6 +241,7 @@ export class BlockController {
     const user = await User.findOne({
       apikey: request.body.key || request.query.key,
     });
+    Logger.info(`Updating block ${block.uid} (Details: ${block.details} -> ${request.body.details})`);
 
     return await block.setDetails(request.body.details, user);
   }
@@ -249,6 +256,7 @@ export class BlockController {
     const user = await User.findOne({
       apikey: request.body.key || request.query.key,
     });
+    Logger.info(`Updating block ${block.uid} (Builder: ${block.builder} -> ${request.body.builder})`);
 
     return await block.setBuilder(request.body.builder, user);
   }
@@ -259,6 +267,7 @@ export class BlockController {
     if (!block) {
       return index.generateError("Block not found");
     }
+    Logger.info(`Adding builder ${request.body.builder} to block ${block.uid}`);
 
     return await block.addBuilder(request.body.builder);
   }
@@ -273,6 +282,7 @@ export class BlockController {
     if (!block) {
       return index.generateError("Block not found");
     }
+    Logger.info(`Removing builder ${request.body.builder} from block ${block.uid}`);
 
     return await block.removeBuilder(request.body.builder);
   }
@@ -288,6 +298,7 @@ export class BlockController {
 
     var counter = 0;
     try {
+      Logger.warn(`Importing blocks from ${request.params.district}`)
       const getData = await google.googleSheets.spreadsheets.values.get({
         auth: google.authGoogle,
         spreadsheetId: google.sheetID,
@@ -325,6 +336,7 @@ export class BlockController {
         counter++;
       }
     } catch {
+      Logger.error(`Error importing blocks from ${request.params.district}: No data found for this district`)
       return index.generateError("No data found for this district");
     }
     return index.generateSuccess(`${counter} Blocks imported`);

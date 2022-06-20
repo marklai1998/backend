@@ -6,3 +6,4 @@ tmp/
 temp/
 ormlogs.log
 ormconfig.json
+log/

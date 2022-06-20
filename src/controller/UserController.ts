@@ -3,6 +3,7 @@ import * as jwt from "../utils/JsonWebToken";
 
 import { NextFunction, Request, Response } from "express";
 
+import Logger from "../utils/Logger";
 import { Permissions } from "../utils/Permissions";
 import { User } from "../entity/User";
 
@@ -20,11 +21,13 @@ export class UserController {
       user.password,
       jwt.secretInternal,
       function (err, decoded) {
-        console.log("Login error: ",err)
+        Logger.warn("Login error: ");
+        Logger.warn(err)
         if (err) {
           return index.generateError("Invalid Password");
         } else {
           if (decoded.data === request.body.password) {
+            Logger.info(`User logged in (${user.username})`)
             return index.generateSuccess("Login successful", {
               user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
             });
@@ -61,6 +64,7 @@ export class UserController {
     user.settings = "{}";
     user.password = jwt.generateToken(ssoPw, jwt.secretInternal);
     user.apikey = index.generateUUID();
+    Logger.info(`User created (${user.username}, Permission: ${user.permission})`)
 
     return await index.getValidation(user, "New user registered", {
       password: ssoPw,
@@ -114,7 +118,7 @@ export class UserController {
     const key = request.body.key || request.query.key;
     const requester = await User.findOne({ apikey: key });
     const user = await User.findOne({ uid: request.body.uid });
-
+    
     if (
       requester.permission < Permissions.admin &&
       requester.apikey !== user.apikey
@@ -128,7 +132,9 @@ export class UserController {
 
     let counter = 0;
     for (const [key, value] of Object.entries(request.body.values)) {
+
       if (user[key] !== undefined) {
+        Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase()+": "+user[key]+" -> "+value+")");
         user[key] = value;
         counter++;
       }
@@ -138,12 +144,11 @@ export class UserController {
   }
   async delete(request: Request, response: Response, next: NextFunction) {
     const user = await User.findOne({ uid: request.body.uid });
-    console.log(request.body.uid);
-
+    
     if (!user) {
       return index.generateError("User not found");
     }
-
+    Logger.warn("Deleting user " + user.username);
     return await User.remove(user);
   }
 }
