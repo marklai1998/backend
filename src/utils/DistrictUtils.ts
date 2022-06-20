@@ -14,7 +14,7 @@ export async function getClaims(user: string) {
     if (b.builder === null) return false;
     const builders = b.builder.split(",");
     for (const builder of builders) {
-      if (builder.toLowerCase() === user.toLowerCase()) {
+      if (builder.toLowerCase().includes(user.toLowerCase())) {
         return true;
       }
     }
