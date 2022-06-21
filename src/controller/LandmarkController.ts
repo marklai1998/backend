@@ -13,12 +13,9 @@ export class LandmarkController {
       !request.body.name ||
       !request.body.district ||
       !request.body.blockID ||
-      !request.body.weight ||
       !request.body.location
     ) {
-      return generateError(
-        "Specify name, district (ID), blockID, weight and location"
-      );
+      return generateError("Specify name, district (ID), blockID and location");
     }
 
     const district = await District.findOne({ id: request.body.district });
@@ -39,14 +36,12 @@ export class LandmarkController {
     landmark = new Landmark();
     landmark.name = request.body.name;
     landmark.blockID = block.uid;
-    landmark.weight = request.body.weight;
     landmark.location = request.body.location;
     Logger.info(`Creating landmark ${landmark.name}`);
 
     return getValidation(landmark, "Landmark created", {
       name: landmark.name,
       blockID: landmark.blockID,
-      weight: landmark.weight,
       location: landmark.location,
     });
   }
