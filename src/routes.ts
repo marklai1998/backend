@@ -283,21 +283,21 @@ const Routes = [
     route: "/api/landmarks/get",
     controller: LandmarkController,
     action: "getAll",
-    permission: Permissions.moderator,
+    permission: Permissions.builder,
   },
   {
     method: "get",
     route: "/api/landmarks/get/:id",
     controller: LandmarkController,
     action: "getOne",
-    permission: Permissions.moderator,
+    permission: Permissions.builder,
   },
   {
     method: "post",
     route: "/api/landmarks/edit",
     controller: LandmarkController,
     action: "edit",
-    permission: Permissions.moderator,
+    permission: Permissions.builder,
   },
   // PlayerStats
   {
