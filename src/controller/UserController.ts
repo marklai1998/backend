@@ -138,6 +138,8 @@ export class UserController {
 
           Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase() + ": " + user[key] + " -> " + value + ")");
           user[key] = value;
+          user.save()
+          Logger.debug("changed to "+user[key])
         } else {
 
           Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase() + ")");
@@ -146,6 +148,7 @@ export class UserController {
           }, jwt.secretInternal)
         }
         counter++;
+        user.save()
       }
     }
     return index.generateSuccess("Login successful", {
@@ -160,6 +163,23 @@ export class UserController {
     }
     Logger.warn("Deleting user " + user.username);
     return await User.remove(user);
+  }
+
+  async generateText(request: Request, response: Response, next: NextFunction) {
+    const users = await User.find();
+    var text = ""
+    for(const user of users) {
+      var password = null;
+      jwt.jwt.verify(
+        user.password,
+        jwt.secretInternal,
+        function (err, decoded) {
+          password=decoded.data
+        }
+      );
+      text+="\n\n"+user.discord+"\n"+"Hey, here are your credentials for the Progress Website (https://progress.minefact.de/login). You should change your password as soon as you are logged in.\n To do that press Ctrl+S (mod+s on mac)\n\n**Username:** "+user.username+"\n**Password:** ||"+password+"||"
+    }
+    return text
   }
 }
 
