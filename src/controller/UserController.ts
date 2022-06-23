@@ -148,8 +148,9 @@ export class UserController {
         counter++;
       }
     }
-
-    return index.getValidation(user, `${counter} columns updated`);
+    return index.generateSuccess("Login successful", {
+      user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+    });
   }
   async delete(request: Request, response: Response, next: NextFunction) {
     const user = await User.findOne({ uid: request.body.uid });
