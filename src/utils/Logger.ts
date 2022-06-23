@@ -8,7 +8,7 @@ const logger = winston.createLogger({
         new winston.transports.File({ filename: 'errors.log', level: 'error' })
     ],
     format: winston.format.combine(
-        winston.format.colorize({ all: false,colors: {http:"#0E9A7E"} }),
+        winston.format.colorize(),
         winston.format.timestamp({format:"HH:mm:ss"}),
         winston.format.printf((info) => {
             return `[${info.timestamp} ${info.level}]: ${info.message}`;
