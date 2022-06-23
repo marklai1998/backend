@@ -118,7 +118,7 @@ export class UserController {
     const key = request.body.key || request.query.key;
     const requester = await User.findOne({ apikey: key });
     const user = await User.findOne({ uid: request.body.uid });
-    
+
     if (
       requester.permission < Permissions.admin &&
       requester.apikey !== user.apikey
@@ -134,8 +134,17 @@ export class UserController {
     for (const [key, value] of Object.entries(request.body.values)) {
 
       if (user[key] !== undefined) {
-        Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase()+": "+user[key]+" -> "+value+")");
-        user[key] = value;
+        if (key != "password") {
+
+          Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase() + ": " + user[key] + " -> " + value + ")");
+          user[key] = value;
+        } else {
+
+          Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase() + ")");
+          user[key] = jwt.jwt.sign({
+            data: jwt.jwt.verify(value, jwt.secretUserData),
+          }, jwt.secretInternal)
+        }
         counter++;
       }
     }
@@ -144,7 +153,7 @@ export class UserController {
   }
   async delete(request: Request, response: Response, next: NextFunction) {
     const user = await User.findOne({ uid: request.body.uid });
-    
+
     if (!user) {
       return index.generateError("User not found");
     }
