@@ -23,11 +23,6 @@ export class Landmark extends BaseEntity {
   @IsInt({ message: "Invalid Block ID" })
   blockID: number;
 
-  @Column("double")
-  @Min(0.0, { message: "Weight must be between 0 and 1" })
-  @Max(1.0, { message: "Weight must be between 0 and 1" })
-  weight: number;
-
   @Column({ default: false })
   @IsBoolean({ message: "Completion must be a boolean" })
   @IsOptional()
@@ -55,7 +50,6 @@ export class Landmark extends BaseEntity {
       id: this.id,
       name: this.name,
       block: this.blockID,
-      weight: this.weight,
       completed: this.done,
       requests: JSON.parse(this.requests),
       builder: JSON.parse(this.builder),
@@ -67,8 +61,17 @@ export class Landmark extends BaseEntity {
   edit(body: object): object {
     let counter = 0;
     for (const [key, value] of Object.entries(body)) {
-      
-      Logger.info("Editing landmark " + this.name + " (" + key.toLocaleUpperCase()+": "+this[key]+" -> "+value+")");
+      Logger.info(
+        "Editing landmark " +
+          this.name +
+          " (" +
+          key.toLocaleUpperCase() +
+          ": " +
+          this[key] +
+          " -> " +
+          value +
+          ")"
+      );
       if (key.toLowerCase() === "done" && typeof value === "boolean") {
         this.setDone(value);
       } else if (
