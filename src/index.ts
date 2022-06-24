@@ -44,11 +44,13 @@ createConnection()
         async (req: Request, res: Response, next: Function) => {
           try {
             Stats.total_requests++;
-            Logger.http(`${req.method} ${req.path}`);
+            let user = await User.findOne({
+              apikey: req.body.key || req.query.key,
+            });
+            Logger.http(
+              `${req.method} ${req.path}${user ? ` (${user.username})` : ""}`
+            );
             if (route.permission > 0) {
-              let user = await User.findOne({
-                apikey: req.body.key || req.query.key,
-              });
               if (user === undefined) {
                 res.send(generateError("Invalid or missing API-Key"));
                 Logger.info("Requested with invalid API-Key");
