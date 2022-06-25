@@ -84,9 +84,9 @@ export class Block extends BaseEntity {
       id: this.id,
       district: showDistrict
         ? {
-          id: this.district,
-          name: await districtIdToName(this.district),
-        }
+            id: this.district,
+            name: await districtIdToName(this.district),
+          }
         : undefined,
       status: this.status,
       progress: this.progress,
@@ -263,9 +263,13 @@ async function setStatus(block: Block): Promise<number> {
   const oldStatus = block.status;
   let changed = false;
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
-    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 4, Progress: ${block.progress
-      }, Details: ${block.details}`);
+    Logger.info(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 4, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 4;
     block.completionDate = new Date();
 
@@ -274,37 +278,33 @@ async function setStatus(block: Block): Promise<number> {
     // Update Block Counts & District Status
     recalculateDistrictBlocksDoneLeft(block.district);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
-    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 3, Progress: ${block.progress
-      }, Details: ${block.details}`)
+    Logger.info(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 3, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 3;
     block.completionDate = null;
 
     changed = true;
-
-    // Update Block Counts & District Status
-    if (oldStatus === 4) {
-      await recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.district);
-    }
   } else if (
     oldStatus !== 2 &&
     ((block.progress > 0 && block.progress < 100) ||
       (block.progress === 0 && block.details))
   ) {
-    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 2, Progress: ${block.progress
-      }, Details: ${block.details}`)
+    Logger.info(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 2, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 2;
     block.completionDate = null;
 
     changed = true;
-
-    // Update Block Counts & District Status
-    if (oldStatus === 4) {
-      await recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.district);
-    }
   } else if (
     oldStatus !== 1 &&
     block.progress === 0 &&
@@ -312,43 +312,45 @@ async function setStatus(block: Block): Promise<number> {
     block.builder !== "" &&
     block.builder !== null
   ) {
-    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 1, Progress: ${block.progress
-      }, Details: ${block.details}`)
+    Logger.info(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 1, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 1;
     block.completionDate = null;
 
     changed = true;
-
-    // Update Block Counts & District Status
-    if (oldStatus === 4) {
-      await recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.district);
-    }
   } else if (
     oldStatus !== 0 &&
     block.progress === 0 &&
     !block.details &&
     !block.builder
   ) {
-    Logger.info(`[${new Date().toLocaleString()}] Block Status changed - District: ${block.district
-      }, Block: ${block.id}, Status: ${oldStatus} -> 0, Progress: ${block.progress
-      }, Details: ${block.details}`)
+    Logger.info(
+      `[${new Date().toLocaleString()}] Block Status changed - District: ${
+        block.district
+      }, Block: ${block.id}, Status: ${oldStatus} -> 0, Progress: ${
+        block.progress
+      }, Details: ${block.details}`
+    );
     block.status = 0;
     block.completionDate = null;
 
     changed = true;
+  }
+
+  // Update on change
+  if (oldStatus !== block.status) {
+    await Block.save(block);
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
       await recalculateDistrictBlocksDoneLeft(block.district);
       recalculateDistrictStatus(block.district);
     }
-  }
-
-  // Update on change
-  if (oldStatus !== block.status) {
-    await Block.save(block);
 
     if (block.status === 4) {
       let blocks = await Block.find({ district: block.district });

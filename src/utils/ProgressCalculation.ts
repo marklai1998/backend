@@ -26,7 +26,9 @@ export async function recalculateDistrictProgress(districtID: number) {
     }
     progress /= blocks.length;
 
-    Logger.info(`District Progress changed - District: ${district.name}, Progress: ${district.progress} -> ${progress}`)
+    Logger.info(
+      `District Progress changed - District: ${district.name}, Progress: ${district.progress} -> ${progress}`
+    );
 
     district.progress = progress;
     await district.save();
@@ -37,7 +39,9 @@ export async function recalculateDistrictProgress(districtID: number) {
     }
     progress /= district.blocksDone + district.blocksLeft;
 
-    Logger.info(`Borough Progress changed - District: ${district.name}, Progress: ${district.progress} -> ${progress}`)
+    Logger.info(
+      `Borough Progress changed - District: ${district.name}, Progress: ${district.progress} -> ${progress}`
+    );
 
     district.progress = progress;
     await district.save();
@@ -132,7 +136,7 @@ export async function recalculateDistrictStatus(districtID: number) {
     );
     district.status = 2;
     changed = true;
-  } else if (oldStatus !== 0) {
+  } else if (district.progress === 0 && oldStatus !== 0) {
     Logger.info(
       `District Status changed - District: ${district.name}, Status: ${oldStatus} -> 0, Progress: ${district.progress}`
     );
