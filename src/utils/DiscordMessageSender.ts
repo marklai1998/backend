@@ -35,7 +35,7 @@ export async function sendOverview() {
     {
       title: "New York City Overview",
       description:
-        "Click [here](http://142.44.137.53:3000/) to open the Progress Website of New York City",
+        "Click [here](https://progress.minefact.de/) to open the Progress Website of New York City",
       color: Colors.MineFact_Green,
       fields: [
         {
