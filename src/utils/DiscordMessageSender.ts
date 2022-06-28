@@ -15,6 +15,7 @@ export const Colors = {
   Status_Reserved: 0x71abd9,
   Status_Not_Started: 0xc9312b,
   Error: 0x8b0000,
+  Green: 0x0cb300,
 };
 
 function progressToColor(progress: number) {

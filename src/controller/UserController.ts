@@ -6,6 +6,7 @@ import { NextFunction, Request, Response } from "express";
 import Logger from "../utils/Logger";
 import { Permissions } from "../utils/Permissions";
 import { User } from "../entity/User";
+import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -22,12 +23,12 @@ export class UserController {
       jwt.secretInternal,
       function (err, decoded) {
         Logger.warn("Login error: ");
-        Logger.warn(err)
+        Logger.warn(err);
         if (err) {
           return index.generateError("Invalid Password");
         } else {
           if (decoded.data === request.body.password) {
-            Logger.info(`User logged in (${user.username})`)
+            Logger.info(`User logged in (${user.username})`);
             return index.generateSuccess("Login successful", {
               user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
             });
@@ -64,7 +65,51 @@ export class UserController {
     user.settings = "{}";
     user.password = jwt.generateToken(ssoPw, jwt.secretInternal);
     user.apikey = index.generateUUID();
-    Logger.info(`User created (${user.username}, Permission: ${user.permission})`)
+    Logger.info(
+      `User created (${user.username}, Permission: ${user.permission})`
+    );
+
+    sendWebhook("user_log", {
+      content: "",
+      embeds: [
+        {
+          title: "New User created",
+          description: "",
+          color: Colors.Green,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "MineFact Network",
+            icon_url:
+              "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+          },
+          thumbnail: {
+            url: "https://mc-heads.net/avatar/" + user.username,
+          },
+          fields: [
+            {
+              name: "Username",
+              value: user.username,
+              inline: true,
+            },
+            {
+              name: "Discord",
+              value: user.discord,
+              inline: true,
+            },
+            {
+              name: "Rank",
+              value: user.rank,
+              inline: true,
+            },
+            {
+              name: "Initial Password",
+              value: ssoPw,
+              inline: true,
+            },
+          ],
+        },
+      ],
+    });
 
     return await index.getValidation(user, "New user registered", {
       password: ssoPw,
@@ -84,7 +129,9 @@ export class UserController {
       users.push(
         await user.toJson({
           showAPIKey: true,
-          hasPermission: !requester ? false : requester.permission >= Permissions.moderator,
+          hasPermission: !requester
+            ? false
+            : requester.permission >= Permissions.moderator,
         })
       );
     }
@@ -106,7 +153,9 @@ export class UserController {
 
     return await user.toJson({
       showAPIKey: true,
-      hasPermission: !requester ? false : requester.permission >= Permissions.moderator,
+      hasPermission: !requester
+        ? false
+        : requester.permission >= Permissions.moderator,
     });
   }
 
@@ -132,23 +181,39 @@ export class UserController {
 
     let counter = 0;
     for (const [key, value] of Object.entries(request.body.values)) {
-
       if (user[key] !== undefined) {
         if (key != "password") {
-
-          Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase() + ": " + user[key] + " -> " + value + ")");
+          Logger.info(
+            "Editing user " +
+              user.username +
+              " (" +
+              key.toLocaleUpperCase() +
+              ": " +
+              user[key] +
+              " -> " +
+              value +
+              ")"
+          );
           user[key] = value;
-          user.save()
-          Logger.debug("changed to "+user[key])
+          user.save();
+          Logger.debug("changed to " + user[key]);
         } else {
-
-          Logger.info("Editing user " + user.username + " (" + key.toLocaleUpperCase() + ")");
-          user[key] = jwt.jwt.sign({
-            data: jwt.jwt.verify(value, jwt.secretUserData),
-          }, jwt.secretInternal)
+          Logger.info(
+            "Editing user " +
+              user.username +
+              " (" +
+              key.toLocaleUpperCase() +
+              ")"
+          );
+          user[key] = jwt.jwt.sign(
+            {
+              data: jwt.jwt.verify(value, jwt.secretUserData),
+            },
+            jwt.secretInternal
+          );
         }
         counter++;
-        user.save()
+        user.save();
       }
     }
     return index.generateSuccess("Login successful", {
