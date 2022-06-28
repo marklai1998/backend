@@ -90,9 +90,10 @@ export class LandmarkController {
     }
 
     const l = landmark.toJson();
-    l["requests"] = l["requests"].map(
-      (r: number) => users.find((u: User) => u.uid === r).username
-    );
+    l["requests"] = l["requests"].map((r: any) => {
+      const user = users.find((u: User) => u.uid === r.user).username;
+      return { user: user, priority: r.priority };
+    });
     l["builder"] = l["builder"].map(
       (b: number) => users.find((u: User) => u.uid === b).username
     );

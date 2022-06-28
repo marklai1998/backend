@@ -64,7 +64,7 @@ export class Landmark extends BaseEntity {
       requests: JSON.parse(this.requests),
       builder: JSON.parse(this.builder),
       completionDate: this.completionDate,
-      location: this.location?.split(",") || null,
+      location: this.location?.split(", ") || null,
     };
   }
 
@@ -127,17 +127,20 @@ export class Landmark extends BaseEntity {
 
   addRequester(userID: number) {
     const requests = JSON.parse(this.requests);
-    if (requests.includes(userID)) {
+    if (requests.some((e: any) => e.user === userID)) {
       return generateError("Requester already added");
     }
 
-    requests.push(userID);
+    requests.push({
+      user: userID,
+      priority: 3,
+    });
     this.requests = JSON.stringify(requests);
   }
 
   removeRequester(userID: number) {
     const requests = JSON.parse(this.requests);
-    const index = requests.indexOf(userID);
+    const index = requests.findIndex((e: any) => e.user === userID);
     if (index === -1) {
       return generateError("Requester not found for this landmark");
     }
