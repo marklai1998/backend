@@ -23,6 +23,14 @@ export class Landmark extends BaseEntity {
   @IsInt({ message: "Invalid Block ID" })
   blockID: number;
 
+  @Column()
+  @IsInt({ message: "Invalid District ID" })
+  district: number;
+
+  @Column()
+  @IsInt({ message: "Invalid Block ID" })
+  block: number;
+
   @Column({ default: false })
   @IsBoolean({ message: "Completion must be a boolean" })
   @IsOptional()
@@ -50,6 +58,8 @@ export class Landmark extends BaseEntity {
       id: this.id,
       name: this.name,
       block: this.blockID,
+      district: this.district,
+      blockID: this.block,
       completed: this.done,
       requests: JSON.parse(this.requests),
       builder: JSON.parse(this.builder),

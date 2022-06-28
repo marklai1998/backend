@@ -36,6 +36,8 @@ export class LandmarkController {
     landmark = new Landmark();
     landmark.name = request.body.name;
     landmark.blockID = block.uid;
+    landmark.district = request.body.district;
+    landmark.block = request.body.blockID;
     landmark.location = request.body.location;
     Logger.info(`Creating landmark ${landmark.name}`);
 
