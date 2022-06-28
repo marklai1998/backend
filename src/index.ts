@@ -84,6 +84,9 @@ createConnection()
         }
       );
     });
+    app.get("*",(req:Request,res:Response) => {
+      res.send(generateError("Cannot GET "+req.path))
+    })
     Logger.debug("Registered routes");
 
     // Create root user
