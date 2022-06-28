@@ -85,6 +85,13 @@ export class Landmark extends BaseEntity {
       if (key.toLowerCase() === "done" && typeof value === "boolean") {
         this.setDone(value);
       } else if (
+        key.toLowerCase() === "priority" &&
+        typeof value === "object" &&
+        value.user &&
+        value.priority
+      ) {
+        this.setPriority(value.user, value.priority);
+      } else if (
         key.toLowerCase() === "requestsadd" &&
         typeof value === "number"
       ) {
@@ -168,5 +175,16 @@ export class Landmark extends BaseEntity {
 
     builder.splice(index, 1);
     this.builder = JSON.stringify(builder);
+  }
+
+  setPriority(user: number, priority: number) {
+    const requests = JSON.parse(this.requests);
+    const index = requests.findIndex((e: any) => e.user === user);
+    if (index === -1) {
+      return generateError("Requester not found for this landmark");
+    }
+
+    requests[index].priority = priority;
+    this.requests = JSON.stringify(requests);
   }
 }
