@@ -3,6 +3,7 @@ import { fetch, generateError, generateSuccess } from "../index";
 
 import { IsUrl } from "class-validator";
 import { Permissions } from "../utils/Permissions";
+import Logger from "../utils/Logger";
 
 @Entity({ name: "webhooks" })
 export class Webhook extends BaseEntity {
@@ -36,6 +37,7 @@ export class Webhook extends BaseEntity {
       },
       body: JSON.stringify(body),
     }).catch((error) => {
+      Logger.error(`Error occurred while sending the webhook ${this.name}`);
       return generateError("Error occurred while sending the message", error);
     });
     return generateSuccess("Message sent");

@@ -88,22 +88,22 @@ export class UserController {
           fields: [
             {
               name: "Username",
-              value: user.username,
+              value: user.username || "---",
               inline: true,
             },
             {
               name: "Discord",
-              value: user.discord,
+              value: user.discord || "---",
               inline: true,
             },
             {
               name: "Rank",
-              value: user.rank,
+              value: user.rank || "---",
               inline: true,
             },
             {
               name: "Initial Password",
-              value: ssoPw,
+              value: ssoPw || "---",
               inline: true,
             },
           ],
