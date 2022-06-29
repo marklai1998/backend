@@ -36,10 +36,10 @@ export class Landmark extends BaseEntity {
   @IsOptional()
   done: boolean;
 
-  @Column({ default: "[]" })
+  @Column("text", { default: "[]" })
   requests: string;
 
-  @Column({ default: "[]" })
+  @Column("text", { default: "[]" })
   builder: string;
 
   @Column({ nullable: true })
