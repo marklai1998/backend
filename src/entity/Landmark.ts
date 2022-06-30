@@ -158,23 +158,35 @@ export class Landmark extends BaseEntity {
 
   addBuilder(userID: number) {
     const builder = JSON.parse(this.builder);
-    if (builder.includes(userID)) {
+    const requests = JSON.parse(this.requests);
+    if (builder.some((e: any) => e.user === userID)) {
       return generateError("Builder already added");
     }
+    const indexRequest = requests.findIndex((e: any) => e.user === userID);
+    if (indexRequest === -1) {
+      return generateError("The user has not applied for this block");
+    }
 
-    builder.push(userID);
+    builder.push(requests[indexRequest]);
+    requests.splice(indexRequest, 1);
     this.builder = JSON.stringify(builder);
+    this.requests = JSON.stringify(requests);
   }
 
   removeBuilder(userID: number) {
     const builder = JSON.parse(this.builder);
-    const index = builder.indexOf(userID);
+    const requests = JSON.parse(this.requests);
+    const index = builder.findIndex((e: any) => e.user === userID);
     if (index === -1) {
       return generateError("Builder not found for this landmark");
     }
 
+    if (!requests.some((e: any) => e.user === userID)) {
+      requests.push(builder[index]);
+    }
     builder.splice(index, 1);
     this.builder = JSON.stringify(builder);
+    this.requests = JSON.stringify(requests);
   }
 
   setPriority(user: number, priority: number) {
