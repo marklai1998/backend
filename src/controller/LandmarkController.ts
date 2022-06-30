@@ -74,9 +74,10 @@ export class LandmarkController {
         const user = users.find((u: User) => u.uid === r.user).username;
         return { user: user, priority: r.priority };
       });
-      l["builder"] = l["builder"].map(
-        (b: number) => users.find((u: User) => u.uid === b).username
-      );
+      l["builder"] = l["builder"].map((b: any) => {
+        const user = users.find((u: User) => u.uid === b.user).username;
+        return { user: user, priority: b.priority };
+      });
       landmarks.push(l);
     }
     return landmarks;
@@ -95,9 +96,10 @@ export class LandmarkController {
       const user = users.find((u: User) => u.uid === r.user).username;
       return { user: user, priority: r.priority };
     });
-    l["builder"] = l["builder"].map(
-      (b: number) => users.find((u: User) => u.uid === b).username
-    );
+    l["builder"] = l["builder"].map((b: any) => {
+      const user = users.find((u: User) => u.uid === b.user).username;
+      return { user: user, priority: b.priority };
+    });
 
     return l;
   }
