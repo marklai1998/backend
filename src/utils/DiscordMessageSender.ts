@@ -15,6 +15,7 @@ export const Colors = {
   Status_Reserved: 0x71abd9,
   Status_Not_Started: 0xc9312b,
   Error: 0x8b0000,
+  Green: 0x0cb300,
 };
 
 function progressToColor(progress: number) {
@@ -26,9 +27,7 @@ function progressToColor(progress: number) {
 
 export async function sendOverview() {
   const districtIDs = JSON.parse(
-    await (
-      await AdminSetting.findOne({ key: "nyc_overview_districts" })
-    ).value
+    (await AdminSetting.findOne({ key: "nyc_overview_districts" })).value
   );
   const projects = await ProjectCount.find({ order: { projects: "DESC" } });
   const embeds = [
@@ -59,7 +58,9 @@ export async function sendOverview() {
 
   for (const id of districtIDs) {
     const parent = await District.findOne({ id: id });
-    const children = await District.find({ parent: id });
+    const children = (await District.find({ parent: id })).sort(
+      (a: District, b: District) => b.progress - a.progress
+    );
 
     if (children.length === 0) continue;
 

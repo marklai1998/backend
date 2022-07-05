@@ -36,6 +36,8 @@ export class LandmarkController {
     landmark = new Landmark();
     landmark.name = request.body.name;
     landmark.blockID = block.uid;
+    landmark.district = request.body.district;
+    landmark.block = request.body.blockID;
     landmark.location = request.body.location;
     Logger.info(`Creating landmark ${landmark.name}`);
 
@@ -68,12 +70,14 @@ export class LandmarkController {
 
     for (const landmark of landmarksRaw) {
       const l = landmark.toJson();
-      l["requests"] = l["requests"].map(
-        (r: number) => users.find((u: User) => u.uid === r).username
-      );
-      l["builder"] = l["builder"].map(
-        (b: number) => users.find((u: User) => u.uid === b).username
-      );
+      l["requests"] = l["requests"].map((r: any) => {
+        const user = users.find((u: User) => u.uid === r.user).username;
+        return { user: user, priority: r.priority };
+      });
+      l["builder"] = l["builder"].map((b: any) => {
+        const user = users.find((u: User) => u.uid === b.user).username;
+        return { user: user, priority: b.priority };
+      });
       landmarks.push(l);
     }
     return landmarks;
@@ -88,12 +92,14 @@ export class LandmarkController {
     }
 
     const l = landmark.toJson();
-    l["requests"] = l["requests"].map(
-      (r: number) => users.find((u: User) => u.uid === r).username
-    );
-    l["builder"] = l["builder"].map(
-      (b: number) => users.find((u: User) => u.uid === b).username
-    );
+    l["requests"] = l["requests"].map((r: any) => {
+      const user = users.find((u: User) => u.uid === r.user).username;
+      return { user: user, priority: r.priority };
+    });
+    l["builder"] = l["builder"].map((b: any) => {
+      const user = users.find((u: User) => u.uid === b.user).username;
+      return { user: user, priority: b.priority };
+    });
 
     return l;
   }

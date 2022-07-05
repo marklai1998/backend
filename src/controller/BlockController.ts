@@ -115,8 +115,10 @@ export class BlockController {
       `UPDATE blocks SET id = id-1 WHERE id > ${block.id} AND district = ${block.district}`
     );
     await block.remove();
-    
-    Logger.warn(`Deleting block ${block.uid} (ID: ${block.id}, District: ${block.district})`);
+
+    Logger.warn(
+      `Deleting block ${block.uid} (ID: ${block.id}, District: ${block.district})`
+    );
     return index.generateSuccess("Block deleted");
   }
 
@@ -226,7 +228,9 @@ export class BlockController {
     const user = await User.findOne({
       apikey: request.body.key || request.query.key,
     });
-    Logger.info(`Updating block ${block.uid} (Progress: ${block.progress}% -> ${request.body.progress}%)`);
+    Logger.info(
+      `Updating block ${block.uid} (Progress: ${block.progress}% -> ${request.body.progress}%)`
+    );
 
     return await block.setProgress(request.body.progress, user);
   }
@@ -241,7 +245,9 @@ export class BlockController {
     const user = await User.findOne({
       apikey: request.body.key || request.query.key,
     });
-    Logger.info(`Updating block ${block.uid} (Details: ${block.details} -> ${request.body.details})`);
+    Logger.info(
+      `Updating block ${block.uid} (Details: ${block.details} -> ${request.body.details})`
+    );
 
     return await block.setDetails(request.body.details, user);
   }
@@ -256,7 +262,9 @@ export class BlockController {
     const user = await User.findOne({
       apikey: request.body.key || request.query.key,
     });
-    Logger.info(`Updating block ${block.uid} (Builder: ${block.builder} -> ${request.body.builder})`);
+    Logger.info(
+      `Updating block ${block.uid} (Builder: ${block.builder} -> ${request.body.builder})`
+    );
 
     return await block.setBuilder(request.body.builder, user);
   }
@@ -282,7 +290,9 @@ export class BlockController {
     if (!block) {
       return index.generateError("Block not found");
     }
-    Logger.info(`Removing builder ${request.body.builder} from block ${block.uid}`);
+    Logger.info(
+      `Removing builder ${request.body.builder} from block ${block.uid}`
+    );
 
     return await block.removeBuilder(request.body.builder);
   }
@@ -298,7 +308,7 @@ export class BlockController {
 
     var counter = 0;
     try {
-      Logger.warn(`Importing blocks from ${request.params.district}`)
+      Logger.warn(`Importing blocks from ${request.params.district}`);
       const getData = await google.googleSheets.spreadsheets.values.get({
         auth: google.authGoogle,
         spreadsheetId: google.sheetID,
@@ -336,18 +346,21 @@ export class BlockController {
         counter++;
       }
     } catch {
-      Logger.error(`Error importing blocks from ${request.params.district}: No data found for this district`)
+      Logger.error(
+        `Error importing blocks from ${request.params.district}: No data found for this district`
+      );
       return index.generateError("No data found for this district");
     }
     return index.generateSuccess(`${counter} Blocks imported`);
   }
 }
 
-async function getBlock(districtName: string | number, blockID: number) {
+async function getBlock(districtID: string | number, blockID: number) {
   const district =
-    typeof districtName === "string"
-      ? await District.findOne({ name: districtName })
-      : await District.findOne({ id: districtName });
+    typeof districtID === "string"
+      ? await District.findOne({ name: districtID })
+      : await District.findOne({ id: districtID });
+
   if (!district) {
     return null;
   }
@@ -359,8 +372,11 @@ async function getBlock(districtName: string | number, blockID: number) {
   return block;
 }
 
-async function getBlocks(districtName: string) {
-  const district = await District.findOne({ name: districtName });
+async function getBlocks(districtID: string | number) {
+  const district =
+    typeof districtID === "string"
+      ? await District.findOne({ name: districtID })
+      : await District.findOne({ id: districtID });
 
   if (!district) {
     return null;

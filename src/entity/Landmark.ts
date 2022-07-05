@@ -23,15 +23,23 @@ export class Landmark extends BaseEntity {
   @IsInt({ message: "Invalid Block ID" })
   blockID: number;
 
+  @Column()
+  @IsInt({ message: "Invalid District ID" })
+  district: number;
+
+  @Column()
+  @IsInt({ message: "Invalid Block ID" })
+  block: number;
+
   @Column({ default: false })
   @IsBoolean({ message: "Completion must be a boolean" })
   @IsOptional()
   done: boolean;
 
-  @Column({ default: "[]" })
+  @Column("text", { default: "[]" })
   requests: string;
 
-  @Column({ default: "[]" })
+  @Column("text", { default: "[]" })
   builder: string;
 
   @Column({ nullable: true })
@@ -50,11 +58,13 @@ export class Landmark extends BaseEntity {
       id: this.id,
       name: this.name,
       block: this.blockID,
+      district: this.district,
+      blockID: this.block,
       completed: this.done,
       requests: JSON.parse(this.requests),
       builder: JSON.parse(this.builder),
       completionDate: this.completionDate,
-      location: this.location?.split(",") || null,
+      location: this.location?.split(", ") || null,
     };
   }
 
@@ -74,6 +84,13 @@ export class Landmark extends BaseEntity {
       );
       if (key.toLowerCase() === "done" && typeof value === "boolean") {
         this.setDone(value);
+      } else if (
+        key.toLowerCase() === "priority" &&
+        typeof value === "object" &&
+        value.user &&
+        value.priority
+      ) {
+        this.setPriority(value.user, value.priority);
       } else if (
         key.toLowerCase() === "requestsadd" &&
         typeof value === "number"
@@ -117,17 +134,20 @@ export class Landmark extends BaseEntity {
 
   addRequester(userID: number) {
     const requests = JSON.parse(this.requests);
-    if (requests.includes(userID)) {
+    if (requests.some((e: any) => e.user === userID)) {
       return generateError("Requester already added");
     }
 
-    requests.push(userID);
+    requests.push({
+      user: userID,
+      priority: 3,
+    });
     this.requests = JSON.stringify(requests);
   }
 
   removeRequester(userID: number) {
     const requests = JSON.parse(this.requests);
-    const index = requests.indexOf(userID);
+    const index = requests.findIndex((e: any) => e.user === userID);
     if (index === -1) {
       return generateError("Requester not found for this landmark");
     }
@@ -138,22 +158,45 @@ export class Landmark extends BaseEntity {
 
   addBuilder(userID: number) {
     const builder = JSON.parse(this.builder);
-    if (builder.includes(userID)) {
+    const requests = JSON.parse(this.requests);
+    if (builder.some((e: any) => e.user === userID)) {
       return generateError("Builder already added");
     }
+    const indexRequest = requests.findIndex((e: any) => e.user === userID);
+    if (indexRequest === -1) {
+      return generateError("The user has not applied for this block");
+    }
 
-    builder.push(userID);
+    builder.push(requests[indexRequest]);
+    requests.splice(indexRequest, 1);
     this.builder = JSON.stringify(builder);
+    this.requests = JSON.stringify(requests);
   }
 
   removeBuilder(userID: number) {
     const builder = JSON.parse(this.builder);
-    const index = builder.indexOf(userID);
+    const requests = JSON.parse(this.requests);
+    const index = builder.findIndex((e: any) => e.user === userID);
     if (index === -1) {
       return generateError("Builder not found for this landmark");
     }
 
+    if (!requests.some((e: any) => e.user === userID)) {
+      requests.push(builder[index]);
+    }
     builder.splice(index, 1);
     this.builder = JSON.stringify(builder);
+    this.requests = JSON.stringify(requests);
+  }
+
+  setPriority(user: number, priority: number) {
+    const requests = JSON.parse(this.requests);
+    const index = requests.findIndex((e: any) => e.user === user);
+    if (index === -1) {
+      return generateError("Requester not found for this landmark");
+    }
+
+    requests[index].priority = priority;
+    this.requests = JSON.stringify(requests);
   }
 }
