@@ -164,9 +164,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-        Object.keys(ips).find(
-          (key) => key.toLowerCase() === serverName.toLowerCase()
-        )
+      Object.keys(ips).find(
+        (key) => key.toLowerCase() === serverName.toLowerCase()
+      )
       ];
 
     if (server === undefined) {
@@ -352,8 +352,8 @@ export class GeneralController {
       rows: (
         await manager.query(
           "SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" +
-            ormconfig.database +
-            "'"
+          ormconfig.database +
+          "'"
         )
       )[0]["SUM(TABLE_ROWS)"],
     };
@@ -450,6 +450,13 @@ export class GeneralController {
         error: error.message,
       };
     }
+  }
+
+  async redirect(request: Request, respone: Response, next: NextFunction) {
+    const links = await AdminSetting.findOne({ key: "links" })
+    // @ts-ignore
+    const link = links.toJson().value.filter((l) => l.short.toLowerCase() === request.params.link.toLowerCase())
+    respone.redirect(link[0].link||"https://progress.minefact.de/links")
   }
 }
 

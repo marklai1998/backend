@@ -458,6 +458,14 @@ const Routes = [
     action: "import",
     permission: Permissions.admin,
   },
+  // Other
+  {
+    method: "get",
+    route: "/links/:link",
+    controller: GeneralController,
+    action: "redirect",
+    permission: Permissions.default,
+  },
 ];
 
 export { Routes, Permissions };
