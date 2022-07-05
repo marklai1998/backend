@@ -22,7 +22,7 @@ var helmet = require("helmet");
 var fetch = require("node-fetch");
 var axios = require("axios");
 
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8080;
 
 Logger.debug("Connecting to database...");
 createConnection()
