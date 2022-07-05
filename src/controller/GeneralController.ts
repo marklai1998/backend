@@ -456,7 +456,12 @@ export class GeneralController {
     const links = await AdminSetting.findOne({ key: "links" })
     // @ts-ignore
     const link = links.toJson().value.filter((l) => l.short.toLowerCase() === request.params.link.toLowerCase())
-    respone.redirect(link[0].link||"https://progress.minefact.de/links")
+    if (link[0]) {
+      respone.redirect(link[0].link)
+    }
+    else {
+      respone.redirect("https://progress.minefact.de/links")
+    }
   }
 }
 
