@@ -64,10 +64,14 @@ export class LandmarkController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    const users = await User.find();
-    const landmarksRaw = await Landmark.find();
-    const landmarks = [];
+    const usersPromise = User.find();
+    const landmarksPromise = Landmark.find();
+    const [users, landmarksRaw] = await Promise.all([
+      usersPromise,
+      landmarksPromise,
+    ]);
 
+    const landmarks = [];
     for (const landmark of landmarksRaw) {
       const l = landmark.toJson();
       l["requests"] = l["requests"].map((r: any) => {
@@ -84,8 +88,12 @@ export class LandmarkController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const users = await User.find();
-    const landmark = await Landmark.findOne({ id: request.params.id });
+    const usersPromise = User.find();
+    const landmarkPromise = Landmark.findOne({ id: request.params.id });
+    const [users, landmark] = await Promise.all([
+      usersPromise,
+      landmarkPromise,
+    ]);
 
     if (!landmark) {
       return generateError("Landmark not found");
