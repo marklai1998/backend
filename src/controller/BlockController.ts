@@ -9,6 +9,7 @@ import Logger from "../utils/Logger";
 import { User } from "../entity/User";
 import { getClaims } from "../utils/DistrictUtils";
 import { statusToNumber } from "../utils/DistrictUtils";
+import * as progress from "../utils/ProgressCalculation";
 
 export class BlockController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -40,7 +41,14 @@ export class BlockController {
     block.area = "[]";
     Logger.info(`Creating block ${block.uid}`);
 
-    return index.getValidation(block, "Block created");
+    const res = await index.getValidation(block, "Block created");
+    if (!res.error) {
+      await progress.recalculateDistrictBlocksDoneLeft(district.id);
+      await progress.recalculateDistrictProgress(district.id);
+      await progress.recalculateDistrictStatus(district.id);
+    }
+
+    return res;
   }
 
   async createMultiple(
@@ -87,6 +95,10 @@ export class BlockController {
       Logger.info(`Creating block ${block.uid}`);
     }
 
+    await progress.recalculateDistrictBlocksDoneLeft(district.id);
+    await progress.recalculateDistrictProgress(district.id);
+    await progress.recalculateDistrictStatus(district.id);
+
     return index.generateSuccess(`${counter} Blocks created`);
   }
 
@@ -119,6 +131,11 @@ export class BlockController {
     Logger.warn(
       `Deleting block ${block.uid} (ID: ${block.id}, District: ${block.district})`
     );
+
+    await progress.recalculateDistrictBlocksDoneLeft(district.id);
+    await progress.recalculateDistrictProgress(district.id);
+    await progress.recalculateDistrictStatus(district.id);
+
     return index.generateSuccess("Block deleted");
   }
 
