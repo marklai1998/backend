@@ -29,6 +29,7 @@ import { District } from "./District";
 import { Landmark } from "./Landmark";
 import Logger from "../utils/Logger";
 import { User } from "./User";
+import { log } from "./Log";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -106,6 +107,14 @@ export class Block extends BaseEntity {
     }
     const oldValue = this.progress;
 
+    log({
+      user: user,
+      type: "BLOCK_PROGRESS",
+      edited: this.uid,
+      oldValue: oldValue,
+      newValue: progress,
+    });
+
     this.progress = progress;
     const oldStatus = await setStatus(this);
 
@@ -126,6 +135,14 @@ export class Block extends BaseEntity {
     }
     const oldValue = this.details;
 
+    log({
+      user: user,
+      type: "BLOCK_DETAILS",
+      edited: this.uid,
+      oldValue: oldValue,
+      newValue: details,
+    });
+
     this.details = details;
     const oldStatus = await setStatus(this);
 
@@ -144,6 +161,14 @@ export class Block extends BaseEntity {
       return index.generateError("Nothing changed");
     }
     const oldValue = this.builder;
+
+    log({
+      user: user,
+      type: "BLOCK_BUILDER",
+      edited: this.uid,
+      oldValue: oldValue,
+      newValue: builder,
+    });
 
     this.builder = builder;
     const oldStatus = await setStatus(this);

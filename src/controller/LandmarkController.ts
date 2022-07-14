@@ -117,12 +117,17 @@ export class LandmarkController {
       return generateError("Specify ID");
     }
 
-    const landmark = await Landmark.findOne({ id: request.body.id });
+    const landmarkPromise = Landmark.findOne({ id: request.body.id });
+    const userPromise = User.findOne({
+      apikey: request.body.key || request.query.key,
+    });
+
+    const [landmark, user] = await Promise.all([landmarkPromise, userPromise]);
 
     if (!landmark) {
       return generateError("Landmark not found");
     }
 
-    return landmark.edit(request.body);
+    return landmark.edit(request.body, user);
   }
 }

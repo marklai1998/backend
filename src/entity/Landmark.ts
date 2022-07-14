@@ -7,9 +7,11 @@ import {
   Max,
   Min,
 } from "class-validator";
-import { generateError, getValidation } from "../index";
+import { generateError, generateSuccess, getValidation } from "../index";
 
 import Logger from "../utils/Logger";
+import { User } from "./User";
+import { log } from "./Log";
 
 @Entity({ name: "landmarks" })
 export class Landmark extends BaseEntity {
@@ -68,7 +70,7 @@ export class Landmark extends BaseEntity {
     };
   }
 
-  edit(body: object): object {
+  edit(body: object, user: User): object {
     let counter = 0;
     for (const [key, value] of Object.entries(body)) {
       Logger.info(
@@ -79,10 +81,18 @@ export class Landmark extends BaseEntity {
           ": " +
           this[key] +
           " -> " +
-          value +
+          (typeof value === "object" ? JSON.stringify(value) : value) +
           ")"
       );
       if (key.toLowerCase() === "done" && typeof value === "boolean") {
+        log({
+          user: user,
+          type: "LANDMARK_DONE",
+          edited: this.id,
+          oldValue: this.done,
+          newValue: value,
+        });
+
         this.setDone(value);
       } else if (
         key.toLowerCase() === "priority" &&
@@ -90,27 +100,75 @@ export class Landmark extends BaseEntity {
         value.user &&
         value.priority
       ) {
-        this.setPriority(value.user, value.priority);
+        const requests_old = this.requests;
+        const res = this.setPriority(value.user, value.priority);
+        if (!res.error) {
+          log({
+            user: user,
+            type: "LANDMARK_PRIORITY",
+            edited: this.id,
+            oldValue: JSON.stringify(
+              JSON.parse(requests_old).find((r: any) => r.user === value.user)
+            ),
+            newValue: JSON.stringify(value),
+          });
+        }
       } else if (
         key.toLowerCase() === "requestsadd" &&
         typeof value === "number"
       ) {
-        this.addRequester(value);
+        const res = this.addRequester(value);
+        if (!res.error) {
+          log({
+            user: user,
+            type: "LANDMARK_APPLY",
+            edited: this.id,
+            oldValue: null,
+            newValue: value,
+          });
+        }
       } else if (
         key.toLowerCase() === "requestsremove" &&
         typeof value === "number"
       ) {
-        this.removeRequester(value);
+        const res = this.removeRequester(value);
+        if (!res.error) {
+          log({
+            user: user,
+            type: "LANDMARK_UNAPPLY",
+            edited: this.id,
+            oldValue: value,
+            newValue: null,
+          });
+        }
       } else if (
         key.toLowerCase() === "builderadd" &&
         typeof value === "number"
       ) {
-        this.addBuilder(value);
+        const res = this.addBuilder(value);
+        if (!res.error) {
+          log({
+            user: user,
+            type: "LANDMARK_ADD_BUILDER",
+            edited: this.id,
+            oldValue: null,
+            newValue: value,
+          });
+        }
       } else if (
         key.toLowerCase() === "builderremove" &&
         typeof value === "number"
       ) {
-        this.removeBuilder(value);
+        const res = this.removeBuilder(value);
+        if (!res.error) {
+          log({
+            user: user,
+            type: "LANDMARK_REMOVE_BUILDER",
+            edited: this.id,
+            oldValue: value,
+            newValue: null,
+          });
+        }
       } else if (key.toLowerCase() !== "id" && this[key] !== undefined) {
         this[key] = value;
       } else {
@@ -143,6 +201,7 @@ export class Landmark extends BaseEntity {
       priority: 3,
     });
     this.requests = JSON.stringify(requests);
+    return generateSuccess("Requester added");
   }
 
   removeRequester(userID: number) {
@@ -154,6 +213,7 @@ export class Landmark extends BaseEntity {
 
     requests.splice(index, 1);
     this.requests = JSON.stringify(requests);
+    return generateSuccess("Requester removed");
   }
 
   addBuilder(userID: number) {
@@ -171,6 +231,7 @@ export class Landmark extends BaseEntity {
     requests.splice(indexRequest, 1);
     this.builder = JSON.stringify(builder);
     this.requests = JSON.stringify(requests);
+    return generateSuccess("Builder added");
   }
 
   removeBuilder(userID: number) {
@@ -187,6 +248,7 @@ export class Landmark extends BaseEntity {
     builder.splice(index, 1);
     this.builder = JSON.stringify(builder);
     this.requests = JSON.stringify(requests);
+    return generateSuccess("Builder removed");
   }
 
   setPriority(user: number, priority: number) {
@@ -195,8 +257,12 @@ export class Landmark extends BaseEntity {
     if (index === -1) {
       return generateError("Requester not found for this landmark");
     }
+    if (requests[index].priority === priority) {
+      return generateError("Nothing changed");
+    }
 
     requests[index].priority = priority;
     this.requests = JSON.stringify(requests);
+    return generateSuccess("Priority updated");
   }
 }
