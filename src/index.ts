@@ -18,16 +18,28 @@ import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
 
 var cors = require("cors");
+var mysql = require("mysql");
 var helmet = require("helmet");
 var fetch = require("node-fetch");
 var axios = require("axios");
-
+const ormconfig = require("../ormconfig.json")
 const port = process.env.PORT || 8080;
+var BTEconnection = mysql.createConnection({
+  host: ormconfig.host,
+  port: ormconfig.port,
+  user: ormconfig.username,
+  password: ormconfig.password,
+  database: 'MineFactServernetzwerk'
+});
 
-Logger.debug("Connecting to database...");
+Logger.debug("Connecting to main database...");
 createConnection()
   .then(async (connection) => {
-    Logger.debug("Connected to database");
+    Logger.debug("Connected to main database");
+
+    Logger.debug("Connecting to BTE.NET database...");
+    BTEconnection.connect();
+    Logger.debug("Connected to BTE.NET database");
 
     // create express app
     const app = express();
@@ -84,8 +96,8 @@ createConnection()
         }
       );
     });
-    app.get("*",(req:Request,res:Response) => {
-      res.send(generateError("Cannot GET "+req.path))
+    app.get("*", (req: Request, res: Response) => {
+      res.send(generateError("Cannot GET " + req.path))
     })
     Logger.debug("Registered routes");
 
@@ -165,4 +177,4 @@ export function generateUUID() {
   return uuidv4();
 }
 
-export { fetch, axios, port };
+export { fetch, axios, port, BTEconnection };

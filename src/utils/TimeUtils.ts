@@ -1,5 +1,5 @@
+import { BTEconnection, fetch, port } from "../index";
 import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
-import { fetch, port } from "../index";
 
 import Logger from "./Logger";
 import { ProjectCount } from "../entity/ProjectCount";
@@ -104,6 +104,8 @@ export function startIntervals() {
 
   trackPlayerCount();
 
+  trackProjectCount();
+
   // Track system memory
 
   const now = new Date();
@@ -204,6 +206,32 @@ function trackPlayerCount() {
   );
 }
 
+async function trackProjectCount() {
+  const now = new Date();
+
+  executeEveryXMinutes(
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds(),
+    async function () {
+      await BTEconnection.query("SELECT * FROM `BuildingServers`",async (error, results, fields) => {
+        if(error) Logger.error(error)
+        var count = 0;
+        for(const server of results) {
+          count += server.Projects
+        }
+        const date = new Date();
+        var project = await ProjectCount.findOne({date: new Date(
+          `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+        ),})
+        Logger.info(`Setting projects from ${ project.projects} to ${count} (${project.date})`);	
+        project.projects = count;
+      })
+    },
+    5
+  );
+}
 export function calculateStatus(cpu, ram, dbstatus) {
   if (!dbstatus) {
     return "outage";
