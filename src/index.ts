@@ -12,7 +12,7 @@ import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
 import { Routes } from "./routes";
-import { Stats } from "./stats";
+import { Stats } from "./cache";
 import { User } from "./entity/User";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
@@ -22,14 +22,14 @@ var mysql = require("mysql");
 var helmet = require("helmet");
 var fetch = require("node-fetch");
 var axios = require("axios");
-const ormconfig = require("../ormconfig.json")
+const ormconfig = require("../ormconfig.json");
 const port = process.env.PORT || 8080;
 var BTEconnection = mysql.createConnection({
   host: ormconfig.host,
   port: ormconfig.port,
   user: ormconfig.username,
   password: ormconfig.password,
-  database: 'MineFactServernetzwerk'
+  database: "MineFactServernetzwerk",
 });
 
 Logger.debug("Connecting to main database...");
@@ -97,8 +97,8 @@ createConnection()
       );
     });
     app.get("*", (req: Request, res: Response) => {
-      res.send(generateError("Cannot GET " + req.path))
-    })
+      res.send(generateError("Cannot GET " + req.path));
+    });
     Logger.debug("Registered routes");
 
     // Create root user
