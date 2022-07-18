@@ -5,6 +5,7 @@ import Logger from "./Logger";
 import { ProjectCount } from "../entity/ProjectCount";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
+import { reviews } from "../cache";
 
 const os = require("os");
 
@@ -226,8 +227,10 @@ async function trackProjectCount() {
         async (error, results, fields) => {
           if (error) Logger.error(error);
           var count = 0;
+          var reviewCount = 0;
           for (const server of results) {
             count += server.Projects;
+            reviewCount += server.ToReview;
           }
           const date = new Date();
           var project = await ProjectCount.findOne({
@@ -235,12 +238,23 @@ async function trackProjectCount() {
               `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
             ),
           });
+          var updateOverview = false;
           if (count > project.projects) {
             Logger.info(
               `Setting projects from ${project.projects} to ${count} (${project.date})`
             );
             project.projects = count;
             await project.save();
+            updateOverview = true;
+          }
+          if (reviewCount !== reviews.total) {
+            Logger.info(
+              `Setting reviews from ${reviews.total} to ${reviewCount}`
+            );
+            reviews.total = reviewCount;
+            updateOverview = true;
+          }
+          if (updateOverview) {
             sendOverview();
           }
         }
