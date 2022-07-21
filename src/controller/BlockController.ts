@@ -169,7 +169,13 @@ export class BlockController {
   async getEvery(request: Request, response: Response, next: NextFunction) {
     const blocksAll = await Block.find();
 
-    return blocksAll;
+    const blocks = [];
+    for (const block of blocksAll) {
+      block.area = JSON.parse(block.area);
+      blocks.push(block);
+    }
+
+    return blocks;
   }
   async getClaims(request: Request, response: Response, next: NextFunction) {
     return getClaims(request.params.name);
