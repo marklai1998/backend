@@ -103,7 +103,7 @@ export class DistrictController {
 
   async edit(request: Request, response: Response, next: NextFunction) {
     const district = await District.findOne({
-      name: request.body.district,
+      id: request.body.district,
     });
 
     if (!district) {
