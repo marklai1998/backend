@@ -1,4 +1,5 @@
 import { districtIdToName, statusToName } from "../utils/DistrictUtils";
+import { reviews } from "../cache";
 
 import { Block } from "../entity/Block";
 import { Webhook } from "../entity/Webhook";
@@ -24,6 +25,20 @@ function progressToColor(progress: number) {
   else if (progress >= 30) return ":orange_circle:";
   else return ":red_circle:";
 }
+function statusToColor(status: number) {
+  switch (status) {
+    case 4:
+      return ":green_circle:";
+    case 3:
+      return ":yellow_circle:";
+    case 2:
+      return ":orange_circle:";
+    case 1:
+      return ":blue_circle:";
+    default:
+      return ":red_circle:";
+  }
+}
 
 export async function sendOverview() {
   const districtIDs = JSON.parse(
@@ -48,8 +63,8 @@ export async function sendOverview() {
           inline: true,
         },
         {
-          name: "**Yesterday's Projects**",
-          value: `» ${projects[1].projects - projects[2].projects}`,
+          name: "**Projects to review**",
+          value: `» ${reviews.total}`,
           inline: true,
         },
       ],
@@ -94,6 +109,45 @@ export async function sendOverview() {
       fields,
     });
   }
+
+  // District with most progress
+  const district = await District.createQueryBuilder("district")
+    .where("parent = :parent", { parent: districtIDs[0] })
+    .andWhere("progress < 100")
+    .orderBy("progress", "DESC")
+    .getOne();
+  const blocks = await Block.createQueryBuilder("blocks")
+    .where("district = :district", { district: district.id })
+    .andWhere("status < 4")
+    .orderBy("id")
+    .getMany();
+
+  const fields = [];
+  for (const block of blocks) {
+    if (fields.length > 25) break;
+    fields.push({
+      name: `${statusToColor(block.status)} Block #${block.id}`,
+      value:
+        `» ${block.progress.toFixed(2)}%\n` +
+        `» Details: ${block.details ? ":white_check_mark:" : ":x:"}\n` +
+        `» Builder: ${block.builder}`,
+      inline: true,
+    });
+  }
+  while (fields.length % 3 !== 0) {
+    fields.push({
+      name: "‎",
+      value: "‎",
+      inline: true,
+    });
+  }
+
+  embeds.push({
+    title: `${district.name}`,
+    description: `There are **${blocks.length}** Block left!`,
+    color: Colors.MineFact_Green,
+    fields: fields,
+  });
 
   const body = {
     content: "",

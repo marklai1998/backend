@@ -8,7 +8,7 @@ import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
-import { Stats } from "../stats";
+import { Stats } from "../cache";
 import { getManager } from "typeorm";
 
 const os = require("os");
