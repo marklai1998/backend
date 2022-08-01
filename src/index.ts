@@ -147,7 +147,26 @@ createConnection()
     app.listen(port);
     Logger.info(`Server started on port ${port}`);
   })
-  .catch((error) => Logger.error(error));
+  .catch((error) => {
+    // create express app
+    const app = express();
+    app.use(bodyParser.json());
+    app.use(helmet());
+    app.use(cors());
+    Logger.debug("Loaded middleware");
+
+    // register express routes from defined application routes
+    Logger.debug("Registering routes...");
+    app.use("*", (req: Request, res: Response) => {
+      res.send(generateError("Database is offline. Try again later"));
+    });
+    Logger.debug("Registered routes");
+    Logger.error(error)
+    // start express server
+    app.listen(port);
+    Logger.info("Running without Intervalls");
+    Logger.info(`Server started on port ${port}`);
+  });
 
 export async function getValidation(
   object: BaseEntity,
