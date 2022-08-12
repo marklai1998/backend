@@ -182,7 +182,7 @@ const Routes = [
     route: "/api/blocks/create",
     controller: BlockController,
     action: "create",
-    permission: Permissions.admin,
+    permission: Permissions.builder,
   },
   {
     method: "post",
