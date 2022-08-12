@@ -4,9 +4,11 @@ import * as jwt from "../utils/JsonWebToken";
 import { NextFunction, Request, Response } from "express";
 
 import Logger from "../utils/Logger";
-import { Permissions } from "../utils/Permissions";
+import { mcRankToPermission, Permissions } from "../utils/Permissions";
 import { User } from "../entity/User";
 import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
+import { Registration } from "../entity/Registration";
+import { MinecraftUser } from "../entity/MinecraftUser";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -38,6 +40,72 @@ export class UserController {
         }
       }
     );
+  }
+
+  async register(request: Request, response: Response, next: NextFunction) {
+    if (!request.body.username || !request.body.password) {
+      return index.generateError("Specify username and password");
+    }
+
+    const registration = new Registration();
+    registration.username = request.body.username;
+    registration.password = jwt.jwt.sign(
+      {
+        data: jwt.jwt.verify(request.body.password, jwt.secretUserData),
+      },
+      jwt.secretInternal
+    );
+    registration.verification = generateVerificationKey();
+
+    return await index.getValidation(registration, "New Registration started", {
+      key: jwt.generateToken(registration.verification, jwt.secretUserData),
+    });
+  }
+
+  async verifyRegistration(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    if (!request.body.verification) {
+      return index.generateError("Missing verification key");
+    }
+    if (!request.body.uuid || !request.body.username || !request.body.rank) {
+      return index.generateError("Specify UUID, username and rank");
+    }
+
+    const registration = await Registration.findOne({
+      username: request.body.username,
+    });
+
+    if (!registration) {
+      return index.generateError("No ongoing registration found");
+    }
+    if (registration.verification !== request.body.verification) {
+      return index.generateError("Invalid verification key");
+    }
+
+    const minecraft = await MinecraftUser.findOne({ uuid: request.body.uuid });
+
+    if (!minecraft) {
+      return index.generateError("Minecraft user not found");
+    }
+
+    const user = new User();
+    user.email = `${request.body.username}@gmail.com`;
+    user.username = request.body.username;
+    user.permission = mcRankToPermission(request.body.rank);
+    user.minecraft = minecraft;
+    user.settings = "{}";
+    user.password = registration.password;
+    user.apikey = index.generateUUID();
+    Logger.info(
+      `User created (${user.username}, Permission: ${user.permission})`
+    );
+
+    registration.remove();
+
+    return index.getValidation(user, "New user registered");
   }
 
   async create(request: Request, response: Response, next: NextFunction) {
@@ -242,4 +310,15 @@ function generatePassword(min: number, max: number): string {
   }
 
   return password;
+}
+
+function generateVerificationKey(): string {
+  let key = "";
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  for (let i = 0; i < 5; i++) {
+    key += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+
+  return key;
 }
