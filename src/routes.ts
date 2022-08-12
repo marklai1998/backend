@@ -21,6 +21,20 @@ const Routes = [
   },
   {
     method: "post",
+    route: "/register",
+    controller: UserController,
+    action: "register",
+    permission: Permissions.default,
+  },
+  {
+    method: "post",
+    route: "/register/verify",
+    controller: UserController,
+    action: "verifyRegistration",
+    permission: Permissions.admin,
+  },
+  {
+    method: "post",
     route: "/api/users/create",
     controller: UserController,
     action: "create",

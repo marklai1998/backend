@@ -59,6 +59,9 @@ export class BlockController {
     if (!request.body.district) {
       return index.generateError("Specify a district");
     }
+    if (typeof request.body.district !== "number") {
+      return index.generateError("The district must be a number");
+    }
     if (!request.body.number) {
       return index.generateError("Specify the number of blocks to create");
     }
@@ -66,7 +69,7 @@ export class BlockController {
       return index.generateError("Invalid number");
     }
 
-    const district = await District.findOne({ name: request.body.district });
+    const district = await District.findOne({ id: request.body.district });
     if (!district) {
       return index.generateError("District not found");
     }
@@ -171,6 +174,7 @@ export class BlockController {
 
     const blocks = [];
     for (const block of blocksAll) {
+      block["center"] = block.getLocationCenter();
       block.area = JSON.parse(block.area);
       blocks.push(block);
     }

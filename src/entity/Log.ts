@@ -1,5 +1,4 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
-import { IsInt } from "class-validator";
+import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
 
 import { getValidation } from "../index";
 import { User } from "./User";
@@ -9,9 +8,11 @@ export class Log extends BaseEntity {
   @PrimaryColumn({ type: "datetime" })
   date: Date;
 
-  @Column()
-  @IsInt({ message: "Invalid User ID" })
-  user: number;
+  @ManyToOne(() => User, (user: User) => user.uid, {
+    nullable: false,
+    eager: true,
+  })
+  user: User;
 
   @Column()
   type: string;
@@ -42,7 +43,7 @@ export function log({
   const log = new Log();
 
   log.date = new Date();
-  log.user = user.uid;
+  log.user = user;
   log.type = type;
   log.edited = edited;
   log.old = oldValue;
