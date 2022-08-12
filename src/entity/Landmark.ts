@@ -33,6 +33,9 @@ export class Landmark extends BaseEntity {
   @IsInt({ message: "Invalid Block ID" })
   block: number;
 
+  @Column()
+  enabled: boolean;
+
   @Column({ default: false })
   @IsBoolean({ message: "Completion must be a boolean" })
   @IsOptional()
@@ -62,6 +65,7 @@ export class Landmark extends BaseEntity {
       block: this.blockID,
       district: this.district,
       blockID: this.block,
+      enabled: this.enabled,
       completed: this.done,
       requests: JSON.parse(this.requests),
       builder: JSON.parse(this.builder),
@@ -84,7 +88,9 @@ export class Landmark extends BaseEntity {
           (typeof value === "object" ? JSON.stringify(value) : value) +
           ")"
       );
-      if (key.toLowerCase() === "done" && typeof value === "boolean") {
+      if (key.toLowerCase() === "enabled" && typeof value === "boolean") {
+        this.enabled = value;
+      } else if (key.toLowerCase() === "done" && typeof value === "boolean") {
         log({
           user: user,
           type: "LANDMARK_DONE",
@@ -191,6 +197,9 @@ export class Landmark extends BaseEntity {
   }
 
   addRequester(userID: number) {
+    if (!this.enabled) {
+      return generateError("This landmark is currently not available to claim");
+    }
     const requests = JSON.parse(this.requests);
     if (requests.some((e: any) => e.user === userID)) {
       return generateError("Requester already added");
