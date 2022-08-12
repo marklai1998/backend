@@ -80,24 +80,26 @@ export function startIntervals() {
     0,
     0,
     async function () {
+      const playersRaw = await fetch(
+        `http://localhost:${port}/api/network/ping?type=java`
+      );
+      const json = await playersRaw.json();
+      const players = json.java.players;
+
+      const stats = {
+        total: 0,
+      };
+      for (const key in players.groups) {
+        stats[key] = 0;
+      }
+
       Logger.info("Adding new Player Count for today");
       const playerStat = new PlayerStat();
       playerStat.date = new Date();
-      playerStat.max = JSON.stringify({
-        total: 0,
-        lobby: 0,
-        building: 0,
-        buildteams: 0,
-        other: 0,
-      });
-      playerStat.avg = JSON.stringify({
-        total: 0,
-        lobby: 0,
-        building: 0,
-        buildteams: 0,
-        other: 0,
-        counter: 0,
-      });
+      playerStat.max = JSON.stringify(stats);
+
+      stats["counter"] = 0;
+      playerStat.avg = JSON.stringify(stats);
       playerStat.save();
     },
     1440
