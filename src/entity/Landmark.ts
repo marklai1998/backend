@@ -33,7 +33,7 @@ export class Landmark extends BaseEntity {
   @IsInt({ message: "Invalid Block ID" })
   block: number;
 
-  @Column()
+  @Column({ default: 0 })
   enabled: boolean;
 
   @Column({ default: false })
