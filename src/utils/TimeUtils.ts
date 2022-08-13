@@ -124,7 +124,7 @@ export function startIntervals() {
       // const cpu =
       //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
       //   "%";
-      const cpu = getCpuUsage();
+      const cpu = Math.round(getCpuUsage() * 100) / 100;
       if (memoryUsage.ram.length >= 15) {
         memoryUsage.cpu.shift();
         memoryUsage.ram.shift();
