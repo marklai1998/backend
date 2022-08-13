@@ -10,6 +10,7 @@ import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { Stats } from "../cache";
 import { getManager } from "typeorm";
+import { getCpuUsage } from "../utils/CpuUsage";
 
 const os = require("os");
 const ormconfig = require("../../ormconfig.json");
@@ -164,9 +165,9 @@ export class GeneralController {
     const serverName = request.params.server;
     const server =
       ips[
-      Object.keys(ips).find(
-        (key) => key.toLowerCase() === serverName.toLowerCase()
-      )
+        Object.keys(ips).find(
+          (key) => key.toLowerCase() === serverName.toLowerCase()
+        )
       ];
 
     if (server === undefined) {
@@ -332,11 +333,13 @@ export class GeneralController {
   async adminOverview(request: Request, respone: Response, next: NextFunction) {
     const backend_version = process.env.npm_package_version;
     const manager = getManager();
-    const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+    // const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+    const ram = date.memoryUsage.ram.at(-1) + "MB";
     const maxRam = Math.round(os.totalmem() / 1024 / 1024) + "MB";
-    const cpu =
-      Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
-      "%";
+    // const cpu =
+    //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
+    //   "%";
+    const cpu = date.memoryUsage.cpu.at(-1) + "%";
     const uptime = process.uptime();
     const platform = process.platform;
     const arch = process.arch;
@@ -352,8 +355,8 @@ export class GeneralController {
       rows: (
         await manager.query(
           "SELECT SUM(TABLE_ROWS) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" +
-          ormconfig.database +
-          "'"
+            ormconfig.database +
+            "'"
         )
       )[0]["SUM(TABLE_ROWS)"],
     };
@@ -453,14 +456,15 @@ export class GeneralController {
   }
 
   async redirect(request: Request, respone: Response, next: NextFunction) {
-    const links = await AdminSetting.findOne({ key: "links" })
+    const links = await AdminSetting.findOne({ key: "links" });
     // @ts-ignore
-    const link = links.toJson().value.filter((l) => l.short.toLowerCase() === request.params.link.toLowerCase())
+    const link = links.toJson().value.filter(
+        (l) => l.short.toLowerCase() === request.params.link.toLowerCase()
+      );
     if (link[0]) {
-      respone.redirect(link[0].link)
-    }
-    else {
-      respone.redirect("https://progress.minefact.de/links")
+      respone.redirect(link[0].link);
+    } else {
+      respone.redirect("https://progress.minefact.de/links");
     }
   }
 }

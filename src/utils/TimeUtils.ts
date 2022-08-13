@@ -6,6 +6,7 @@ import { ProjectCount } from "../entity/ProjectCount";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 import { reviews } from "../cache";
+import { getCpuUsage } from "./CpuUsage";
 
 const os = require("os");
 
@@ -120,17 +121,20 @@ export function startIntervals() {
     async function () {
       const ram =
         Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
-      const cpu =
-        Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
-        "%";
+      // const cpu =
+      //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
+      //   "%";
+      const cpu = getCpuUsage();
       if (memoryUsage.ram.length >= 15) {
         memoryUsage.cpu.shift();
         memoryUsage.ram.shift();
       }
       memoryUsage.cpu.push(cpu);
       memoryUsage.ram.push(ram);
-      if (parseInt(cpu.split("%")[0]) > 50) {
-        if (parseInt(cpu.split("%")[0]) > 80) {
+      // if (parseInt(cpu.split("%")[0]) > 50) {
+      //   if (parseInt(cpu.split("%")[0]) > 80) {
+      if (cpu > 50) {
+        if (cpu > 80) {
           Logger.warn(
             "System is overloaded, please change memory allocation or restart the process. A long state of high CPU usage is not recommended. Current CPU usage: " +
               cpu +
