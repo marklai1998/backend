@@ -335,11 +335,11 @@ export class GeneralController {
     const manager = getManager();
     // const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
     const ram = date.memoryUsage.ram.at(-1) + "MB";
-    const maxRam = Math.round(os.totalmem() / 1024 / 1024) + "MB";
+    const maxRam = Math.round(os.totalmem() / 1024 / 1024);
     // const cpu =
     //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
     //   "%";
-    const cpu = date.memoryUsage.cpu.at(-1) + "%";
+    const cpu = date.memoryUsage.cpu.at(-1);
     const uptime = process.uptime();
     const platform = process.platform;
     const arch = process.arch;
