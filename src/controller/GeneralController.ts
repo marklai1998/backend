@@ -334,8 +334,8 @@ export class GeneralController {
     const backend_version = process.env.npm_package_version;
     const manager = getManager();
     // const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
-    const ram = date.memoryUsage.ram.at(-1) + "MB";
-    const maxRam = Math.round(os.totalmem() / 1024 / 1024);
+    const ram = date.memoryUsage.ram.at(-1);
+    const maxRam = Math.round(os.totalmem() / 1024 / 1024) + "MB";
     // const cpu =
     //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
     //   "%";
