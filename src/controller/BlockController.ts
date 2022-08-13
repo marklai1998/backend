@@ -186,10 +186,26 @@ export class BlockController {
   }
 
   async addLocation(request: Request, response: Response, next: NextFunction) {
-    const block = await getBlock(request.body.district, request.body.blockID);
+    let block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      const blocks = await Block.find({
+        where: { district: request.body.district },
+        order: { id: "ASC" },
+      });
+
+      const nextID = blocks.at(-1).id + 1;
+      if (nextID !== request.body.blockID) {
+        return index.generateError(
+          `You skipped a block. Next block should be ${nextID}`
+        );
+      }
+
+      block = new Block();
+      block.id = request.body.blockID;
+      block.district = request.body.district;
+      block.area = "[]";
+      Logger.info(`Creating block ${block.uid}`);
     }
     Logger.info(`Adding location to block ${block.uid}`);
     return block.addLocation(request.body.location);
