@@ -129,7 +129,8 @@ export function startIntervals() {
         memoryUsage.cpu.shift();
         memoryUsage.ram.shift();
       }
-      memoryUsage.cpu.push(cpu);
+      // memoryUsage.cpu.push(cpu);
+      memoryUsage.cpu.push(cpu + "%");
       memoryUsage.ram.push(ram);
       // if (parseInt(cpu.split("%")[0]) > 50) {
       //   if (parseInt(cpu.split("%")[0]) > 80) {
