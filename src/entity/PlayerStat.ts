@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
 
 import { IsJSON } from "class-validator";
 import Logger from "../utils/Logger";
+import { fetch, port } from "..";
 
 @Entity({ name: "playerstats" })
 export class PlayerStat extends BaseEntity {
@@ -24,32 +25,39 @@ export async function createMissingDayEntries() {
   const lastEntry = allEntries[allEntries.length - 1];
   const missingDays = Math.floor(
     (new Date().getTime() - new Date(lastEntry.date).getTime()) /
-    (1000 * 3600 * 24)
+      (1000 * 3600 * 24)
   );
 
   for (let i = 0; i < missingDays; i++) {
-    Logger.info(`Creating missing day entry for ${new Date(
-      new Date(lastEntry.date).getTime() + 86400000 * (i + 1)
-    ).toISOString().split("T")[0]}`);
+    Logger.info(
+      `Creating missing day entry for ${
+        new Date(new Date(lastEntry.date).getTime() + 86400000 * (i + 1))
+          .toISOString()
+          .split("T")[0]
+      }`
+    );
     const stat = new PlayerStat();
     stat.date = new Date(
       new Date(lastEntry.date).getTime() + 86400000 * (i + 1)
     );
-    stat.max = JSON.stringify({
+
+    const playersRaw = await fetch(
+      `http://localhost:${port}/api/network/ping?type=java`
+    );
+    const json = await playersRaw.json();
+    const players = json.java.players;
+
+    const stats = {
       total: 0,
-      lobby: 0,
-      building: 0,
-      buildteams: 0,
-      other: 0,
-    });
-    stat.avg = JSON.stringify({
-      total: 0,
-      lobby: 0,
-      building: 0,
-      buildteams: 0,
-      other: 0,
-      counter: 0,
-    });
+    };
+    for (const key in players.groups) {
+      stats[key] = 0;
+    }
+
+    stat.max = JSON.stringify(stats);
+
+    stats["counter"] = 0;
+    stat.avg = JSON.stringify(stats);
     await stat.save();
   }
 }

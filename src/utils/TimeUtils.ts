@@ -100,7 +100,7 @@ export function startIntervals() {
 
       stats["counter"] = 0;
       playerStat.avg = JSON.stringify(stats);
-      playerStat.save();
+      await playerStat.save();
     },
     1440
   );
