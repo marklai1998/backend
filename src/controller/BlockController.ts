@@ -194,7 +194,7 @@ export class BlockController {
         order: { id: "ASC" },
       });
 
-      const nextID = blocks.at(-1).id + 1;
+      const nextID = blocks.length === 0 ? 1 : blocks.at(-1).id + 1;
       if (nextID !== request.body.blockID) {
         return index.generateError(
           `You skipped a block. Next block should be ${nextID}`
