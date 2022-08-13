@@ -205,6 +205,8 @@ export class BlockController {
       block.id = request.body.blockID;
       block.district = request.body.district;
       block.area = "[]";
+
+      await block.save();
       Logger.info(`Creating block ${block.uid}`);
     }
     Logger.info(`Adding location to block ${block.uid}`);
