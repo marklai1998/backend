@@ -43,9 +43,7 @@ export class BlockController {
 
     const res = await index.getValidation(block, "Block created");
     if (!res.error) {
-      await progress.recalculateDistrictBlocksDoneLeft(district.id);
-      await progress.recalculateDistrictProgress(district.id);
-      await progress.recalculateDistrictStatus(district.id);
+      progress.recalculateAll(district.id);
     }
 
     return res;
@@ -98,9 +96,7 @@ export class BlockController {
       Logger.info(`Creating block ${block.uid}`);
     }
 
-    await progress.recalculateDistrictBlocksDoneLeft(district.id);
-    await progress.recalculateDistrictProgress(district.id);
-    await progress.recalculateDistrictStatus(district.id);
+    progress.recalculateAll(district.id);
 
     return index.generateSuccess(`${counter} Blocks created`);
   }
@@ -135,9 +131,7 @@ export class BlockController {
       `Deleting block ${block.uid} (ID: ${block.id}, District: ${block.district})`
     );
 
-    await progress.recalculateDistrictBlocksDoneLeft(district.id);
-    await progress.recalculateDistrictProgress(district.id);
-    await progress.recalculateDistrictStatus(district.id);
+    progress.recalculateAll(district.id);
 
     return index.generateSuccess("Block deleted");
   }
@@ -208,6 +202,8 @@ export class BlockController {
 
       await block.save();
       Logger.info(`Creating block ${block.uid}`);
+
+      progress.recalculateAll(request.body.district);
     }
     Logger.info(`Adding location to block ${block.uid}`);
     return block.addLocation(request.body.location);

@@ -7,6 +7,12 @@ import {
 import { District } from "../entity/District";
 import Logger from "./Logger";
 
+export async function recalculateAll(district: number) {
+  await recalculateDistrictBlocksDoneLeft(district);
+  await recalculateDistrictProgress(district);
+  await recalculateDistrictStatus(district);
+}
+
 export async function recalculateDistrictProgress(districtID: number) {
   const district = await District.findOne({ id: districtID });
 
