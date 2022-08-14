@@ -144,7 +144,7 @@ export async function sendOverview() {
 
   embeds.push({
     title: `${district.name}`,
-    description: `There are **${blocks.length}** Block left!`,
+    description: `There are **${blocks.length}** Blocks left!`,
     color: Colors.MineFact_Green,
     fields: fields,
   });
