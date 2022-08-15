@@ -10,7 +10,7 @@ import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { Stats } from "../cache";
 import { getManager } from "typeorm";
-import { getCpuUsage } from "../utils/CpuUsage";
+import { status } from "../utils/ServerStatus";
 
 const os = require("os");
 const ormconfig = require("../../ormconfig.json");
@@ -22,13 +22,18 @@ export class GeneralController {
     if (
       type &&
       (typeof type !== "string" ||
-        (type.toLowerCase() !== "java" && type.toLowerCase() !== "bedrock"))
+        (type.toLowerCase() !== "java" &&
+          type.toLowerCase() !== "bedrock" &&
+          type.toLowerCase() !== "spigot"))
     ) {
-      return index.generateError("Invalid type. Select 'Java' or 'Bedrock'");
+      return index.generateError(
+        "Invalid type. Select 'Java', 'Bedrock' or 'Spigot'"
+      );
     }
 
     let java = undefined;
     let bedrock = undefined;
+    let spigot = undefined;
 
     if (!type || type.toLowerCase() === "java") {
       java = await minecraftUtil
@@ -152,7 +157,11 @@ export class GeneralController {
         });
     }
 
-    return { java: java, bedrock: bedrock };
+    if (!type || type.toLowerCase() === "spigot") {
+      spigot = status;
+    }
+
+    return { java: java, bedrock: bedrock, spigot: spigot };
   }
 
   async pingServer(request: Request, response: Response, next: NextFunction) {

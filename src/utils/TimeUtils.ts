@@ -7,8 +7,7 @@ import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 import { reviews } from "../cache";
 import { getCpuUsage } from "./CpuUsage";
-
-const os = require("os");
+import { checkServerStatus } from "./ServerStatus";
 
 export function parseDate(date: string | Date, locale?: string) {
   if (date === null) {
@@ -155,6 +154,9 @@ export function startIntervals() {
     },
     1
   );
+
+  // Request server status
+  checkServerStatus();
 }
 
 function trackPlayerCount() {
