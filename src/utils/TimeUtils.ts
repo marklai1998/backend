@@ -46,6 +46,21 @@ export function executeEveryXMinutes(
   }, millisTill);
 }
 
+export function executeEveryXMinutesStartingNow(
+  callback: any,
+  intervalMinutes: number
+) {
+  const now = new Date();
+  executeEveryXMinutes(
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds(),
+    callback,
+    intervalMinutes
+  );
+}
+
 export function startIntervals() {
   // Add missing projects if backend was offline at 0:00
   createMissingProjectEntries();
@@ -110,167 +125,139 @@ export function startIntervals() {
   trackProjectCount();
 
   // Track system memory
-
-  const now = new Date();
-  executeEveryXMinutes(
-    now.getHours(),
-    now.getMinutes(),
-    now.getSeconds(),
-    now.getMilliseconds(),
-    async function () {
-      const ram =
-        Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
-      // const cpu =
-      //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
-      //   "%";
-      const cpu = Math.round(getCpuUsage() * 100) / 100;
-      if (memoryUsage.ram.length >= 15) {
-        memoryUsage.cpu.shift();
-        memoryUsage.ram.shift();
+  executeEveryXMinutesStartingNow(async function () {
+    const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
+    // const cpu =
+    //   Math.round(process.cpuUsage().user / 1000 / 1000 / os.cpus().length) +
+    //   "%";
+    const cpu = Math.round(getCpuUsage() * 100) / 100;
+    if (memoryUsage.ram.length >= 15) {
+      memoryUsage.cpu.shift();
+      memoryUsage.ram.shift();
+    }
+    // memoryUsage.cpu.push(cpu);
+    memoryUsage.cpu.push(cpu + "%");
+    memoryUsage.ram.push(ram);
+    // if (parseInt(cpu.split("%")[0]) > 50) {
+    //   if (parseInt(cpu.split("%")[0]) > 80) {
+    if (cpu > 50) {
+      if (cpu > 80) {
+        Logger.warn(
+          "System is overloaded, please change memory allocation or restart the process. A long state of high CPU usage is not recommended. Current CPU usage: " +
+            cpu +
+            "%"
+        );
+        Logger.warn("");
+        Logger.warn("");
+        Logger.error("----------------------");
+        Logger.error("CPU usage is over 80%");
+        Logger.error("----------------------");
+        Logger.warn("");
+        Logger.warn("");
+      } else {
+        Logger.warn("CPU usage is over 50% (" + cpu + "%)");
       }
-      // memoryUsage.cpu.push(cpu);
-      memoryUsage.cpu.push(cpu + "%");
-      memoryUsage.ram.push(ram);
-      // if (parseInt(cpu.split("%")[0]) > 50) {
-      //   if (parseInt(cpu.split("%")[0]) > 80) {
-      if (cpu > 50) {
-        if (cpu > 80) {
-          Logger.warn(
-            "System is overloaded, please change memory allocation or restart the process. A long state of high CPU usage is not recommended. Current CPU usage: " +
-              cpu +
-              "%"
-          );
-          Logger.warn("");
-          Logger.warn("");
-          Logger.error("----------------------");
-          Logger.error("CPU usage is over 80%");
-          Logger.error("----------------------");
-          Logger.warn("");
-          Logger.warn("");
-        } else {
-          Logger.warn("CPU usage is over 50% (" + cpu + "%)");
-        }
-      }
-    },
-    1
-  );
+    }
+  }, 1);
 
   // Request server status
-  checkServerStatus();
+  executeEveryXMinutesStartingNow(checkServerStatus, 1);
 }
 
 function trackPlayerCount() {
-  const now = new Date();
+  executeEveryXMinutesStartingNow(async function () {
+    const playersRaw = await fetch(
+      `http://localhost:${port}/api/network/ping?type=java`
+    );
+    const json = await playersRaw.json();
+    const players = json.java.players;
 
-  executeEveryXMinutes(
-    now.getHours(),
-    now.getMinutes(),
-    now.getSeconds(),
-    now.getMilliseconds(),
-    async function () {
-      const playersRaw = await fetch(
-        `http://localhost:${port}/api/network/ping?type=java`
-      );
-      const json = await playersRaw.json();
-      const players = json.java.players;
+    if (!players) return;
 
-      if (!players) return;
+    const date = new Date();
+    Logger.info(
+      `Updating Player Count for ${date.toISOString().split("T")[0]}`
+    );
+    let playerStat = await PlayerStat.findOne({
+      date: new Date(
+        `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+      ),
+    });
 
-      const date = new Date();
-      Logger.info(
-        `Updating Player Count for ${date.toISOString().split("T")[0]}`
-      );
-      let playerStat = await PlayerStat.findOne({
+    if (!playerStat) {
+      await createMissingDayEntries();
+      playerStat = await PlayerStat.findOne({
         date: new Date(
           `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
         ),
       });
+    }
 
-      if (!playerStat) {
-        await createMissingDayEntries();
-        playerStat = await PlayerStat.findOne({
+    const maxJson = JSON.parse(playerStat.max);
+    const avgJson = JSON.parse(playerStat.avg);
+
+    for (const key in players.groups) {
+      // Check max players
+      if (players.groups[key] > maxJson[key]) {
+        maxJson[key] = players.groups[key];
+      }
+      // Check avg players
+      avgJson[key] += players.groups[key];
+    }
+    // Total & counter
+    if (players.total > maxJson.total) {
+      maxJson.total = players.total;
+    }
+    avgJson.counter++;
+    avgJson.total += players.total;
+
+    // Update database entry
+    playerStat.max = JSON.stringify(maxJson);
+    playerStat.avg = JSON.stringify(avgJson);
+    playerStat.save();
+  }, 1);
+}
+
+async function trackProjectCount() {
+  executeEveryXMinutesStartingNow(async function () {
+    await BTEconnection.query(
+      "SELECT * FROM `BuildingServers`",
+      async (error, results, fields) => {
+        if (error) Logger.error(error);
+        var count = 0;
+        var reviewCount = 0;
+        for (const server of results) {
+          count += server.Projects;
+          reviewCount += server.ToReview;
+        }
+        const date = new Date();
+        var project = await ProjectCount.findOne({
           date: new Date(
             `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
           ),
         });
-      }
-
-      const maxJson = JSON.parse(playerStat.max);
-      const avgJson = JSON.parse(playerStat.avg);
-
-      for (const key in players.groups) {
-        // Check max players
-        if (players.groups[key] > maxJson[key]) {
-          maxJson[key] = players.groups[key];
+        var updateOverview = false;
+        if (count > project.projects) {
+          Logger.info(
+            `Setting projects from ${project.projects} to ${count} (${project.date})`
+          );
+          project.projects = count;
+          await project.save();
+          updateOverview = true;
         }
-        // Check avg players
-        avgJson[key] += players.groups[key];
-      }
-      // Total & counter
-      if (players.total > maxJson.total) {
-        maxJson.total = players.total;
-      }
-      avgJson.counter++;
-      avgJson.total += players.total;
-
-      // Update database entry
-      playerStat.max = JSON.stringify(maxJson);
-      playerStat.avg = JSON.stringify(avgJson);
-      playerStat.save();
-    },
-    1
-  );
-}
-
-async function trackProjectCount() {
-  const now = new Date();
-
-  executeEveryXMinutes(
-    now.getHours(),
-    now.getMinutes(),
-    now.getSeconds(),
-    now.getMilliseconds(),
-    async function () {
-      await BTEconnection.query(
-        "SELECT * FROM `BuildingServers`",
-        async (error, results, fields) => {
-          if (error) Logger.error(error);
-          var count = 0;
-          var reviewCount = 0;
-          for (const server of results) {
-            count += server.Projects;
-            reviewCount += server.ToReview;
-          }
-          const date = new Date();
-          var project = await ProjectCount.findOne({
-            date: new Date(
-              `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
-            ),
-          });
-          var updateOverview = false;
-          if (count > project.projects) {
-            Logger.info(
-              `Setting projects from ${project.projects} to ${count} (${project.date})`
-            );
-            project.projects = count;
-            await project.save();
-            updateOverview = true;
-          }
-          if (reviewCount !== reviews.total) {
-            Logger.info(
-              `Setting reviews from ${reviews.total} to ${reviewCount}`
-            );
-            reviews.total = reviewCount;
-            updateOverview = true;
-          }
-          if (updateOverview) {
-            sendOverview();
-          }
+        if (reviewCount !== reviews.total) {
+          Logger.info(
+            `Setting reviews from ${reviews.total} to ${reviewCount}`
+          );
+          reviews.total = reviewCount;
+          updateOverview = true;
         }
-      );
-    },
-    5
-  );
+        if (updateOverview) {
+          sendOverview();
+        }
+      }
+    );
+  }, 5);
 }
 export function calculateStatus(cpu, ram, dbstatus) {
   if (!dbstatus) {

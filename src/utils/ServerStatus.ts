@@ -1,9 +1,11 @@
 import { fetch } from "..";
 import { AdminSetting } from "../entity/AdminSetting";
+import Logger from "./Logger";
 
 export const status = {};
 
 export async function checkServerStatus() {
+  Logger.info("Requesting server status...");
   const servers = JSON.parse(
     (await AdminSetting.findOne({ key: "ips" })).value
   );
@@ -41,4 +43,5 @@ export async function checkServerStatus() {
       },
     };
   }
+  Logger.info("Requested server status");
 }
