@@ -47,7 +47,15 @@ export class UserController {
       return index.generateError("Specify username and password");
     }
 
-    const registration = new Registration();
+    let registration = await Registration.findOne({
+      username: request.body.username,
+    });
+
+    if (registration) {
+      return index.generateError("Registration already running");
+    }
+
+    registration = new Registration();
     registration.username = request.body.username;
     registration.password = jwt.jwt.sign(
       {
@@ -57,9 +65,43 @@ export class UserController {
     );
     registration.verification = generateVerificationKey();
 
-    return await index.getValidation(registration, "New Registration started", {
-      key: jwt.generateToken(registration.verification, jwt.secretUserData),
-    });
+    const res = await index.getValidation(
+      registration,
+      "New Registration started",
+      {
+        key: jwt.generateToken(registration.verification, jwt.secretUserData),
+      }
+    );
+
+    if (!res.error) {
+      sendWebhook("user_log", {
+        content: "",
+        embeds: [
+          {
+            title: "New Account requested",
+            description: "",
+            color: Colors.Green,
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "MineFact Network",
+              icon_url:
+                "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+            },
+            thumbnail: {
+              url: "https://mc-heads.net/avatar/" + registration.username,
+            },
+            fields: [
+              {
+                name: "Username",
+                value: registration.username || "---",
+              },
+            ],
+          },
+        ],
+      });
+    }
+
+    return res;
   }
 
   async verifyRegistration(
