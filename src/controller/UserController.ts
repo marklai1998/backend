@@ -43,8 +43,12 @@ export class UserController {
   }
 
   async register(request: Request, response: Response, next: NextFunction) {
-    if (!request.body.username || !request.body.password) {
-      return index.generateError("Specify username and password");
+    if (
+      !request.body.username ||
+      !request.body.password ||
+      !request.body.discord
+    ) {
+      return index.generateError("Specify username, password and discord");
     }
 
     let registration = await Registration.findOne({
@@ -57,6 +61,7 @@ export class UserController {
 
     registration = new Registration();
     registration.username = request.body.username;
+    registration.discord = request.body.discord;
     registration.password = jwt.jwt.sign(
       {
         data: jwt.jwt.verify(request.body.password, jwt.secretUserData),
@@ -94,6 +99,12 @@ export class UserController {
               {
                 name: "Username",
                 value: registration.username || "---",
+                inline: true,
+              },
+              {
+                name: "Discord",
+                value: registration.discord || "---",
+                inline: true,
               },
             ],
           },
@@ -127,17 +138,20 @@ export class UserController {
       return index.generateError("Invalid verification key");
     }
 
-    const minecraft = await MinecraftUser.findOne({ uuid: request.body.uuid });
+    // TODO: enable again if plugin is ready
 
-    if (!minecraft) {
-      return index.generateError("Minecraft user not found");
-    }
+    // const minecraft = await MinecraftUser.findOne({ uuid: request.body.uuid });
+
+    // if (!minecraft) {
+    //   return index.generateError("Minecraft user not found");
+    // }
 
     const user = new User();
     user.email = `${request.body.username}@gmail.com`;
     user.username = request.body.username;
     user.permission = mcRankToPermission(request.body.rank);
-    user.minecraft = minecraft;
+    user.discord = registration.discord;
+    //user.minecraft = minecraft;
     user.settings = "{}";
     user.password = registration.password;
     user.apikey = index.generateUUID();

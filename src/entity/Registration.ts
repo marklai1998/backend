@@ -17,6 +17,9 @@ export class Registration extends BaseEntity {
   @Column()
   username: string;
 
+  @Column()
+  discord: string;
+
   @Column("text")
   password: string;
 
