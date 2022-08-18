@@ -3,6 +3,7 @@ import * as jwt from "../utils/JsonWebToken";
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -62,6 +63,9 @@ export class User extends BaseEntity {
   @IsUUID("4", { message: "Invalid API Key set for user" })
   apikey: string;
 
+  @CreateDateColumn()
+  created: Date;
+
   async toJson({
     showAPIKey = false,
     showPassword = false,
@@ -88,6 +92,7 @@ export class User extends BaseEntity {
         showAPIKey && hasPermission
           ? jwt.generateToken(this.apikey, jwt.secretUserData)
           : undefined,
+      created: this.created,
     };
   }
 }
