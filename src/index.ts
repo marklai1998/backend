@@ -16,6 +16,7 @@ import { Stats } from "./cache";
 import { User } from "./entity/User";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
+import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 
 var cors = require("cors");
 var mysql = require("mysql");
@@ -24,6 +25,7 @@ var fetch = require("node-fetch");
 var axios = require("axios");
 const ormconfig = require("../ormconfig.json");
 const port = process.env.PORT || 8080;
+const productionMode = process.argv.slice(2)[0] === "--i";
 var BTEconnection = mysql.createConnection({
   host: ormconfig.host,
   port: ormconfig.port,
@@ -54,11 +56,11 @@ createConnection()
       (app as any)[route.method](
         route.route,
         async (req: Request, res: Response, next: Function) => {
+          let user = await User.findOne({
+            apikey: req.body.key || req.query.key,
+          });
           try {
             Stats.total_requests++;
-            let user = await User.findOne({
-              apikey: req.body.key || req.query.key,
-            });
             Logger.http(
               `${req.method} ${req.path}${user ? ` (${user.username})` : ""}`
             );
@@ -93,6 +95,67 @@ createConnection()
             Stats.errors++;
             Logger.error(err);
           }
+          process.on("uncaughtException", (error) => {
+            Stats.errors++;
+            Logger.error(error.stack);
+            res.send(generateError("Unexpected Error occurred"));
+
+            if (productionMode) {
+              sendWebhook("error_log", {
+                content: "",
+                embeds: [
+                  {
+                    title: "Backend Error Occurred",
+                    description: "",
+                    color: Colors.Error,
+                    timestamp: new Date().toISOString(),
+                    footer: {
+                      text: "MineFact Network",
+                      icon_url:
+                        "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+                    },
+                    fields: [
+                      {
+                        name: "Name",
+                        value: error.name,
+                        inline: true,
+                      },
+                      {
+                        name: "Message",
+                        value: error.message,
+                        inline: true,
+                      },
+                      {
+                        name: "User",
+                        value: user ? user.username : "Unknown",
+                        inline: true,
+                      },
+                      {
+                        name: "Route",
+                        value: req.path,
+                        inline: true,
+                      },
+                      {
+                        name: "Method",
+                        value: req.method,
+                        inline: true,
+                      },
+                      {
+                        name: "‎",
+                        value: "‎",
+                        inline: true,
+                      },
+                      {
+                        name: "Stacktrace",
+                        value: error.stack,
+                        inline: false,
+                      },
+                    ],
+                  },
+                ],
+              });
+            }
+          });
         }
       );
     });
@@ -137,7 +200,7 @@ createConnection()
         await getRepository(AdminSetting).save(adminSetting);
       }
     });
-    if (process.argv.slice(2)[0] === "--i") {
+    if (productionMode) {
       Logger.info("Running with Intervalls");
       date.startIntervals();
     } else {
@@ -161,7 +224,7 @@ createConnection()
       res.send(generateError("Database is offline. Try again later"));
     });
     Logger.debug("Registered routes");
-    Logger.error(error)
+    Logger.error(error);
     // start express server
     app.listen(port);
     Logger.info("Running without Intervalls");
