@@ -29,7 +29,7 @@ export class User extends BaseEntity {
 
   @Column({ nullable: true })
   @IsOptional()
-  @Matches(/^.{3,32}#[0-9]{4}$/, { message: "Invalid Discord Tag" })
+  //@Matches(/^.{3,32}#[0-9]{4}$/, { message: "Invalid Discord Tag" })
   discord: string;
 
   @ManyToOne(() => MinecraftUser, (user) => user.uid, {
