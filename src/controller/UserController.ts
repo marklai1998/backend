@@ -150,6 +150,7 @@ export class UserController {
     user.email = `${request.body.username}@gmail.com`;
     user.username = request.body.username;
     user.permission = mcRankToPermission(request.body.rank);
+    user.rank = request.body.rank;
     user.discord = registration.discord;
     //user.minecraft = minecraft;
     user.about = "";
