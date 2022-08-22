@@ -48,7 +48,53 @@ createConnection()
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
+
     Logger.debug("Loaded middleware");
+    process.on("uncaughtException", (error) => {
+      Stats.errors++;
+      Logger.error(error.stack);
+
+      if (productionMode) {
+        sendWebhook("error_log", {
+          content: "",
+          embeds: [
+            {
+              title: "Backend Error Occurred",
+              description: "",
+              color: Colors.Error,
+              timestamp: new Date().toISOString(),
+              footer: {
+                text: "MineFact Network",
+                icon_url:
+                  "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+              },
+              fields: [
+                {
+                  name: "Name",
+                  value: error.name,
+                  inline: true,
+                },
+                {
+                  name: "Message",
+                  value: error.message,
+                  inline: true,
+                },
+                {
+                  name: "‎",
+                  value: "‎",
+                  inline: true,
+                },
+                {
+                  name: "Stacktrace",
+                  value: error.stack,
+                  inline: false,
+                },
+              ],
+            },
+          ],
+        });
+      }
+    });
 
     // register express routes from defined application routes
     Logger.debug("Registering routes...");
@@ -95,67 +141,6 @@ createConnection()
             Stats.errors++;
             Logger.error(err);
           }
-          process.on("uncaughtException", (error) => {
-            Stats.errors++;
-            Logger.error(error.stack);
-            res.send(generateError("Unexpected Error occurred"));
-
-            if (productionMode) {
-              sendWebhook("error_log", {
-                content: "",
-                embeds: [
-                  {
-                    title: "Backend Error Occurred",
-                    description: "",
-                    color: Colors.Error,
-                    timestamp: new Date().toISOString(),
-                    footer: {
-                      text: "MineFact Network",
-                      icon_url:
-                        "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
-                    },
-                    fields: [
-                      {
-                        name: "Name",
-                        value: error.name,
-                        inline: true,
-                      },
-                      {
-                        name: "Message",
-                        value: error.message,
-                        inline: true,
-                      },
-                      {
-                        name: "User",
-                        value: user ? user.username : "Unknown",
-                        inline: true,
-                      },
-                      {
-                        name: "Route",
-                        value: req.path,
-                        inline: true,
-                      },
-                      {
-                        name: "Method",
-                        value: req.method,
-                        inline: true,
-                      },
-                      {
-                        name: "‎",
-                        value: "‎",
-                        inline: true,
-                      },
-                      {
-                        name: "Stacktrace",
-                        value: error.stack,
-                        inline: false,
-                      },
-                    ],
-                  },
-                ],
-              });
-            }
-          });
         }
       );
     });
