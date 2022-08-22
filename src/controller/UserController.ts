@@ -152,6 +152,9 @@ export class UserController {
     user.permission = mcRankToPermission(request.body.rank);
     user.discord = registration.discord;
     //user.minecraft = minecraft;
+    user.about = "";
+    user.picture = "";
+    user.image = "";
     user.settings = "{}";
     user.password = registration.password;
     user.apikey = index.generateUUID();
@@ -159,9 +162,13 @@ export class UserController {
       `User created (${user.username}, Permission: ${user.permission})`
     );
 
-    registration.remove();
+    const res = await index.getValidation(user, "New user registered");
 
-    return index.getValidation(user, "New user registered");
+    if (!res.error) {
+      registration.remove();
+    }
+
+    return res;
   }
 
   async create(request: Request, response: Response, next: NextFunction) {
