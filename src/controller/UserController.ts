@@ -8,7 +8,6 @@ import { mcRankToPermission, Permissions } from "../utils/Permissions";
 import { User } from "../entity/User";
 import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 import { Registration } from "../entity/Registration";
-import { MinecraftUser } from "../entity/MinecraftUser";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -170,6 +169,71 @@ export class UserController {
     }
 
     return res;
+  }
+
+  async getRegistrations(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    const registrationsRaw = await Registration.find();
+
+    const registrations = [];
+    for (const registration of registrationsRaw) {
+      registrations.push(registration.toJson());
+    }
+
+    return registrations;
+  }
+
+  async handleRegistration(
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) {
+    if (!request.body.id) {
+      return index.generateError("Specify registration id");
+    }
+    if (!request.body.rank) {
+      return index.generateError("Specify rank of player");
+    }
+    if (typeof request.body.accept !== "boolean") {
+      return index.generateError("Accept value must be a boolean");
+    }
+
+    const registration = await Registration.findOne({ id: request.body.id });
+
+    if (request.body.accept) {
+      // Create new user
+      const user = new User();
+      user.email = `${registration.username}@gmail.com`;
+      user.username = registration.username;
+
+      user.permission = mcRankToPermission(request.body.rank);
+      user.rank = request.body.rank;
+      user.discord = registration.discord;
+      //user.minecraft = minecraft;
+      user.about = "";
+      user.picture = "";
+      user.image = "";
+      user.settings = "{}";
+      user.password = registration.password;
+      user.apikey = index.generateUUID();
+      Logger.info(
+        `User created (${user.username}, Permission: ${user.permission})`
+      );
+
+      const res = await index.getValidation(user, "Registration accepted");
+
+      if (!res.error) {
+        registration.remove();
+      }
+
+      return res;
+    } else {
+      registration.remove();
+      return index.generateSuccess("Registration denied");
+    }
   }
 
   async create(request: Request, response: Response, next: NextFunction) {

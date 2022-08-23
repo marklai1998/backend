@@ -25,4 +25,13 @@ export class Registration extends BaseEntity {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  toJson(): object {
+    return {
+      id: this.id,
+      username: this.username,
+      discord: this.discord,
+      createdAt: this.createdAt,
+    };
+  }
 }

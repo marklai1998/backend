@@ -68,6 +68,21 @@ const Routes = [
     action: "delete",
     permission: Permissions.admin,
   },
+  // Registrations
+  {
+    method: "get",
+    route: "/api/users/registrations/get",
+    controller: UserController,
+    action: "getRegistrations",
+    permission: Permissions.moderator,
+  },
+  {
+    method: "post",
+    route: "/api/users/registrations/handle",
+    controller: UserController,
+    action: "handleRegistration",
+    permission: Permissions.moderator,
+  },
   // General
   {
     method: "get",
