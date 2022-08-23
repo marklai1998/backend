@@ -237,14 +237,14 @@ export class UserController {
     response: Response,
     next: NextFunction
   ) {
+    if (typeof request.body.accept !== "boolean") {
+      return index.generateError("Accept value must be a boolean");
+    }
     if (!request.body.id) {
       return index.generateError("Specify registration id");
     }
-    if (!request.body.rank) {
+    if (request.body.accept && !request.body.rank) {
       return index.generateError("Specify rank of player");
-    }
-    if (typeof request.body.accept !== "boolean") {
-      return index.generateError("Accept value must be a boolean");
     }
 
     const registration = await Registration.findOne({ id: request.body.id });
