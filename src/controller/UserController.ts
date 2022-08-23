@@ -84,7 +84,7 @@ export class UserController {
           {
             title: "New Account requested",
             description: "",
-            color: Colors.Green,
+            color: Colors.Yellow,
             timestamp: new Date().toISOString(),
             footer: {
               text: "MineFact Network",
@@ -166,6 +166,52 @@ export class UserController {
 
     if (!res.error) {
       registration.remove();
+
+      const accepter = await User.findOne({
+        apikey: request.body.apikey || request.params.apikey,
+      });
+
+      sendWebhook("user_log", {
+        content: "",
+        embeds: [
+          {
+            title: "Account accepted",
+            description: "",
+            color: Colors.Green,
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "MineFact Network",
+              icon_url:
+                "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+            },
+            thumbnail: {
+              url: "https://mc-heads.net/avatar/" + registration.username,
+            },
+            fields: [
+              {
+                name: "Username",
+                value: registration.username || "---",
+                inline: true,
+              },
+              {
+                name: "Discord",
+                value: registration.discord || "---",
+                inline: true,
+              },
+              {
+                name: "Rank",
+                value: request.body.rank || "---",
+                inline: true,
+              },
+              {
+                name: "Accepted by",
+                value: accepter.username || "---",
+                inline: true,
+              },
+            ],
+          },
+        ],
+      });
     }
 
     return res;
