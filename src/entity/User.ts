@@ -50,6 +50,13 @@ export class User extends BaseEntity {
   @Column("text")
   picture: string;
 
+  @Column("text", {
+    default: JSON.stringify({
+      rank_history: [],
+    }),
+  })
+  stats: string;
+
   @Column("text" /*{ default: "{}" }*/)
   @IsJSON({ message: "Settings must be a valid JSON-String" })
   @IsOptional()
@@ -85,6 +92,7 @@ export class User extends BaseEntity {
       about: this.about,
       image: this.image,
       picture: this.picture,
+      stats: JSON.parse(this.stats),
       settings: hasPermission ? JSON.parse(this.settings) : undefined,
       minecraft: !this.minecraft ? null : this.minecraft.toJson(),
       password: showPassword ? this.password : undefined,
