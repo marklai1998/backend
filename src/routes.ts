@@ -168,14 +168,14 @@ const Routes = [
     route: "/api/districts/create",
     controller: DistrictController,
     action: "create",
-    permission: Permissions.admin,
+    permission: Permissions.moderator,
   },
   {
     method: "post",
     route: "/api/districts/delete",
     controller: DistrictController,
     action: "delete",
-    permission: Permissions.admin,
+    permission: Permissions.moderator,
   },
   {
     method: "post",
