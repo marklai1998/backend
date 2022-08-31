@@ -118,7 +118,7 @@ export async function sendOverview() {
     .orderBy("progress", "DESC")
     .getOne();
   const blocks = await Block.createQueryBuilder("blocks")
-    .where("district = :district", { district: district.id })
+    .where("districtId = :district", { district: district.id })
     .andWhere("status < 4")
     .orderBy("id")
     .getMany();
