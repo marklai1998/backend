@@ -20,7 +20,7 @@ export class LandmarkController {
 
     const district = await District.findOne({ id: request.body.district });
     const block = await Block.findOne({
-      district: district.id,
+      district: district,
       id: request.body.blockID,
     });
 

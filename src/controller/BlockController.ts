@@ -27,7 +27,7 @@ export class BlockController {
 
     let block = await Block.findOne({
       id: request.body.blockID,
-      district: district.id,
+      district: district,
     });
     if (block) {
       await Block.query(
@@ -37,7 +37,7 @@ export class BlockController {
 
     block = new Block();
     block.id = request.body.blockID;
-    block.district = district.id;
+    block.district = district;
     block.area = "[]";
     Logger.info(`Creating block ${block.uid}`);
 
@@ -82,7 +82,7 @@ export class BlockController {
     for (var i = lastID + 1; i <= lastID + request.body.number; i++) {
       const block = new Block();
       block.id = i;
-      block.district = district.id;
+      block.district = district;
       block.area = "[]";
 
       if (request.body.done) {
@@ -115,7 +115,7 @@ export class BlockController {
     }
     const block = await Block.findOne({
       id: request.body.blockID,
-      district: district.id,
+      district: district,
     });
 
     if (!block) {
@@ -168,12 +168,10 @@ export class BlockController {
 
     const blocks = [];
     for (const block of blocksAll) {
-      block["center"] = block.getLocationCenter();
-      block.area = JSON.parse(block.area);
-      blocks.push(block);
+      blocks.push(block.toJson());
     }
 
-    return blocks;
+    return await Promise.all(blocks);
   }
   async getClaims(request: Request, response: Response, next: NextFunction) {
     return getClaims(request.params.name);
@@ -362,7 +360,7 @@ export class BlockController {
 
         const block = new Block();
         block.id = parseInt(d[0]);
-        block.district = district.id;
+        block.district = district;
         block.status = statusToNumber(d[1]);
         block.progress = !d[2] ? 0.0 : parseFloat(d[2].replace(",", "."));
         block.details = d[3] === "TRUE" ? true : false;
@@ -396,7 +394,7 @@ export class BlockController {
   }
 }
 
-async function getBlock(districtID: string | number, blockID: number) {
+async function getBlock(districtID: string | number, blockID: number): Promise<Block> {
   const district =
     typeof districtID === "string"
       ? await District.findOne({ name: districtID })
@@ -406,14 +404,14 @@ async function getBlock(districtID: string | number, blockID: number) {
     return null;
   }
 
-  const block = Block.findOne({ id: blockID, district: district.id });
+  const block = Block.findOne({ id: blockID, district: district });
   if (!block) {
     return null;
   }
   return block;
 }
 
-async function getBlocks(districtID: string | number) {
+async function getBlocks(districtID: string | number): Promise<Block[]> {
   const district =
     typeof districtID === "string"
       ? await District.findOne({ name: districtID })
@@ -424,7 +422,7 @@ async function getBlocks(districtID: string | number) {
   }
 
   return await Block.find({
-    where: { district: district.id },
+    where: { district: district },
     order: { id: "ASC" },
   });
 }

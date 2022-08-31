@@ -3,7 +3,7 @@ import { District } from "../entity/District";
 
 export async function getBlocksOfDistrict(district: District) {
   return Block.find({
-    where: { district: district.id },
+    where: { district: district },
     order: { id: "ASC" },
   });
 }
@@ -33,7 +33,7 @@ export async function getClaims(user: string) {
     },
   };
   for (const block of blocks) {
-    const districtName = await districtIdToName(block.district);
+    const districtName = block.district.name;
     const index = json.claims.districts.findIndex((d) => {
       return d.id === block.district;
     });

@@ -1,6 +1,12 @@
 import * as index from "../index";
 
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import {
   IsBoolean,
   IsInt,
@@ -40,9 +46,11 @@ export class Block extends BaseEntity {
   @IsInt({ message: "Invalid ID" })
   id: number;
 
-  @Column()
-  @IsInt({ message: "Invalid District ID" })
-  district: number;
+  @ManyToOne(() => District, (district: District) => district.id, {
+    nullable: false,
+    eager: true,
+  })
+  district: District;
 
   @Column("tinyint", { default: 0 })
   @Min(0, { message: "Status must be between 0 and 4" })
@@ -85,8 +93,8 @@ export class Block extends BaseEntity {
       id: this.id,
       district: showDistrict
         ? {
-            id: this.district,
-            name: await districtIdToName(this.district),
+            id: this.district.id,
+            name: this.district.name,
           }
         : undefined,
       status: this.status,
@@ -118,7 +126,7 @@ export class Block extends BaseEntity {
     this.progress = progress;
     const oldStatus = await setStatus(this);
 
-    recalculateDistrictProgress(this.district);
+    recalculateDistrictProgress(this.district.id);
     return await update({
       block: this,
       successMessage: "Progress Updated",
@@ -301,7 +309,7 @@ async function setStatus(block: Block): Promise<number> {
     changed = true;
 
     // Update Block Counts & District Status
-    recalculateDistrictBlocksDoneLeft(block.district);
+    recalculateDistrictBlocksDoneLeft(block.district.id);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
     Logger.info(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
@@ -373,8 +381,8 @@ async function setStatus(block: Block): Promise<number> {
 
     // Update Block Counts & District Status
     if (oldStatus === 4) {
-      await recalculateDistrictBlocksDoneLeft(block.district);
-      recalculateDistrictStatus(block.district);
+      await recalculateDistrictBlocksDoneLeft(block.district.id);
+      recalculateDistrictStatus(block.district.id);
     }
 
     if (block.status === 4) {
@@ -388,12 +396,12 @@ async function setStatus(block: Block): Promise<number> {
 
       if (done === blocks.length) {
         // District completed
-        let district = await District.findOne({ id: block.district });
+        let district = await District.findOne({ id: block.district.id });
         district.completionDate = new Date();
         await district.save();
       }
     } else {
-      let district = await District.findOne({ id: block.district });
+      let district = await District.findOne({ id: block.district.id });
       if (district.completionDate !== null) {
         district.completionDate = null;
         await district.save();
