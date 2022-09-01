@@ -62,7 +62,7 @@ export class DistrictController {
       return index.generateError("District not found");
     }
 
-    const blocks = await Block.find({ district: district });
+    const blocks = await Block.find({ district: district.id });
 
     if (blocks.length > 0) {
       return index.generateError("Cannot delete district with existing blocks");
@@ -212,13 +212,13 @@ export class DistrictController {
                     })
                     .catch((error) => {
                       Logger.warn(`Error occurred for district ${d[1]}`);
-                      Logger.warn(error);
+                      Logger.warn(error)
                     });
                 }
               })
               .catch((error) => {
                 Logger.warn(`Error occurred for district ${d[1]}`);
-                Logger.warn(error);
+                Logger.warn(error)
               });
           }
         }

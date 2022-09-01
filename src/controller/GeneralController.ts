@@ -257,7 +257,7 @@ export class GeneralController {
         for (let k = 0; k < nyc.children[j].children.length; k++) {
           if (districts[i].parent === nyc.children[j].children[k].id) {
             const blocksRaw = blocksAll.filter(
-              (e) => e.district.id === districts[i].id
+              (e) => e.district === districts[i].id
             );
             const blocks = blocksRaw.map((b) => {
               return {

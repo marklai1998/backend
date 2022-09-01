@@ -203,7 +203,7 @@ export async function sendDistrictChange({
   const fields = [
     {
       name: "District",
-      value: block.district.name,
+      value: await districtIdToName(block.district),
       inline: true,
     },
     {
