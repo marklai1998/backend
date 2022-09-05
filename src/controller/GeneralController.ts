@@ -9,7 +9,9 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { Stats } from "../cache";
+import { getDirectChildren } from "../utils/DistrictUtils";
 import { getManager } from "typeorm";
+import { insidePolygon } from "../utils/Polygon";
 import { status } from "../utils/ServerStatus";
 
 const os = require("os");
@@ -475,6 +477,40 @@ export class GeneralController {
     } else {
       respone.redirect("https://progress.minefact.de/links");
     }
+  }
+
+  async search(request: Request, respone: Response, next: NextFunction) {
+    const point = [parseFloat(request.params.x), parseFloat(request.params.y)]; // [x,y]
+    const districts = await District.find();
+    console.log(point);
+    for (const district of districts) {
+      const areaD = JSON.parse(district.area);
+
+      if (areaD.length <= 0 || district.id ==1) continue;
+
+      if (insidePolygon(point, areaD)) {
+        // District found
+        console.log(district.name);
+
+        const blocks = await Block.find({
+          where: { district: district.id },
+        });
+
+        for (const block of blocks) {
+          const areaB = JSON.parse(block.area);
+
+          if (areaB.length <= 0) continue;
+
+          if (insidePolygon(point, areaB)) {
+            // Block found
+
+            return { district, block };
+          }
+        }
+        return { district, block: null };
+      }
+    }
+    return { district: null, block: null };
   }
 }
 

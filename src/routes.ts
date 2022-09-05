@@ -494,6 +494,13 @@ const Routes = [
     action: "redirect",
     permission: Permissions.default,
   },
+  {
+    method: "get",
+    route: "/search/:x/:y",
+    controller: GeneralController,
+    action: "search",
+    permission: Permissions.default,
+  },
 ];
 
 export { Routes, Permissions };
