@@ -20,26 +20,35 @@ export async function checkServerStatus() {
       )
     );
   }
-  const responses = await Promise.all(promises);
+  const responses = await Promise.allSettled(promises);
 
   for (let i = 0; i < keys.length; i++) {
     const res = responses[i];
 
-    if (res.error) {
+    if (res.status === "rejected") {
+      Logger.error(
+        `Error occurred while requesting server status of ${keys[i]}! Reason: ${res.reason}`
+      );
+      continue;
+    }
+
+    if (res.value.error) {
       status[keys[i]] = {
         online: false,
+        last_updated: new Date(),
       };
       continue;
     }
 
     status[keys[i]] = {
       online: true,
-      version: res.version,
+      version: res.value.version,
       players: {
-        online: res.players.online,
-        max: res.players.max,
-        list: res.players.sample,
+        online: res.value.players.online,
+        max: res.value.players.max,
+        list: res.value.players.sample,
       },
+      last_updated: new Date(),
     };
   }
 }
