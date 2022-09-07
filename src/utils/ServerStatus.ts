@@ -53,11 +53,16 @@ export async function checkServerStatus() {
 
     if (oldValue) {
       // Compare Server Status
-      if (newValue.online !== oldValue.online) {
+      if (
+        newValue.online !== oldValue.online ||
+        newValue.timeout !== oldValue.timeout
+      ) {
         // Status changed
         update = true;
         Logger.info(
-          `Server status of ${keys[i]} changed (${oldValue.online} --> ${newValue.online})`
+          `Server status of ${keys[i]} changed (${statusToString(
+            oldValue
+          )} --> ${statusToString(newValue)})`
         );
       }
       // Compare Server Version
@@ -118,4 +123,14 @@ export function serverDataToString() {
   }
 
   return result;
+}
+
+function statusToString(status: any) {
+  if (status.online) {
+    return "Online";
+  }
+  if (status.timeout) {
+    return "Timeout";
+  }
+  return "Offline";
 }
