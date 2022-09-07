@@ -37,7 +37,7 @@ export async function checkServerStatus() {
 
     const oldValue = status[keys[i]];
     const newValue = res.value.error
-      ? !oldValue || oldValue.timeout
+      ? !oldValue || !oldValue.online
         ? { online: false, timeout: false, last_updated: new Date() }
         : { online: false, timeout: true, last_updated: new Date() }
       : {
