@@ -1,7 +1,9 @@
 import { fetch } from "..";
 import { AdminSetting } from "../entity/AdminSetting";
+import { Colors, sendWebhook } from "./DiscordMessageSender";
 import Logger from "./Logger";
 
+const serversToPingRole = ["NewYorkCity", "BuildingServer1"];
 export const status = {};
 
 export async function checkServerStatus() {
@@ -22,6 +24,7 @@ export async function checkServerStatus() {
   }
   const responses = await Promise.allSettled(promises);
 
+  let update = Object.keys(status).length === 0;
   for (let i = 0; i < keys.length; i++) {
     const res = responses[i];
 
@@ -32,23 +35,87 @@ export async function checkServerStatus() {
       continue;
     }
 
-    if (res.value.error) {
-      status[keys[i]] = {
-        online: false,
-        last_updated: new Date(),
-      };
-      continue;
+    const oldValue = status[keys[i]];
+    const newValue = res.value.error
+      ? !oldValue || oldValue.timeout
+        ? { online: false, timeout: false, last_updated: new Date() }
+        : { online: false, timeout: true, last_updated: new Date() }
+      : {
+          online: true,
+          version: res.value.version,
+          players: {
+            online: res.value.players.online,
+            max: res.value.players.max,
+            list: res.value.players.sample,
+          },
+          last_updated: new Date(),
+        };
+
+    if (oldValue) {
+      // Compare Server Status
+      if (newValue.online !== oldValue.online) {
+        // Status changed
+        update = true;
+        Logger.info(
+          `Server status of ${keys[i]} changed (${oldValue.online} --> ${newValue.online})`
+        );
+      }
+      // Compare Server Version
+      if (
+        newValue.version &&
+        oldValue.version &&
+        newValue.version.name !== oldValue.version.name
+      ) {
+        // Version changed
+        update = true;
+        Logger.info(
+          `Server version of ${keys[i]} changed (${oldValue.version.name} --> ${newValue.version.name})`
+        );
+      }
     }
 
-    status[keys[i]] = {
-      online: true,
-      version: res.value.version,
-      players: {
-        online: res.value.players.online,
-        max: res.value.players.max,
-        list: res.value.players.sample,
-      },
-      last_updated: new Date(),
-    };
+    status[keys[i]] = newValue;
   }
+
+  if (update && Object.keys(status).length > 0) {
+    // Update server status embed
+    Logger.info("Updating Server Status Embed");
+    const body = {
+      content: "",
+      embeds: [
+        {
+          title: "Server Status",
+          description: serverDataToString(),
+          color: Colors.MineFact_Green,
+          footer: {
+            text: "MineFact Network",
+            icon_url:
+              "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+          },
+        },
+      ],
+    };
+
+    sendWebhook("network_status", body);
+  }
+}
+
+export function serverDataToString() {
+  let result = "";
+
+  for (const server of Object.entries(status)) {
+    const serverName: string = server[0];
+    const serverStatus: any = server[1];
+    result += `${
+      serverStatus.online
+        ? ":green_circle: "
+        : serverStatus.timeout
+        ? ":yellow_circle: "
+        : ":red_circle: "
+    }**${serverName}** ${
+      serverStatus.version ? `(${serverStatus.version.name.split(" ")[1]})` : ""
+    }\n`;
+  }
+
+  return result;
 }
