@@ -64,6 +64,15 @@ export async function checkServerStatus() {
             oldValue
           )} --> ${statusToString(newValue)})`
         );
+
+        // Send network log
+        if (newValue.online && !oldValue.online) {
+          // Status switched from offline to online
+          sendWebhook("network_log", generateNetworkLogEmbed(keys[i], true));
+        } else if (!newValue.online && oldValue.timeout) {
+          // Status switched from timeout to offline
+          sendWebhook("network_log", generateNetworkLogEmbed(keys[i], false));
+        }
       }
       // Compare Server Version
       if (
@@ -133,4 +142,22 @@ function statusToString(status: any) {
     return "Timeout";
   }
   return "Offline";
+}
+
+function generateNetworkLogEmbed(server: string, online: boolean) {
+  return {
+    content: serversToPingRole.includes(server) ? "<@&976842481884864623>" : "",
+    embeds: [
+      {
+        title: `${online ? ":recycle:" : ":warning:"} Server ${
+          online ? "Online" : "Offline"
+        }`,
+        description: `The server **${server}** is ${
+          online ? "online again" : "offline"
+        }`,
+        color: online ? Colors.Green : Colors.Error,
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  };
 }
