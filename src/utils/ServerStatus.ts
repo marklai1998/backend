@@ -66,7 +66,7 @@ export async function checkServerStatus() {
         );
 
         // Send network log
-        if (newValue.online && !oldValue.online) {
+        if (newValue.online && !oldValue.online && !oldValue.timeout) {
           // Status switched from offline to online
           sendWebhook("network_log", generateNetworkLogEmbed(keys[i], true));
         } else if (!newValue.online && oldValue.timeout) {
@@ -146,7 +146,10 @@ function statusToString(status: any) {
 
 function generateNetworkLogEmbed(server: string, online: boolean) {
   return {
-    content: serversToPingRole.includes(server) ? "<@&976842481884864623>" : "",
+    content:
+      !online && serversToPingRole.includes(server)
+        ? "<@&976842481884864623>"
+        : "",
     embeds: [
       {
         title: `${online ? ":recycle:" : ":warning:"} Server ${
