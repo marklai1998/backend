@@ -17,6 +17,8 @@ import { User } from "./entity/User";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
 import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
+import * as sockets from "./sockets/SocketManager";
+import { createServer } from "http";
 
 var cors = require("cors");
 var mysql = require("mysql");
@@ -49,52 +51,12 @@ createConnection()
     app.use(helmet());
     app.use(cors());
 
-    Logger.debug("Loaded middleware");
-    process.on("uncaughtException", (error) => {
-      Stats.errors++;
-      Logger.error(error.stack);
+    const httpServer = createServer(app);
 
-      if (productionMode) {
-        sendWebhook("error_log", {
-          content: "",
-          embeds: [
-            {
-              title: "Backend Error Occurred",
-              description: "",
-              color: Colors.Error,
-              timestamp: new Date().toISOString(),
-              footer: {
-                text: "MineFact Network",
-                icon_url:
-                  "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
-              },
-              fields: [
-                {
-                  name: "Name",
-                  value: error.name,
-                  inline: true,
-                },
-                {
-                  name: "Message",
-                  value: error.message,
-                  inline: true,
-                },
-                {
-                  name: "‎",
-                  value: "‎",
-                  inline: true,
-                },
-                {
-                  name: "Stacktrace",
-                  value: error.stack,
-                  inline: false,
-                },
-              ],
-            },
-          ],
-        });
-      }
-    });
+    sockets.init(httpServer);
+
+    Logger.debug("Loaded middleware");
+    process.on("uncaughtException", (error) => handleException(error));
 
     // register express routes from defined application routes
     Logger.debug("Registering routes...");
@@ -192,7 +154,7 @@ createConnection()
       Logger.info("Running without Intervalls");
     }
     // start express server
-    app.listen(port);
+    httpServer.listen(port);
     Logger.info(`Server started on port ${port}`);
   })
   .catch((error) => {
@@ -201,6 +163,11 @@ createConnection()
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
+
+    const httpServer = createServer(app);
+
+    sockets.init(httpServer);
+
     Logger.debug("Loaded middleware");
 
     // register express routes from defined application routes
@@ -211,7 +178,7 @@ createConnection()
     Logger.debug("Registered routes");
     Logger.error(error);
     // start express server
-    app.listen(port);
+    httpServer.listen(port);
     Logger.info("Running without Intervalls");
     Logger.info(`Server started on port ${port}`);
   });
@@ -245,3 +212,49 @@ export function generateUUID() {
 }
 
 export { fetch, axios, port, BTEconnection };
+
+function handleException(error) {
+  Stats.errors++;
+  Logger.error(error.stack);
+
+  if (productionMode) {
+    sendWebhook("error_log", {
+      content: "",
+      embeds: [
+        {
+          title: "Backend Error Occurred",
+          description: "",
+          color: Colors.Error,
+          timestamp: new Date().toISOString(),
+          footer: {
+            text: "MineFact Network",
+            icon_url:
+              "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+          },
+          fields: [
+            {
+              name: "Name",
+              value: error.name,
+              inline: true,
+            },
+            {
+              name: "Message",
+              value: error.message,
+              inline: true,
+            },
+            {
+              name: "‎",
+              value: "‎",
+              inline: true,
+            },
+            {
+              name: "Stacktrace",
+              value: error.stack,
+              inline: false,
+            },
+          ],
+        },
+      ],
+    });
+  }
+}
