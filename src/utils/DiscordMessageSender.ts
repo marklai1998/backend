@@ -1,5 +1,5 @@
 import { districtIdToName, statusToName } from "../utils/DistrictUtils";
-import { reviews } from "../cache";
+import { Cache } from "../cache";
 
 import { Block } from "../entity/Block";
 import { Webhook } from "../entity/Webhook";
@@ -65,7 +65,7 @@ export async function sendOverview() {
         },
         {
           name: "**Projects to review**",
-          value: `» ${reviews.total}`,
+          value: `» ${Cache.reviews}`,
           inline: true,
         },
       ],

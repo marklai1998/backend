@@ -5,7 +5,7 @@ import Logger from "./Logger";
 import { ProjectCount } from "../entity/ProjectCount";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
-import { reviews } from "../cache";
+import { Cache } from "../cache";
 import { getCpuUsage } from "./CpuUsage";
 import { checkServerStatus } from "./ServerStatus";
 
@@ -242,14 +242,15 @@ async function trackProjectCount() {
             `Setting projects from ${project.projects} to ${count} (${project.date})`
           );
           project.projects = count;
+          Cache.projects_today = count;
           await project.save();
           updateOverview = true;
         }
-        if (reviewCount !== reviews.total) {
+        if (reviewCount !== Cache.reviews) {
           Logger.info(
-            `Setting reviews from ${reviews.total} to ${reviewCount}`
+            `Setting reviews from ${Cache.reviews} to ${reviewCount}`
           );
-          reviews.total = reviewCount;
+          Cache.reviews = reviewCount;
           updateOverview = true;
         }
         if (updateOverview) {
