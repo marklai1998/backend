@@ -17,7 +17,7 @@ const Broadcasts: Broadcast[] = [];
 function init(server: http.Server): void {
   io = new Server(server, {
     cors: {
-      origin: "https://progress.minefact.de",
+      origin: "*",
     },
   });
 
