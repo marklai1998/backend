@@ -6,5 +6,5 @@ export const Stats = {
 };
 export const Cache = {
   reviews: 0,
-  projects_today: 0,
+  projects_total: 0,
 };

@@ -242,7 +242,7 @@ async function trackProjectCount() {
             `Setting projects from ${project.projects} to ${count} (${project.date})`
           );
           project.projects = count;
-          Cache.projects_today = count;
+          Cache.projects_total = count;
           await project.save();
           updateOverview = true;
         }
