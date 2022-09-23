@@ -4,14 +4,9 @@ import Logger from "../utils/Logger";
 import { Motd_Broadcast } from "./broadcasts/Motd_Broadcast";
 import { Broadcast } from "./broadcasts/Broadcast";
 import { User } from "../entity/User";
-
-interface Connection {
-  socket: Server;
-  user: User;
-}
+import { Permissions } from "../routes";
 
 let io = null;
-const Clients: Connection[] = [];
 const Broadcasts: Broadcast[] = [];
 
 function init(server: http.Server): void {
@@ -24,11 +19,18 @@ function init(server: http.Server): void {
   startSchedulers();
 
   io.on("connection", async (socket: any) => {
-    const user = await User.findOne({ apikey: socket.handshake.query.key });
-    Clients.push({
-      socket: io,
-      user: user,
-    });
+    const key = socket.handshake.query.key;
+
+    let user: User;
+    if (validateUUIDv4(key)) {
+      user = await User.findOne({ apikey: socket.handshake.query.key });
+    }
+    if (user?.permission >= Permissions.builder) {
+      socket.join("clients_staff");
+    } else {
+      socket.join("clients");
+    }
+
     Logger.info(`[Socket] ${user?.username || "User"} connected`);
 
     sendCurrentBroadcast(socket);
@@ -36,10 +38,6 @@ function init(server: http.Server): void {
     // Disconnect
     socket.on("disconnect", () => {
       Logger.info(`[Socket] ${user?.username || "User"} disconnected`);
-      const index = Clients.findIndex((e: Connection) => e.socket === socket);
-      if (index != -1) {
-        Clients.splice(index, 1);
-      }
     });
   });
 }
@@ -50,6 +48,12 @@ function sendCurrentBroadcast(socket: any): void {
   for (const broadcast of Broadcasts) {
     socket.emit(broadcast.eventName(), broadcast.message());
   }
+}
+
+function validateUUIDv4(uuid: string) {
+  return uuid.match(
+    /^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
+  );
 }
 
 export { init };
