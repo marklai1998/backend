@@ -236,13 +236,16 @@ async function trackProjectCount() {
             `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
           ),
         });
+
+        // Update Cache
+        Cache.projects_total = count;
+
         var updateOverview = false;
         if (count > project.projects) {
           Logger.info(
             `Setting projects from ${project.projects} to ${count} (${project.date})`
           );
           project.projects = count;
-          Cache.projects_total = count;
           await project.save();
           updateOverview = true;
         }
