@@ -50,10 +50,18 @@ function sendCurrentBroadcast(socket: any): void {
   }
 }
 
+// -----===== Emit functions =====-----
+function broadcast(event: string, value: any): void {
+  io.emit(event, value);
+}
+function sendToRoom(room: string, event: string, value: any): void {
+  io.to(room).emit(event, value);
+}
+
 function validateUUIDv4(uuid: string) {
-  return uuid.match(
+  return uuid?.match(
     /^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
   );
 }
 
-export { init };
+export { init, broadcast, sendToRoom };
