@@ -3,8 +3,6 @@ import http = require("http");
 import Logger from "../utils/Logger";
 import { Motd_Broadcast } from "./broadcasts/Motd_Broadcast";
 import { Broadcast } from "./broadcasts/Broadcast";
-import { User } from "../entity/User";
-import { Permissions } from "../routes";
 
 let io = null;
 const Broadcasts: Broadcast[] = [];
@@ -19,25 +17,15 @@ function init(server: http.Server): void {
   startSchedulers();
 
   io.on("connection", async (socket: any) => {
-    const key = socket.handshake.query.key;
+    socket.join("clients");
 
-    let user: User;
-    if (validateUUIDv4(key)) {
-      user = await User.findOne({ apikey: socket.handshake.query.key });
-    }
-    if (user?.permission >= Permissions.builder) {
-      socket.join("clients_staff");
-    } else {
-      socket.join("clients");
-    }
-
-    Logger.info(`[Socket] ${user?.username || "User"} connected`);
+    Logger.info(`[Socket] User connected`);
 
     sendCurrentBroadcast(socket);
 
     // Disconnect
     socket.on("disconnect", () => {
-      Logger.info(`[Socket] ${user?.username || "User"} disconnected`);
+      Logger.info(`[Socket] User disconnected`);
     });
   });
 }
