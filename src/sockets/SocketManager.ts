@@ -3,6 +3,7 @@ import http = require("http");
 import Logger from "../utils/Logger";
 import { Motd_Broadcast } from "./broadcasts/Motd_Broadcast";
 import { Broadcast } from "./broadcasts/Broadcast";
+import { joinRoom } from "./Rooms";
 
 let io = null;
 const Broadcasts: Broadcast[] = [];
@@ -16,12 +17,23 @@ function init(server: http.Server): void {
 
   startSchedulers();
 
-  io.on("connection", async (socket: any) => {
-    socket.join("clients");
-
+  io.on("connection", (socket: any) => {
     Logger.info(`[Socket] User connected`);
 
-    sendCurrentBroadcast(socket);
+    // Join Room
+    socket.on("join", (msg: any) => {
+      const roomName = msg.data?.room;
+      if (roomName) {
+        joinRoom(socket, roomName, msg.apikey);
+      }
+    });
+    // Leave Room
+    socket.on("leave", (msg: any) => {
+      const roomName = msg.data?.room;
+      if (roomName) {
+        socket.leave(roomName);
+      }
+    });
 
     // Disconnect
     socket.on("disconnect", () => {
@@ -30,12 +42,7 @@ function init(server: http.Server): void {
   });
 }
 function startSchedulers(): void {
-  Broadcasts.push(new Motd_Broadcast(io));
-}
-function sendCurrentBroadcast(socket: any): void {
-  for (const broadcast of Broadcasts) {
-    socket.emit(broadcast.eventName(), broadcast.message());
-  }
+  Broadcasts.push(new Motd_Broadcast());
 }
 
 // -----===== Emit functions =====-----
@@ -44,12 +51,6 @@ function broadcast(event: string, value: any): void {
 }
 function sendToRoom(room: string, event: string, value: any): void {
   io.to(room).emit(event, value);
-}
-
-function validateUUIDv4(uuid: string) {
-  return uuid?.match(
-    /^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
-  );
 }
 
 export { init, broadcast, sendToRoom };

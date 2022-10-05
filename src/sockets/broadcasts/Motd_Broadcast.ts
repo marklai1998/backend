@@ -1,14 +1,15 @@
-import { Server } from "http";
 import { AdminSetting } from "../../entity/AdminSetting";
 import { replacePlaceholders } from "../Placeholders";
 import { Broadcast } from "./Broadcast";
+
+const cache = require("../../cache");
 
 export class Motd_Broadcast extends Broadcast {
   private index: number;
   private motds: string[];
 
-  constructor(io: Server) {
-    super(io);
+  constructor() {
+    super();
     this.index = 0;
     this.motds = [];
 
@@ -16,11 +17,8 @@ export class Motd_Broadcast extends Broadcast {
     this.loadMotds();
     setInterval(async () => this.loadMotds(), 5 * 60 * 1000);
     // Refresh motd every x seconds
-    setInterval(() => {
-      if (++this.index >= this.motds.length) {
-        this.index = 0;
-      }
-    }, this.interval() * 1000);
+    this.refreshMotd();
+    setInterval(() => this.refreshMotd(), this.interval() * 1000);
   }
 
   public eventName(): string {
@@ -40,5 +38,12 @@ export class Motd_Broadcast extends Broadcast {
     this.motds = JSON.parse(
       (await AdminSetting.findOne({ key: "motd" })).value
     );
+    cache.set("current_motd", this.message());
+  }
+  private refreshMotd() {
+    if (++this.index >= this.motds.length) {
+      this.index = 0;
+    }
+    cache.set("current_motd", this.message());
   }
 }

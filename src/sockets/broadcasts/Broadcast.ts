@@ -1,17 +1,13 @@
-import { Server } from "http";
+import { sendToRoom } from "../SocketManager";
 
 export abstract class Broadcast {
-  private io: Server;
-
-  constructor(io: Server) {
-    this.io = io;
-
+  constructor() {
     this.start();
   }
 
   private start() {
     setInterval(() => {
-      this.io.emit(this.eventName(), this.message());
+      sendToRoom("motd", this.eventName(), this.message());
     }, this.interval() * 1000);
   }
 
