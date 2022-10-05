@@ -1,5 +1,4 @@
 import { districtIdToName, statusToName } from "../utils/DistrictUtils";
-import { Cache } from "../cache";
 
 import { Block } from "../entity/Block";
 import { Webhook } from "../entity/Webhook";
@@ -7,6 +6,8 @@ import { District } from "../entity/District";
 import { ProjectCount } from "../entity/ProjectCount";
 import { AdminSetting } from "../entity/AdminSetting";
 import { User } from "../entity/User";
+
+const cache = require("../cache");
 
 export const Colors = {
   MineFact_Green: 0x1d9e64,
@@ -65,7 +66,7 @@ export async function sendOverview() {
         },
         {
           name: "**Projects to review**",
-          value: `» ${Cache.reviews}`,
+          value: `» ${cache.get("reviews")}`,
           inline: true,
         },
       ],

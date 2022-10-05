@@ -8,11 +8,11 @@ import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
-import { Stats } from "../cache";
-import { getDirectChildren } from "../utils/DistrictUtils";
 import { getManager } from "typeorm";
 import { insidePolygon } from "../utils/Polygon";
 import { status } from "../utils/ServerStatus";
+
+const cache = require("../cache");
 
 const os = require("os");
 const ormconfig = require("../../ormconfig.json");
@@ -394,9 +394,9 @@ export class GeneralController {
       backend_version,
       database: db,
       stats: {
-        total_requests: Stats.total_requests,
-        successful_requests: Stats.successful_requests,
-        error_requests: Stats.errors,
+        total_requests: cache.get("total_requests"),
+        successful_requests: cache.get("successful_requests"),
+        error_requests: cache.get("errors"),
       },
     };
   }
@@ -486,7 +486,7 @@ export class GeneralController {
     for (const district of districts) {
       const areaD = JSON.parse(district.area);
 
-      if (areaD.length <= 0 || district.id ==1) continue;
+      if (areaD.length <= 0 || district.id == 1) continue;
 
       if (insidePolygon(point, areaD)) {
         // District found

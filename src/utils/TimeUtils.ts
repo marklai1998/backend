@@ -5,9 +5,10 @@ import Logger from "./Logger";
 import { ProjectCount } from "../entity/ProjectCount";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
-import { Cache } from "../cache";
 import { getCpuUsage } from "./CpuUsage";
 import { checkServerStatus } from "./ServerStatus";
+
+const cache = require("../cache");
 
 export function parseDate(date: string | Date, locale?: string) {
   if (date === null) {
@@ -238,7 +239,7 @@ async function trackProjectCount() {
         });
 
         // Update Cache
-        Cache.projects_total = count;
+        cache.set("projects_total", count);
 
         var updateOverview = false;
         if (count > project.projects) {
@@ -249,11 +250,11 @@ async function trackProjectCount() {
           await project.save();
           updateOverview = true;
         }
-        if (reviewCount !== Cache.reviews) {
+        if (reviewCount !== cache.get("reviews")) {
           Logger.info(
-            `Setting reviews from ${Cache.reviews} to ${reviewCount}`
+            `Setting reviews from ${cache.get("reviews")} to ${reviewCount}`
           );
-          Cache.reviews = reviewCount;
+          cache.set("reviews", reviewCount);
           updateOverview = true;
         }
         if (updateOverview) {

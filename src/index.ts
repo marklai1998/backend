@@ -12,7 +12,6 @@ import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
 import { Routes } from "./routes";
-import { Stats } from "./cache";
 import { User } from "./entity/User";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
@@ -35,6 +34,7 @@ var BTEconnection = mysql.createConnection({
   password: ormconfig.password,
   database: "MineFactServernetzwerk",
 });
+const cache = require("./cache");
 
 Logger.debug("Connecting to main database...");
 createConnection()
@@ -53,6 +53,7 @@ createConnection()
 
     const httpServer = createServer(app);
 
+    cache.loadDefaults();
     sockets.init(httpServer);
 
     Logger.debug("Loaded middleware");
@@ -68,7 +69,7 @@ createConnection()
             apikey: req.body.key || req.query.key,
           });
           try {
-            Stats.total_requests++;
+            cache.inc("total_requests");
             Logger.http(
               `${req.method} ${req.path}${user ? ` (${user.username})` : ""}`
             );
@@ -98,9 +99,9 @@ createConnection()
             } else if (result !== null && result !== undefined) {
               res.json(result);
             }
-            Stats.successful_requests++;
+            cache.inc("successful_requests");
           } catch (err) {
-            Stats.errors++;
+            cache.inc("errors");
             Logger.error(err);
           }
         }
@@ -214,7 +215,7 @@ export function generateUUID() {
 export { fetch, axios, port, BTEconnection };
 
 function handleException(error) {
-  Stats.errors++;
+  cache.inc("errors");
   Logger.error(error.stack);
 
   if (productionMode) {
