@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
 import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import * as sockets from "./sockets/SocketManager";
+import * as dbCache from "./utils/cache/DatabaseCache";
 import { createServer } from "http";
 
 var cors = require("cors");
@@ -53,7 +54,11 @@ createConnection()
 
     const httpServer = createServer(app);
 
+    Logger.debug("Loading cache...");
+    await dbCache.loadAll();
     cache.loadDefaults();
+    Logger.debug("Loaded cache");
+
     sockets.init(httpServer);
 
     Logger.debug("Loaded middleware");
@@ -65,7 +70,7 @@ createConnection()
       (app as any)[route.method](
         route.route,
         async (req: Request, res: Response, next: Function) => {
-          let user = await User.findOne({
+          let user = dbCache.findOne("users", {
             apikey: req.body.key || req.query.key,
           });
           try {
@@ -196,6 +201,8 @@ export async function getValidation(
   }
 
   await object.save();
+
+  dbCache.reload(object);
 
   return generateSuccess(successMessage, successData);
 }

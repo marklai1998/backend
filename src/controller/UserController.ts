@@ -8,6 +8,7 @@ import { mcRankToPermission, Permissions } from "../utils/Permissions";
 import { User } from "../entity/User";
 import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 import { Registration } from "../entity/Registration";
+import * as dbCache from "../utils/cache/DatabaseCache";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -360,9 +361,8 @@ export class UserController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    const userRaw = await User.find();
-
-    const requester = await User.findOne({
+    const userRaw = dbCache.find("users");
+    const requester = dbCache.findOne("users", {
       apikey: request.body.key || request.query.key,
     });
 
@@ -382,10 +382,9 @@ export class UserController {
 
   async getOne(request: Request, response: Response, next: NextFunction) {
     const user =
-      (await User.findOne({ uid: request.params.user })) ||
-      (await User.findOne({ username: request.params.user }));
-
-    const requester = await User.findOne({
+      dbCache.findOne("users", { uid: request.params.user }) ||
+      dbCache.findOne("users", { username: request.params.user });
+    const requester = dbCache.findOne("users", {
       apikey: request.body.key || request.query.key,
     });
 
@@ -407,8 +406,8 @@ export class UserController {
     }
 
     const key = request.body.key || request.query.key;
-    const requester = await User.findOne({ apikey: key });
-    const user = await User.findOne({ uid: request.body.uid });
+    const requester = dbCache.findOne("users", { apikey: key });
+    const user = dbCache.findOne("users", { uid: request.body.uid });
 
     if (
       requester.permission < Permissions.admin &&
@@ -458,7 +457,7 @@ export class UserController {
         user.save();
       }
     }
-    return index.generateSuccess("Login successful", {
+    return index.generateSuccess(`Updated ${counter} columns`, {
       user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
     });
   }
@@ -469,7 +468,9 @@ export class UserController {
       return index.generateError("User not found");
     }
     Logger.warn("Deleting user " + user.username);
-    return await User.remove(user);
+    await User.remove(user);
+    dbCache.reload(user);
+    return index.generateError("User deleted");
   }
 }
 
