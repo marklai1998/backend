@@ -101,11 +101,15 @@ createConnection()
                 result !== null && result !== undefined
                   ? res.send(result)
                   : undefined;
-                trackResponseTime(req.route.path, new Date().getTime() - time);
+                const neededTime = new Date().getTime() - time;
+                Logger.debug(`Request took ${neededTime}ms`);
+                trackResponseTime(req.route.path, neededTime);
               });
             } else if (result !== null && result !== undefined) {
               res.json(result);
-              trackResponseTime(req.route.path, new Date().getTime() - time);
+              const neededTime = new Date().getTime() - time;
+              Logger.debug(`Request took ${neededTime}ms`);
+              trackResponseTime(req.route.path, neededTime);
             }
             cache.inc("successful_requests");
           } catch (err) {
