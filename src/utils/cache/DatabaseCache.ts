@@ -43,7 +43,7 @@ function search(type: string, conditions: any, onlyOne: boolean) {
     let found = true;
     if (conditions) {
       for (const [key, value] of Object.entries(conditions)) {
-        if (element[key] !== value) {
+        if (element[key] != value) {
           found = false;
           break;
         }
