@@ -25,7 +25,7 @@ export class Motd_Broadcast extends Broadcast {
     return "motd";
   }
   public interval(): number {
-    return 30;
+    return 10;
   }
   public message(): string {
     if (this.motds.length === 0) {

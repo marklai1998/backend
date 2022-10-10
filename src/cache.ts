@@ -23,6 +23,7 @@ module.exports = {
     this.set("total_requests", 0);
     this.set("successful_requests", 0);
     this.set("errors", 0);
+    this.set("connected_clients", 0);
     this.set("response_time", []);
   },
 };

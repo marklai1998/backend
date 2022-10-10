@@ -5,6 +5,8 @@ import { Motd_Broadcast } from "./broadcasts/Motd_Broadcast";
 import { Broadcast } from "./broadcasts/Broadcast";
 import { joinRoom } from "./Rooms";
 
+const cache = require("../cache");
+
 let io = null;
 const Broadcasts: Broadcast[] = [];
 
@@ -19,6 +21,8 @@ function init(server: http.Server): void {
 
   io.on("connection", (socket: any) => {
     Logger.info(`[Socket] User connected`);
+
+    cache.set("connected_clients", io.engine.clientsCount);
 
     // Join Room
     socket.on("join", (msg: any) => {
@@ -37,6 +41,7 @@ function init(server: http.Server): void {
 
     // Disconnect
     socket.on("disconnect", () => {
+      cache.set("connected_clients", io.engine.clientsCount);
       Logger.info(`[Socket] User disconnected`);
     });
   });
