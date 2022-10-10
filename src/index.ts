@@ -2,10 +2,13 @@ import "reflect-metadata";
 
 import * as bodyParser from "body-parser";
 import * as date from "./utils/TimeUtils";
+import * as dbCache from "./utils/cache/DatabaseCache";
 import * as express from "express";
 import * as jwt from "./utils/JsonWebToken";
+import * as sockets from "./sockets/SocketManager";
 
 import { BaseEntity, createConnection, getRepository } from "typeorm";
+import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import { Request, Response } from "express";
 
 import { AdminSetting } from "./entity/AdminSetting";
@@ -13,12 +16,9 @@ import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
 import { Routes } from "./routes";
 import { User } from "./entity/User";
+import { createServer } from "http";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
-import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
-import * as sockets from "./sockets/SocketManager";
-import * as dbCache from "./utils/cache/DatabaseCache";
-import { createServer } from "http";
 
 var cors = require("cors");
 var mysql = require("mysql");
@@ -96,21 +96,7 @@ createConnection()
               res,
               next
             );
-            if (result instanceof Promise) {
-              result.then((result) => {
-                result !== null && result !== undefined
-                  ? res.send(result)
-                  : undefined;
-                const neededTime = new Date().getTime() - time;
-                Logger.debug(`Request took ${neededTime}ms`);
-                trackResponseTime(req.route.path, neededTime);
-              });
-            } else if (result !== null && result !== undefined) {
-              res.json(result);
-              const neededTime = new Date().getTime() - time;
-              Logger.debug(`Request took ${neededTime}ms`);
-              trackResponseTime(req.route.path, neededTime);
-            }
+            handleResponse(result, req, res, time);
             cache.inc("successful_requests");
           } catch (err) {
             cache.inc("errors");
@@ -285,5 +271,23 @@ function handleException(error) {
         },
       ],
     });
+  }
+}
+
+function handleResponse(
+  result: any,
+  req: Request,
+  res: Response,
+  time: number
+) {
+  if (result instanceof Promise) {
+    result.then((result) => {
+      handleResponse(result, req, res, time);
+    });
+  } else if (result !== null && result !== undefined) {
+    res.json(result);
+    const neededTime = new Date().getTime() - time;
+    Logger.debug(`Request took ${neededTime}ms`);
+    trackResponseTime(req.route.path, neededTime);
   }
 }
