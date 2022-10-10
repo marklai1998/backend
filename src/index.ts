@@ -70,6 +70,7 @@ createConnection()
       (app as any)[route.method](
         route.route,
         async (req: Request, res: Response, next: Function) => {
+          const time = new Date().getTime();
           let user = dbCache.findOne("users", {
             apikey: req.body.key || req.query.key,
           });
@@ -96,13 +97,15 @@ createConnection()
               next
             );
             if (result instanceof Promise) {
-              result.then((result) =>
+              result.then((result) => {
                 result !== null && result !== undefined
                   ? res.send(result)
-                  : undefined
-              );
+                  : undefined;
+                trackResponseTime(req.route.path, new Date().getTime() - time);
+              });
             } else if (result !== null && result !== undefined) {
               res.json(result);
+              trackResponseTime(req.route.path, new Date().getTime() - time);
             }
             cache.inc("successful_requests");
           } catch (err) {
@@ -220,6 +223,20 @@ export function generateUUID() {
 }
 
 export { fetch, axios, port, BTEconnection };
+
+function trackResponseTime(route: string, time: number) {
+  const response_times = cache.get("response_time");
+  let route_time = response_times.find((e: any) => e.route === route);
+  if (!route_time) {
+    response_times.push({
+      route: route,
+      times: [],
+    });
+    route_time = response_times.at(-1);
+  }
+  route_time.times.push(time);
+  cache.set("response_time", response_times);
+}
 
 function handleException(error) {
   cache.inc("errors");

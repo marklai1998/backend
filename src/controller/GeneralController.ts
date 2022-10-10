@@ -397,6 +397,7 @@ export class GeneralController {
         total_requests: cache.get("total_requests"),
         successful_requests: cache.get("successful_requests"),
         error_requests: cache.get("errors"),
+        response_times: cache.get("response_time"),
       },
     };
   }
