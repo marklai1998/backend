@@ -16,9 +16,9 @@ export class Motd_Broadcast extends Broadcast {
     // Load Motds from database
     this.loadMotds();
     setInterval(async () => this.loadMotds(), 5 * 60 * 1000);
-    // Refresh motd every x seconds
-    this.refreshMotd();
-    setInterval(() => this.refreshMotd(), this.interval() * 1000);
+    // // Refresh motd every x seconds
+    // this.refreshMotd();
+    // setInterval(() => this.refreshMotd(), this.interval() * 1000);
   }
 
   public eventName(): string {
@@ -32,6 +32,9 @@ export class Motd_Broadcast extends Broadcast {
       return "";
     }
     return replacePlaceholders(this.motds[this.index]);
+  }
+  public onMessageSend(): void {
+    this.refreshMotd();
   }
 
   private async loadMotds() {

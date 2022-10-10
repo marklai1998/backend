@@ -7,6 +7,7 @@ export abstract class Broadcast {
 
   private start() {
     setInterval(() => {
+      this.onMessageSend();
       sendToRoom("motd", this.eventName(), this.message());
     }, this.interval() * 1000);
   }
@@ -14,4 +15,5 @@ export abstract class Broadcast {
   public abstract eventName(): string;
   public abstract interval(): number;
   public abstract message(): string;
+  public abstract onMessageSend(): void;
 }
