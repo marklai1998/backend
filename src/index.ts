@@ -287,7 +287,6 @@ function handleResponse(
   } else if (result !== null && result !== undefined) {
     res.json(result);
     const neededTime = new Date().getTime() - time;
-    Logger.debug(`Request took ${neededTime}ms`);
     trackResponseTime(req.route.path, neededTime);
   }
 }
