@@ -241,7 +241,10 @@ export class UserController {
     if (typeof request.body.accept !== "boolean") {
       return index.generateError("Accept value must be a boolean");
     }
-    if (!request.body.id) {
+    const reviewer = dbCache.findOne("users", {
+      apikey: request.body.key || request.query.key,
+    });
+    if (!request.body.id && !(reviewer?.permission >= Permissions.moderator)) {
       return index.generateError("Specify registration id");
     }
     if (request.body.accept && !request.body.rank) {
