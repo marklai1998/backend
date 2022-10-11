@@ -253,6 +253,10 @@ export class UserController {
 
     const registration = await Registration.findOne({ id: request.body.id });
 
+    if (!registration) {
+      return index.generateError("No registration found with the specified ID");
+    }
+
     if (request.body.accept) {
       // Create new user
       const user = new User();
