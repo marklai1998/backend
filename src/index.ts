@@ -55,9 +55,9 @@ createConnection()
     const httpServer = createServer(app);
 
     Logger.debug("Loading cache...");
-    await dbCache.loadAll();
     cache.loadDefaults();
-    Logger.debug("Loaded cache");
+    await dbCache.loadAll();
+    setInterval(dbCache.loadAll, 60000 * 15);
 
     sockets.init(httpServer);
 

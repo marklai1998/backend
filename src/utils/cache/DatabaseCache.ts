@@ -1,5 +1,6 @@
 import { BaseEntity } from "typeorm";
 import { User } from "../../entity/User";
+import Logger from "../Logger";
 
 type DBCache = {
   users: User[];
@@ -15,6 +16,7 @@ async function loadAll(): Promise<void> {
     promises.push(reloadFromDatabase(key));
   }
   await Promise.allSettled(promises);
+  Logger.debug("Updated cache from Database");
 }
 async function reload(updatedObject: BaseEntity): Promise<void> {
   if (updatedObject instanceof User) {
