@@ -373,18 +373,14 @@ export class UserController {
       apikey: request.body.key || request.query.key,
     });
 
-    const users = [];
-    for (const user of userRaw) {
-      users.push(
-        await user.toJson({
-          showAPIKey: true,
-          hasPermission: !requester
-            ? false
-            : requester.permission >= Permissions.moderator,
-        })
-      );
-    }
-    return users;
+    return userRaw.map((user: any) =>
+      user.toJson({
+        showAPIKey: true,
+        hasPermission: !requester
+          ? false
+          : requester.permission >= Permissions.moderator,
+      })
+    );
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -399,7 +395,7 @@ export class UserController {
       return index.generateError("User not found");
     }
 
-    return await user.toJson({
+    return user.toJson({
       showAPIKey: true,
       hasPermission: !requester
         ? false

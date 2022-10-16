@@ -73,7 +73,7 @@ export class User extends BaseEntity {
   @CreateDateColumn()
   created: Date;
 
-  async toJson({
+  toJson({
     showAPIKey = false,
     showPassword = false,
     hasPermission = false,
@@ -81,7 +81,7 @@ export class User extends BaseEntity {
     showAPIKey?: boolean;
     showPassword?: boolean;
     hasPermission?: boolean;
-  } = {}): Promise<object> {
+  } = {}): object {
     return {
       uid: this.uid,
       email: hasPermission ? this.email : undefined,
