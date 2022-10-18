@@ -3,6 +3,7 @@ import { BlockController } from "./controller/BlockController";
 import { DistrictController } from "./controller/DistrictController";
 import { GeneralController } from "./controller/GeneralController";
 import { LandmarkController } from "./controller/LandmarkController";
+import { MapController } from "./controller/MapController";
 import { MinecraftController } from "./controller/MinecraftController";
 import { Permissions } from "./utils/Permissions";
 import { PlayerStatController } from "./controller/PlayerStatController";
@@ -456,6 +457,28 @@ const Routes = [
     controller: WebhookController,
     action: "send",
     permission: Permissions.default, // Permissions handled later
+  },
+  // Custom Maps
+  {
+    method: "get",
+    route: "/api/maps/get",
+    controller: MapController,
+    action: "getAll",
+    permission: Permissions.builder,
+  },
+  {
+    method: "get",
+    route: "/api/maps/get/:id",
+    controller: MapController,
+    action: "getOne",
+    permission: Permissions.builder,
+  },
+  {
+    method: "post",
+    route: "/api/maps/create",
+    controller: MapController,
+    action: "create",
+    permission: Permissions.builder,
   },
   // Sheet Imports
   {
