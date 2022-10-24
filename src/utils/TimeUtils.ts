@@ -6,7 +6,7 @@ import { ProjectCount } from "../entity/ProjectCount";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 import { getCpuUsage } from "./CpuUsage";
-import { checkServerStatus } from "./ServerStatus";
+import { checkServerStatus, pingNetworkServers } from "./ServerStatusTracker";
 import { DATABASES } from "./DatabaseConnector";
 
 const cache = require("../cache");
@@ -161,6 +161,9 @@ export function startIntervals() {
       }
     }
   }, 1);
+
+  // Request network server status
+  executeEveryXMinutesStartingNow(pingNetworkServers, 0.5);
 
   // Request server status
   executeEveryXMinutesStartingNow(checkServerStatus, 1);

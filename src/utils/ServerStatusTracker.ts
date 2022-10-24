@@ -1,10 +1,134 @@
+import * as minecraftUtil from "minecraft-server-util";
+
 import { fetch } from "..";
 import { AdminSetting } from "../entity/AdminSetting";
 import { Colors, sendWebhook } from "./DiscordMessageSender";
+import { DATABASES } from "./DatabaseConnector";
 import Logger from "./Logger";
+import { ServerStatus } from "../entity/ServerStatus";
+import { getObjectDifferences } from "./JsonUtils";
 
+const nycServerStatus = [
+  "NewYorkCity",
+  "BuildingServer1",
+  "BuildingServer2",
+  "BuildingServer3",
+  "BuildingServer4",
+  "BuildingServer5",
+  "BuildingServer6",
+  "BuildingServer7",
+  "BuildingServer8",
+  "NYCMap",
+  "NYCLobby",
+  "Hub1",
+  "BTLobby",
+];
 const serversToPingRole = ["NewYorkCity", "BuildingServer1"];
+let currentlyUpdating = false;
 export const status = {};
+
+export async function pingNetworkServers() {
+  if (currentlyUpdating) return;
+
+  currentlyUpdating = true;
+  const time = new Date().getTime();
+  const servers = await ServerStatus.find();
+  await DATABASES.terrabungee.query(
+    "SELECT * FROM `StaticInstances`",
+    async (error, results, fields) => {
+      if (error) {
+        Logger.error(error);
+        return;
+      }
+      const requests = [];
+      for (const server of results) {
+        const [ip, port] = server.Address.split(":");
+        requests.push(
+          minecraftUtil.status(ip, parseInt(port), {
+            timeout: 1000 * 20,
+            enableSRV: true,
+          })
+        );
+      }
+      const responses = await Promise.allSettled(requests);
+      const serverNames = results.map((server: any) => server.Id);
+
+      // Handle responses
+
+      // Check for new servers to be saved
+      const saves = [];
+      for (let i = 0; i < serverNames.length; i++) {
+        if (
+          !servers.some((server: ServerStatus) => server.id === serverNames[i])
+        ) {
+          const server = new ServerStatus();
+          server.id = serverNames[i];
+          server.address = results[i].Address;
+          saves.push(server.save());
+          Logger.debug(
+            `New Network Server found: ${server.id} (${server.address})`
+          );
+        }
+      }
+      await Promise.allSettled(saves);
+
+      // Update server status
+      const savesNew = [];
+      for (let i = 0; i < serverNames.length; i++) {
+        const res = responses[i];
+        const oldValue = servers.find(
+          (s: ServerStatus) => s.id === serverNames[i]
+        );
+
+        if (res.status === "rejected") {
+          if (oldValue.online) {
+            oldValue.online = false;
+            oldValue.players = {
+              online: 0,
+              max: oldValue.players.max,
+              sample: [],
+            };
+            savesNew.push(oldValue.save());
+          }
+          continue;
+        }
+
+        const newValue = {
+          id: serverNames[i],
+          address: results[i].Address,
+          online: true,
+          version: res.value.version,
+          players: res.value.players,
+          motd: res.value.motd,
+          favicon: res.value.favicon,
+          srvRecord: res.value.srvRecord,
+        };
+
+        const diff = getObjectDifferences(oldValue, newValue);
+        for (const col of diff) {
+          oldValue[col] = newValue[col];
+        }
+        if (diff.length > 0) {
+          savesNew.push(oldValue.save());
+        }
+      }
+      if (savesNew.length > 0) {
+        await Promise.allSettled(savesNew);
+        const successful = responses.filter(
+          (res: any) => res.status === "fulfilled"
+        ).length;
+        Logger.info(
+          `Updated the server status of ${
+            savesNew.length
+          } servers (${successful} Online | ${
+            responses.length - successful
+          } Offline) | ${new Date().getTime() - time}ms`
+        );
+      }
+      currentlyUpdating = false;
+    }
+  );
+}
 
 export async function checkServerStatus() {
   const servers = JSON.parse(

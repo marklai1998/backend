@@ -21,6 +21,9 @@ import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
 import { connectToDatabases } from "./utils/DatabaseConnector";
 
+// Increase EventEmitter limit
+require("events").EventEmitter.prototype._maxListeners = 20;
+
 var cors = require("cors");
 var helmet = require("helmet");
 var fetch = require("node-fetch");

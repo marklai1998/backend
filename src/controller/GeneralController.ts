@@ -10,7 +10,7 @@ import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { getManager } from "typeorm";
 import { insidePolygon } from "../utils/Polygon";
-import { status } from "../utils/ServerStatus";
+import { status } from "../utils/ServerStatusTracker";
 
 const cache = require("../cache");
 
