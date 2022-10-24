@@ -8,6 +8,7 @@ import { MinecraftController } from "./controller/MinecraftController";
 import { Permissions } from "./utils/Permissions";
 import { PlayerStatController } from "./controller/PlayerStatController";
 import { ProjectCountController } from "./controller/ProjectCountController";
+import { ServerStatusController } from "./controller/ServerStatusController";
 import { UserController } from "./controller/UserController";
 import { WebhookController } from "./controller/WebhookController";
 
@@ -84,7 +85,7 @@ const Routes = [
     action: "handleRegistration",
     permission: Permissions.moderator,
   },
-  // General
+  // Server Status
   {
     method: "get",
     route: "/api/network/ping",
@@ -101,10 +102,17 @@ const Routes = [
   },
   {
     method: "get",
-    route: "/api/progress",
-    controller: GeneralController,
-    action: "overview",
-    permission: Permissions.default,
+    route: "/api/network/status",
+    controller: ServerStatusController,
+    action: "getAll",
+    permission: Permissions.builder,
+  },
+  {
+    method: "get",
+    route: "/api/network/status/:server",
+    controller: ServerStatusController,
+    action: "getOne",
+    permission: Permissions.builder,
   },
   // Admin Settings
   {
@@ -510,6 +518,13 @@ const Routes = [
     permission: Permissions.admin,
   },
   // Other
+  {
+    method: "get",
+    route: "/api/progress",
+    controller: GeneralController,
+    action: "overview",
+    permission: Permissions.default,
+  },
   {
     method: "get",
     route: "/links/:link",
