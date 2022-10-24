@@ -98,7 +98,11 @@ export async function pingNetworkServers() {
           address: results[i].Address,
           online: true,
           version: res.value.version,
-          players: res.value.players,
+          players: {
+            online: res.value.players.online,
+            max: res.value.players.max,
+            sample: res.value.players.sample || [],
+          },
           motd: res.value.motd,
           favicon: res.value.favicon,
           srvRecord: res.value.srvRecord,
