@@ -19,22 +19,14 @@ import { User } from "./entity/User";
 import { createServer } from "http";
 import { v4 as uuidv4 } from "uuid";
 import { validate } from "class-validator";
+import { connectToDatabases } from "./utils/DatabaseConnector";
 
 var cors = require("cors");
-var mysql = require("mysql");
 var helmet = require("helmet");
 var fetch = require("node-fetch");
 var axios = require("axios");
-const ormconfig = require("../ormconfig.json");
 const port = process.env.PORT || 8080;
 const productionMode = process.argv.slice(2)[0] === "--i";
-var BTEconnection = mysql.createConnection({
-  host: ormconfig.host,
-  port: ormconfig.port,
-  user: ormconfig.username,
-  password: ormconfig.password,
-  database: "MineFactServernetzwerk",
-});
 const cache = require("./cache");
 
 Logger.debug("Connecting to main database...");
@@ -42,9 +34,7 @@ createConnection()
   .then(async (connection) => {
     Logger.debug("Connected to main database");
 
-    Logger.debug("Connecting to BTE.NET database...");
-    BTEconnection.connect();
-    Logger.debug("Connected to BTE.NET database");
+    connectToDatabases();
 
     // create express app
     const app = express();
@@ -212,7 +202,7 @@ export function generateUUID() {
   return uuidv4();
 }
 
-export { fetch, axios, port, BTEconnection };
+export { fetch, axios, port };
 
 function trackResponseTime(route: string, time: number) {
   const response_times = cache.get("response_time");

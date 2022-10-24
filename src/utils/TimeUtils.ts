@@ -1,4 +1,4 @@
-import { BTEconnection, fetch, port } from "../index";
+import { fetch, port } from "../index";
 import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
 
 import Logger from "./Logger";
@@ -7,6 +7,7 @@ import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 import { getCpuUsage } from "./CpuUsage";
 import { checkServerStatus } from "./ServerStatus";
+import { DATABASES } from "./DatabaseConnector";
 
 const cache = require("../cache");
 
@@ -221,7 +222,7 @@ function trackPlayerCount() {
 
 async function trackProjectCount() {
   executeEveryXMinutesStartingNow(async function () {
-    await BTEconnection.query(
+    await DATABASES.MineFactServernetzwerk.query(
       "SELECT * FROM `BuildingServers`",
       async (error, results, fields) => {
         if (error) Logger.error(error);
