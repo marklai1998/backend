@@ -40,6 +40,12 @@ export async function pingNetworkServers() {
         Logger.error(error);
         return;
       }
+      if (!results) {
+        Logger.error(
+          "Error occurred while getting data from StaticInstances table"
+        );
+        return;
+      }
       const requests = [];
       for (const server of results) {
         const [ip, port] = server.Address.split(":");

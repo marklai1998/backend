@@ -229,6 +229,12 @@ async function trackProjectCount() {
       "SELECT * FROM `BuildingServers`",
       async (error, results, fields) => {
         if (error) Logger.error(error);
+        if (!results) {
+          Logger.error(
+            "Error occurred while getting data from BuildingServers table"
+          );
+          return;
+        }
         var count = 0;
         var reviewCount = 0;
         for (const server of results) {
