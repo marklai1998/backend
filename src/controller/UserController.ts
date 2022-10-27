@@ -1,4 +1,4 @@
-import * as index from "../index";
+import { generateUUID } from "../index";
 import * as jwt from "../utils/JsonWebToken";
 
 import { NextFunction, Request, Response } from "express";
@@ -9,6 +9,7 @@ import { User } from "../entity/User";
 import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 import { Registration } from "../entity/Registration";
 import * as dbCache from "../utils/cache/DatabaseCache";
+import responses from "../responses";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -17,7 +18,10 @@ export class UserController {
     });
 
     if (!user) {
-      return index.generateError("There is no user matching this username");
+      return responses.error({
+        message: "There is no user matching this username",
+        code: 404,
+      });
     }
 
     return jwt.jwt.verify(
@@ -27,15 +31,21 @@ export class UserController {
         Logger.warn("Login error: ");
         Logger.warn(err);
         if (err) {
-          return index.generateError("Invalid Password");
+          return responses.error({ message: "Invalid Password", code: 400 });
         } else {
           if (decoded.data === request.body.password) {
             Logger.info(`User logged in (${user.username})`);
-            return index.generateSuccess("Login successful", {
-              user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+            return responses.success({
+              message: "Login successful",
+              data: {
+                user: jwt.generateToken(
+                  JSON.stringify(user),
+                  jwt.secretUserData
+                ),
+              },
             });
           } else {
-            return index.generateError("Invalid Password");
+            return responses.error({ message: "Invalid Password", code: 400 });
           }
         }
       }
@@ -48,7 +58,10 @@ export class UserController {
       !request.body.password ||
       !request.body.discord
     ) {
-      return index.generateError("Specify username, password and discord");
+      return responses.error({
+        message: "Specify username, password and discord",
+        code: 400,
+      });
     }
 
     let registration = await Registration.findOne({
@@ -56,7 +69,10 @@ export class UserController {
     });
 
     if (registration) {
-      return index.generateError("Registration already running");
+      return responses.error({
+        message: "Registration already running",
+        code: 400,
+      });
     }
 
     registration = new Registration();
@@ -70,7 +86,7 @@ export class UserController {
     );
     registration.verification = generateVerificationKey();
 
-    const res = await index.getValidation(
+    const res = await responses.validate(
       registration,
       "New Registration started",
       {
@@ -121,10 +137,16 @@ export class UserController {
     next: NextFunction
   ) {
     if (!request.body.verification) {
-      return index.generateError("Missing verification key");
+      return responses.error({
+        message: "Missing verification key",
+        code: 400,
+      });
     }
     if (!request.body.uuid || !request.body.username || !request.body.rank) {
-      return index.generateError("Specify UUID, username and rank");
+      return responses.error({
+        message: "Specify UUID, username and rank",
+        code: 400,
+      });
     }
 
     const registration = await Registration.findOne({
@@ -132,10 +154,16 @@ export class UserController {
     });
 
     if (!registration) {
-      return index.generateError("No ongoing registration found");
+      return responses.error({
+        message: "No ongoing registration found",
+        code: 404,
+      });
     }
     if (registration.verification !== request.body.verification) {
-      return index.generateError("Invalid verification key");
+      return responses.error({
+        message: "Invalid verification key",
+        code: 400,
+      });
     }
 
     // TODO: enable again if plugin is ready
@@ -158,12 +186,12 @@ export class UserController {
     user.image = "";
     user.settings = "{}";
     user.password = registration.password;
-    user.apikey = index.generateUUID();
+    user.apikey = generateUUID();
     Logger.info(
       `User created (${user.username}, Permission: ${user.permission})`
     );
 
-    const res = await index.getValidation(user, "New user registered");
+    const res = await responses.validate(user, "New user registered");
 
     if (!res.error) {
       registration.remove();
@@ -239,22 +267,28 @@ export class UserController {
     next: NextFunction
   ) {
     if (typeof request.body.accept !== "boolean") {
-      return index.generateError("Accept value must be a boolean");
+      return responses.error({
+        message: "Accept value must be a boolean",
+        code: 400,
+      });
     }
     const reviewer = dbCache.findOne("users", {
       apikey: request.body.key || request.query.key,
     });
     if (!request.body.id && !(reviewer?.permission >= Permissions.moderator)) {
-      return index.generateError("Specify registration id");
+      return responses.error({ message: "Specify registration id", code: 400 });
     }
     if (request.body.accept && !request.body.rank) {
-      return index.generateError("Specify rank of player");
+      return responses.error({ message: "Specify rank of player", code: 400 });
     }
 
     const registration = await Registration.findOne({ id: request.body.id });
 
     if (!registration) {
-      return index.generateError("No registration found with the specified ID");
+      return responses.error({
+        message: "No registration found with the specified ID",
+        code: 404,
+      });
     }
 
     if (request.body.accept) {
@@ -272,12 +306,12 @@ export class UserController {
       user.image = "";
       user.settings = "{}";
       user.password = registration.password;
-      user.apikey = index.generateUUID();
+      user.apikey = generateUUID();
       Logger.info(
         `User created (${user.username}, Permission: ${user.permission})`
       );
 
-      const res = await index.getValidation(user, "Registration accepted");
+      const res = await responses.validate(user, "Registration accepted");
 
       if (!res.error) {
         registration.remove();
@@ -286,13 +320,16 @@ export class UserController {
       return res;
     } else {
       registration.remove();
-      return index.generateSuccess("Registration denied");
+      return responses.success({ message: "Registration denied" });
     }
   }
 
   async create(request: Request, response: Response, next: NextFunction) {
     if (!request.body.username || !request.body.email) {
-      return index.generateError("Specify Email and Username");
+      return responses.error({
+        message: "Specify Email and Username",
+        code: 400,
+      });
     }
 
     let user =
@@ -300,7 +337,10 @@ export class UserController {
       (await User.findOne({ username: request.body.username }));
 
     if (user) {
-      return index.generateError("Email or username already in use");
+      return responses.error({
+        message: "Email or username already in use",
+        code: 400,
+      });
     }
     const ssoPw = generatePassword(8, 16);
     user = new User();
@@ -314,7 +354,7 @@ export class UserController {
     user.image = "";
     user.settings = "{}";
     user.password = jwt.generateToken(ssoPw, jwt.secretInternal);
-    user.apikey = index.generateUUID();
+    user.apikey = generateUUID();
     Logger.info(
       `User created (${user.username}, Permission: ${user.permission})`
     );
@@ -361,7 +401,7 @@ export class UserController {
       ],
     });
 
-    return await index.getValidation(user, "New user registered", {
+    return await responses.validate(user, "New user registered", {
       password: ssoPw,
       username: user.username,
     });
@@ -392,7 +432,7 @@ export class UserController {
     });
 
     if (!user) {
-      return index.generateError("User not found");
+      return responses.error({ message: "User not found", code: 404 });
     }
 
     return user.toJson({
@@ -405,7 +445,7 @@ export class UserController {
 
   async update(request: Request, response: Response, next: NextFunction) {
     if (!request.body.uid || !request.body.values) {
-      return index.generateError("Specify uid and values");
+      return responses.error({ message: "Specify uid and values", code: 400 });
     }
 
     const key = request.body.key || request.query.key;
@@ -416,11 +456,11 @@ export class UserController {
       requester.permission < Permissions.admin &&
       requester.apikey !== user.apikey
     ) {
-      return index.generateError("No permission");
+      return responses.error({ message: "No Permission", code: 403 });
     }
 
     if (!user) {
-      return index.generateError("User not found");
+      return responses.error({ message: "User not found", code: 404 });
     }
 
     let counter = 0;
@@ -460,20 +500,23 @@ export class UserController {
         user.save();
       }
     }
-    return index.generateSuccess(`Updated ${counter} columns`, {
-      user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+    return responses.success({
+      message: `Updated ${counter} columns`,
+      data: {
+        user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+      },
     });
   }
   async delete(request: Request, response: Response, next: NextFunction) {
     const user = await User.findOne({ uid: request.body.uid });
 
     if (!user) {
-      return index.generateError("User not found");
+      return responses.error({ message: "User not found", code: 404 });
     }
     Logger.warn("Deleting user " + user.username);
     await User.remove(user);
     dbCache.reload(user);
-    return index.generateError("User deleted");
+    return responses.success({ message: "User deleted" });
   }
 }
 

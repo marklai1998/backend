@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { Map } from "../entity/Map";
 import { User } from "../entity/User";
-import { generateError, generateUUID, getValidation } from "../index";
+import { generateUUID } from "../index";
+import responses from "../responses";
 
 export class MapController {
   async create(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name) {
-      return generateError("Specify a name");
+      return responses.error({ message: "Specify a name", code: 400 });
     }
 
     const user = await User.findOne({
@@ -18,7 +19,7 @@ export class MapController {
     map.name = request.body.name;
     map.owner = user.uid;
 
-    return getValidation(map, "Map created successfully");
+    return responses.validate(map, "Map created successfully");
   }
   async getAll(request: Request, response: Response, next: NextFunction) {
     const maps = await Map.find();
@@ -27,13 +28,13 @@ export class MapController {
   async getOne(request: Request, response: Response, next: NextFunction) {
     const id = request.params.id;
     if (!id) {
-      return generateError("Specify id or uuid");
+      return responses.error({ message: "Specify id or uuid", code: 400 });
     }
     const maps = await Map.find();
     const map = maps.find((m: Map) => m.id == id || m.uuid === id);
 
     if (!map) {
-      return generateError("No map found");
+      return responses.error({ message: "No map found", code: 404 });
     }
 
     return map.toJson();

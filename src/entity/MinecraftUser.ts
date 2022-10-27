@@ -1,8 +1,8 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { IsJSON, IsUUID, Length, Matches } from "class-validator";
-import { generateError, getValidation } from "../index";
 
 import { setAttributeJson } from "../utils/JsonUtils";
+import responses from "../responses";
 
 @Entity({ name: "minecraft" })
 export class MinecraftUser extends BaseEntity {
@@ -43,13 +43,16 @@ export class MinecraftUser extends BaseEntity {
     if (typeof type === "string") {
       if (type.toLowerCase() === "name") {
         this.username = value;
-        return getValidation(this, "Minecraft Username updated");
+        return responses.validate(this, "Minecraft Username updated");
       } else if (type.toLowerCase() === "rank") {
         this.rank = value;
-        return getValidation(this, "Minecraft Rank updated");
+        return responses.validate(this, "Minecraft Rank updated");
       }
     }
-    return generateError("Invalid type. Available types: 'name', 'rank'");
+    return responses.error({
+      message: "Invalid type. Available types: 'name', 'rank'",
+      code: 400,
+    });
   }
 
   setSetting(type: string, value: string): object {
@@ -57,6 +60,6 @@ export class MinecraftUser extends BaseEntity {
     setAttributeJson(settings, type, value);
     this.settings = JSON.stringify(settings);
 
-    return getValidation(this, "Minecraft Settings updated");
+    return responses.validate(this, "Minecraft Settings updated");
   }
 }

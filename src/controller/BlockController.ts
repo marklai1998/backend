@@ -1,5 +1,4 @@
 import * as google from "../utils/SheetUtils";
-import * as index from "../index";
 
 import { NextFunction, Request, Response } from "express";
 
@@ -10,19 +9,20 @@ import { User } from "../entity/User";
 import { getClaims } from "../utils/DistrictUtils";
 import { statusToNumber } from "../utils/DistrictUtils";
 import * as progress from "../utils/ProgressCalculation";
+import responses from "../responses";
 
 export class BlockController {
   async create(request: Request, response: Response, next: NextFunction) {
     if (!request.body.district) {
-      return index.generateError("Specify a district");
+      return responses.error({ message: "Specify a district", code: 400 });
     }
     if (!request.body.blockID) {
-      return index.generateError("Specify a blockID");
+      return responses.error({ message: "Specify a blockID", code: 400 });
     }
 
     const district = await District.findOne({ name: request.body.district });
     if (!district) {
-      return index.generateError("District not found");
+      return responses.error({ message: "District not found", code: 404 });
     }
 
     let block = await Block.findOne({
@@ -41,7 +41,7 @@ export class BlockController {
     block.area = "[]";
     Logger.info(`Creating block ${block.uid}`);
 
-    const res = await index.getValidation(block, "Block created");
+    const res = await responses.validate(block, "Block created");
     if (!res.error) {
       progress.recalculateAll(district.id);
     }
@@ -55,21 +55,27 @@ export class BlockController {
     next: NextFunction
   ) {
     if (!request.body.district) {
-      return index.generateError("Specify a district");
+      return responses.error({ message: "Specify a district", code: 400 });
     }
     if (typeof request.body.district !== "number") {
-      return index.generateError("The district must be a number");
+      return responses.error({
+        message: "The district must be a number",
+        code: 400,
+      });
     }
     if (!request.body.number) {
-      return index.generateError("Specify the number of blocks to create");
+      return responses.error({
+        message: "Specify the number of blocks to create",
+        code: 400,
+      });
     }
     if (typeof request.body.number !== "number") {
-      return index.generateError("Invalid number");
+      return responses.error({ message: "Invalid number", code: 400 });
     }
 
     const district = await District.findOne({ id: request.body.district });
     if (!district) {
-      return index.generateError("District not found");
+      return responses.error({ message: "District not found", code: 404 });
     }
 
     const blocks = await Block.find({
@@ -98,20 +104,20 @@ export class BlockController {
 
     progress.recalculateAll(district.id);
 
-    return index.generateSuccess(`${counter} Blocks created`);
+    return responses.success({ message: `${counter} Blocks created` });
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
     if (!request.body.district) {
-      return index.generateError("Specify a District Name");
+      return responses.error({ message: "Specify a District Name", code: 400 });
     }
     if (!request.body.blockID) {
-      return index.generateError("Specify a BlockID");
+      return responses.error({ message: "Specify a BlockID", code: 400 });
     }
 
     const district = await District.findOne({ name: request.body.district });
     if (!district) {
-      return index.generateError("District not found");
+      return responses.error({ message: "District not found", code: 404 });
     }
     const block = await Block.findOne({
       id: request.body.blockID,
@@ -119,7 +125,7 @@ export class BlockController {
     });
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     await Block.query(
@@ -133,7 +139,7 @@ export class BlockController {
 
     progress.recalculateAll(district.id);
 
-    return index.generateSuccess("Block deleted");
+    return responses.success({ message: "Block deleted" });
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -143,7 +149,7 @@ export class BlockController {
     );
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     return block.toJson();
@@ -153,7 +159,7 @@ export class BlockController {
     const blocksRaw = await getBlocks(request.params.district);
 
     if (blocksRaw.length === 0) {
-      return index.generateError("No blocks found");
+      return responses.error({ message: "No blocks found", code: 404 });
     }
 
     const blocks = [];
@@ -190,9 +196,10 @@ export class BlockController {
 
       const nextID = blocks.length === 0 ? 1 : blocks.at(-1).id + 1;
       if (nextID !== request.body.blockID) {
-        return index.generateError(
-          `You skipped a block. Next block should be ${nextID}`
-        );
+        return responses.error({
+          message: `You skipped a block. Next block should be ${nextID}`,
+          code: 400,
+        });
       }
 
       block = new Block();
@@ -216,7 +223,7 @@ export class BlockController {
     const block = await Block.findOne({ where: { uid: request.body.uid } });
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
     Logger.warn(`Removing location from block ${block.uid}`);
     return block.removeLocation(request.body.index);
@@ -228,14 +235,17 @@ export class BlockController {
       !request.body.blockID ||
       !request.body.values
     ) {
-      return index.generateError("Specify district, blockID and values");
+      return responses.error({
+        message: "Specify district, blockID and values",
+        code: 400,
+      });
     }
 
     const values = request.body.values;
     const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     const user = await User.findOne({
@@ -256,14 +266,14 @@ export class BlockController {
       counter++;
     }
     Logger.info(`Updating block ${block.uid} (${counter} columns updated)`);
-    return index.getValidation(block, `${counter} columns updated`);
+    return responses.validate(block, `${counter} columns updated`);
   }
 
   async setProgress(request: Request, response: Response, next: NextFunction) {
     const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     const user = await User.findOne({
@@ -280,7 +290,7 @@ export class BlockController {
     const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     const user = await User.findOne({
@@ -297,7 +307,7 @@ export class BlockController {
     const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     const user = await User.findOne({
@@ -314,7 +324,7 @@ export class BlockController {
     const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
     Logger.info(`Adding builder ${request.body.builder} to block ${block.uid}`);
 
@@ -329,7 +339,7 @@ export class BlockController {
     const block = await getBlock(request.body.district, request.body.blockID);
 
     if (!block) {
-      return index.generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
     Logger.info(
       `Removing builder ${request.body.builder} from block ${block.uid}`
@@ -344,7 +354,7 @@ export class BlockController {
     });
 
     if (!district) {
-      return index.generateError("District not found in database");
+      return responses.error({ message: "District not found", code: 404 });
     }
 
     var counter = 0;
@@ -390,9 +400,12 @@ export class BlockController {
       Logger.error(
         `Error importing blocks from ${request.params.district}: No data found for this district`
       );
-      return index.generateError("No data found for this district");
+      return responses.error({
+        message: "No data found for this district",
+        code: 404,
+      });
     }
-    return index.generateSuccess(`${counter} Blocks imported`);
+    return responses.success({ message: `${counter} Blocks imported` });
   }
 }
 

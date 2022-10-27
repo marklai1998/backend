@@ -539,6 +539,13 @@ const Routes = [
     action: "search",
     permission: Permissions.default,
   },
+  {
+    method: "get",
+    route: "/sync/:district",
+    controller: DistrictController,
+    action: "sync",
+    permission: Permissions.admin,
+  },
 ];
 
 export { Routes, Permissions };

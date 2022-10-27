@@ -7,7 +7,7 @@ import * as express from "express";
 import * as jwt from "./utils/JsonWebToken";
 import * as sockets from "./sockets/SocketManager";
 
-import { BaseEntity, createConnection, getRepository } from "typeorm";
+import { createConnection, getRepository } from "typeorm";
 import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import { Request, Response } from "express";
 
@@ -18,8 +18,8 @@ import { Routes } from "./routes";
 import { User } from "./entity/User";
 import { createServer } from "http";
 import { v4 as uuidv4 } from "uuid";
-import { validate } from "class-validator";
 import { connectToDatabases } from "./utils/DatabaseConnector";
+import responses from "./responses";
 
 // Increase EventEmitter limit
 require("events").EventEmitter.prototype._maxListeners = 20;
@@ -74,12 +74,26 @@ createConnection()
             );
             if (route.permission > 0) {
               if (user === undefined) {
-                res.send(generateError("Invalid or missing API-Key"));
+                handleResponse(
+                  responses.error({
+                    message: "Invalid or missing API-Key",
+                    code: 401,
+                  }),
+                  req,
+                  res
+                );
                 Logger.info("Requested with invalid API-Key");
                 return;
               }
               if (user.permission < route.permission) {
-                res.send(generateError("No permission"));
+                handleResponse(
+                  responses.error({
+                    message: "No Permission",
+                    code: 403,
+                  }),
+                  req,
+                  res
+                );
                 Logger.info("Requested without Permission");
                 return;
               }
@@ -99,7 +113,11 @@ createConnection()
       );
     });
     app.get("*", (req: Request, res: Response) => {
-      res.send(generateError("Cannot GET " + req.path));
+      handleResponse(
+        responses.error({ message: `Cannot GET ${req.path}`, code: 404 }),
+        req,
+        res
+      );
     });
     Logger.debug("Registered routes");
 
@@ -165,7 +183,14 @@ createConnection()
     // register express routes from defined application routes
     Logger.debug("Registering routes...");
     app.use("*", (req: Request, res: Response) => {
-      res.send(generateError("Database is offline. Try again later"));
+      handleResponse(
+        responses.error({
+          message: "Database is offline. Try again later",
+          code: 500,
+        }),
+        req,
+        res
+      );
     });
     Logger.debug("Registered routes");
     Logger.error(error);
@@ -174,32 +199,6 @@ createConnection()
     Logger.info("Running without Intervalls");
     Logger.info(`Server started on port ${port}`);
   });
-
-export async function getValidation(
-  object: BaseEntity,
-  successMessage: string,
-  successData?: any
-) {
-  const errors = await validate(object);
-
-  if (errors.length > 0) {
-    return generateError(Object.values(errors[0].constraints)[0]);
-  }
-
-  await object.save();
-
-  dbCache.reload(object);
-
-  return generateSuccess(successMessage, successData);
-}
-
-export function generateSuccess(message?: string, data?: object) {
-  return { error: false, message: message, data };
-}
-
-export function generateError(message: string, error?: object) {
-  return { error: true, message: message, stacktrace: error };
-}
 
 export function generateUUID() {
   return uuidv4();
@@ -271,15 +270,17 @@ function handleResponse(
   result: any,
   req: Request,
   res: Response,
-  time: number
+  time?: number
 ) {
   if (result instanceof Promise) {
     result.then((result) => {
       handleResponse(result, req, res, time);
     });
   } else if (result !== null && result !== undefined) {
-    res.json(result);
-    const neededTime = new Date().getTime() - time;
-    trackResponseTime(req.route.path, neededTime);
+    res.status(result.code || 200).json(result);
+    if (time) {
+      const neededTime = new Date().getTime() - time;
+      trackResponseTime(req.route.path, neededTime);
+    }
   }
 }

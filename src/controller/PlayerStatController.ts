@@ -1,10 +1,10 @@
 import * as google from "../utils/SheetUtils";
-import * as index from "../index";
 
 import { NextFunction, Request, Response } from "express";
 
 import Logger from "../utils/Logger";
 import { PlayerStat } from "../entity/PlayerStat";
+import responses from "../responses";
 
 export class PlayerStatController {
   async getPlayerStat(
@@ -13,7 +13,7 @@ export class PlayerStatController {
     next: NextFunction
   ) {
     if (!request.params.date) {
-      return index.generateError("Specify date");
+      return responses.error({ message: "Specify date", code: 400 });
     }
 
     const date = request.params.date;
@@ -28,7 +28,10 @@ export class PlayerStatController {
     });
 
     if (!playerStat) {
-      return index.generateError("No entry found for this date");
+      return responses.error({
+        message: "No entry found for this date",
+        code: 404,
+      });
     }
 
     const avgData = JSON.parse(playerStat.avg);
@@ -125,6 +128,8 @@ export class PlayerStatController {
       counter++;
     }
 
-    return index.generateSuccess(`Player Stats of ${counter} days imported`);
+    return responses.success({
+      message: `Player Stats of ${counter} days imported`,
+    });
   }
 }

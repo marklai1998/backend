@@ -1,5 +1,4 @@
 import * as date from "../utils/TimeUtils";
-import * as index from "../index";
 import * as minecraftUtil from "minecraft-server-util";
 
 import { NextFunction, Request, Response } from "express";
@@ -11,6 +10,7 @@ import Logger from "../utils/Logger";
 import { getManager } from "typeorm";
 import { insidePolygon } from "../utils/Polygon";
 import { status } from "../utils/ServerStatusTracker";
+import responses from "../responses";
 
 const cache = require("../cache");
 
@@ -28,9 +28,7 @@ export class GeneralController {
           type.toLowerCase() !== "bedrock" &&
           type.toLowerCase() !== "spigot"))
     ) {
-      return index.generateError(
-        "Invalid type. Select 'Java', 'Bedrock' or 'Spigot'"
-      );
+      return responses.error({message: "Invalid type. Select 'Java', 'Bedrock' or 'Spigot'", code: 400})
     }
 
     let java = undefined;
@@ -170,7 +168,7 @@ export class GeneralController {
     const ips = JSON.parse((await AdminSetting.findOne({ key: "ips" })).value);
 
     if (ips === undefined) {
-      return index.generateError("Ips not set in Admin Settings");
+      return responses.error({message: "Ips not set in Admin Settings", code: 500})
     }
 
     const serverName = request.params.server;
@@ -182,7 +180,7 @@ export class GeneralController {
       ];
 
     if (server === undefined) {
-      return index.generateError("Invalid Server");
+      return responses.error({message: "Invalid Server", code: 404})
     }
 
     const serverIp = server.split(":")[0];

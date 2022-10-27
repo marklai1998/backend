@@ -1,9 +1,10 @@
 import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
-import { fetch, generateError, generateSuccess } from "../index";
+import { fetch } from "..";
 
 import { IsUrl } from "class-validator";
 import { Permissions } from "../utils/Permissions";
 import Logger from "../utils/Logger";
+import responses from "../responses";
 
 @Entity({ name: "webhooks" })
 export class Webhook extends BaseEntity {
@@ -25,7 +26,7 @@ export class Webhook extends BaseEntity {
 
   async send(body: object): Promise<object> {
     if (!this.enabled) {
-      return generateError("Webhook disabled");
+      return responses.error({ message: "Webhook disabled", code: 400 });
     }
 
     const link =
@@ -38,8 +39,11 @@ export class Webhook extends BaseEntity {
       body: JSON.stringify(body),
     }).catch((error) => {
       Logger.error(`Error occurred while sending the webhook ${this.name}`);
-      return generateError("Error occurred while sending the message", error);
+      return responses.error({
+        message: "Error occurred while sending the message",
+        code: 500,
+      });
     });
-    return generateSuccess("Message sent");
+    return responses.success({ message: "Message sent" });
   }
 }

@@ -1,17 +1,16 @@
-import * as date from "../utils/TimeUtils";
 import * as google from "../utils/SheetUtils";
-import * as index from "../index";
 
 import { NextFunction, Request, Response } from "express";
 
 import Logger from "../utils/Logger";
 import { ProjectCount } from "../entity/ProjectCount";
 import { sendOverview } from "../utils/DiscordMessageSender";
+import responses from "../responses";
 
 export class ProjectCountController {
   async getOne(request: Request, response: Response, next: NextFunction) {
     if (!request.params.date) {
-      return index.generateError("Specify date");
+      return responses.error({ message: "Specify date", code: 400 });
     }
 
     const date = request.params.date;
@@ -26,7 +25,10 @@ export class ProjectCountController {
     });
 
     if (!projectCount) {
-      return index.generateError("No entry found for this date");
+      return responses.error({
+        message: "No entry found for this date",
+        code: 404,
+      });
     }
 
     return {
@@ -51,7 +53,7 @@ export class ProjectCountController {
 
   async set(request: Request, response: Response, next: NextFunction) {
     if (!request.body.projects) {
-      return index.generateError("Specify projects");
+      return responses.error({ message: "Specify projects", code: 400 });
     }
 
     const date = new Date();
@@ -63,10 +65,12 @@ export class ProjectCountController {
       projectCount = new ProjectCount();
       projectCount.date = date;
     }
-    Logger.info(`Setting projects from ${projectCount.projects} to ${request.body.projects} (${projectCount.date})`);	
+    Logger.info(
+      `Setting projects from ${projectCount.projects} to ${request.body.projects} (${projectCount.date})`
+    );
     projectCount.projects = request.body.projects;
 
-    const res = await index.getValidation(projectCount, "Projects updated");
+    const res = await responses.validate(projectCount, "Projects updated");
 
     if (!res.error) {
       sendOverview();
@@ -89,7 +93,10 @@ export class ProjectCountController {
     }
 
     if (scale < 1000) {
-      return index.generateError("Scale must be 1000 or greater");
+      return responses.error({
+        message: "Scale must be 1000 or greater",
+        code: 400,
+      });
     }
 
     const milestones = [];
@@ -143,6 +150,6 @@ export class ProjectCountController {
       counter++;
     }
 
-    return index.generateSuccess(`${counter} days imported`);
+    return responses.success({ message: `${counter} days imported` });
   }
 }

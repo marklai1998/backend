@@ -1,5 +1,3 @@
-import * as index from "../index";
-
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import {
   IsBoolean,
@@ -14,7 +12,6 @@ import {
   calculateCenterOfLatLong,
   districtIdToName,
 } from "../utils/DistrictUtils";
-import { generateError, getValidation } from "../index";
 import {
   recalculateDistrictBlocksDoneLeft,
   recalculateDistrictProgress,
@@ -30,6 +27,7 @@ import { Landmark } from "./Landmark";
 import Logger from "../utils/Logger";
 import { User } from "./User";
 import { log } from "./Log";
+import responses from "../responses";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -103,7 +101,7 @@ export class Block extends BaseEntity {
 
   async setProgress(progress: number, user: User): Promise<object> {
     if (this.progress === progress) {
-      return index.generateError("Nothing changed");
+      return responses.error({ message: "Nothing changed", code: 400 });
     }
     const oldValue = this.progress;
 
@@ -131,7 +129,7 @@ export class Block extends BaseEntity {
 
   async setDetails(details: boolean, user: User): Promise<object> {
     if (this.details === details) {
-      return index.generateError("Nothing changed");
+      return responses.error({ message: "Nothing changed", code: 400 });
     }
     const oldValue = this.details;
 
@@ -158,7 +156,7 @@ export class Block extends BaseEntity {
 
   async setBuilder(builder: string, user: User) {
     if (this.builder === builder) {
-      return index.generateError("Nothing changed");
+      return responses.error({ message: "Nothing changed", code: 400 });
     }
     const oldValue = this.builder;
 
@@ -187,7 +185,7 @@ export class Block extends BaseEntity {
     const builderSplit = this.builder === null ? [] : this.builder.split(",");
     for (const b of builderSplit) {
       if (b.toLowerCase() === builder.toLowerCase()) {
-        return index.generateError("Builder already added");
+        return responses.error({ message: "Builder already added", code: 400 });
       }
     }
 
@@ -230,12 +228,15 @@ export class Block extends BaseEntity {
         });
       }
     }
-    return index.generateError("Builder not found for this block");
+    return responses.error({
+      message: "Builder not found for this block",
+      code: 404,
+    });
   }
 
   addLocation(coords: string): object {
     if (!this.validateCoords(coords))
-      return generateError("Invalid Coordinates");
+      return responses.error({ message: "Invalid Coordinates", code: 400 });
 
     const coordsNew = coords.split(",").map(function (e) {
       return parseFloat(e);
@@ -244,20 +245,21 @@ export class Block extends BaseEntity {
     coordsArray.push(coordsNew);
 
     this.area = JSON.stringify(coordsArray);
-    return index.getValidation(this, "Location added");
+    return responses.validate(this, "Location added");
   }
 
   removeLocation(index: number): object {
-    if (typeof index !== "number") return generateError("Invalid index");
+    if (typeof index !== "number")
+      return responses.error({ message: "Invalid index", code: 400 });
 
     const coordsArray = JSON.parse(this.area);
     if (index >= coordsArray.length)
-      return generateError("Index out of bounds");
+      return responses.error({ message: "Index out of bounds", code: 400 });
 
     coordsArray.splice(index, 1);
 
     this.area = JSON.stringify(coordsArray);
-    return getValidation(this, "Location removed");
+    return responses.validate(this, "Location removed");
   }
 
   async getLandmarks() {
@@ -420,7 +422,7 @@ async function update({
 } = {}): Promise<object> {
   if (block === null || successMessage === null) return;
 
-  const result = await index.getValidation(block, successMessage);
+  const result = await responses.validate(block, successMessage);
 
   if (!result["error"]) {
     // Send Webhook

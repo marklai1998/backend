@@ -1,15 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 
-import * as index from "../index";
-
 import { MinecraftUser } from "../entity/MinecraftUser";
+import responses from "../responses";
 
 export class MinecraftController {
   async create(request: Request, response: Response, next: NextFunction) {
     let user = await MinecraftUser.findOne({ uuid: request.body.uuid });
 
     if (user) {
-      return index.generateError("UUID already exists");
+      return responses.error({ message: "UUID already exists", code: 400 });
     }
 
     user = new MinecraftUser();
@@ -18,21 +17,21 @@ export class MinecraftController {
     user.rank = request.body.rank || "Player";
     user.settings = request.body.settings || "{}";
 
-    return index.getValidation(user, "Minecraft User registered");
+    return responses.validate(user, "Minecraft User registered");
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
     if (!request.body.uuid) {
-      return index.generateError("Specify UUID");
+      return responses.error({ message: "Specify UUID", code: 400 });
     }
     const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
 
     if (!user) {
-      return index.generateError("UUID not found");
+      return responses.error({ message: "UUID not found", code: 404 });
     }
 
     await MinecraftUser.remove(user);
-    return index.generateSuccess("Minecraft User deleted");
+    return responses.success({ message: "Minecraft User deleted" });
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
@@ -52,23 +51,26 @@ export class MinecraftController {
       (await MinecraftUser.findOne({ uuid: request.params.user }));
 
     if (!player) {
-      return index.generateError("Player not found");
+      return responses.error({ message: "Player not found", code: 404 });
     }
     return player.toJson();
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
     if (!request.body.uuid) {
-      return index.generateError("Specify UUID");
+      return responses.error({ message: "Specify UUID", code: 400 });
     }
     if (!request.body.type || !request.body.value) {
-      return index.generateError("Specify a type and a value");
+      return responses.error({
+        message: "Specify a type and a value",
+        code: 400,
+      });
     }
 
     const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
 
     if (!user) {
-      return index.generateError("UUID not found");
+      return responses.error({ message: "UUID not found", code: 404 });
     }
 
     return user.update(request.body.type, request.body.value);
@@ -76,16 +78,19 @@ export class MinecraftController {
 
   async setSettings(request: Request, response: Response, next: NextFunction) {
     if (!request.body.uuid) {
-      return index.generateError("Specify UUID");
+      return responses.error({ message: "Specify UUID", code: 400 });
     }
     if (!request.body.type || !request.body.value) {
-      return index.generateError("Specify a type and a value");
+      return responses.error({
+        message: "Specify a type and a value",
+        code: 400,
+      });
     }
 
     const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
 
     if (!user) {
-      return index.generateError("UUID not found");
+      return responses.error({ message: "UUID not found", code: 404 });
     }
 
     return user.setSetting(request.body.type, request.body.value);

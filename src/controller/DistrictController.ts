@@ -7,28 +7,33 @@ import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { statusToNumber } from "../utils/DistrictUtils";
+import { recalculateAll } from "../utils/ProgressCalculation";
+import responses from "../responses";
 
 export class DistrictController {
   async create(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name) {
-      return index.generateError("Specify a name");
+      return responses.error({ message: "Specify a name", code: 400 });
     }
     if (!request.body.parent) {
-      return index.generateError("Specify a parent");
+      return responses.error({ message: "Specify a parent", code: 400 });
     }
 
     let district = await District.findOne({
       name: request.body.name,
     });
     if (district) {
-      return index.generateError("District already exists");
+      return responses.error({ message: "District already exists", code: 400 });
     }
 
     const parent = await District.findOne({
       id: request.body.parent,
     });
     if (!parent) {
-      return index.generateError("Parent District not found");
+      return responses.error({
+        message: "Parent District not found",
+        code: 404,
+      });
     }
 
     district = new District();
@@ -42,7 +47,7 @@ export class DistrictController {
     district.image = "[]";
     Logger.info(`Creating district ${district.name}`);
 
-    return index.getValidation(district, "District created", {
+    return responses.validate(district, "District created", {
       name: district.name,
       parent: district.parent,
     });
@@ -50,34 +55,40 @@ export class DistrictController {
 
   async delete(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name) {
-      return index.generateError("Specify a name");
+      return responses.error({ message: "Specify a name", code: 400 });
     }
     if (request.body.name.toLowerCase() === "new york city") {
-      return index.generateError("You cannot delete initial district");
+      return responses.error({
+        message: "You cannot delete initial district",
+        code: 400,
+      });
     }
     const district = await District.findOne({
       name: request.body.name,
     });
     if (!district) {
-      return index.generateError("District not found");
+      return responses.error({ message: "District not found", code: 404 });
     }
 
     const blocks = await Block.find({ district: district.id });
 
     if (blocks.length > 0) {
-      return index.generateError("Cannot delete district with existing blocks");
+      return responses.error({
+        message: "Cannot delete district with existing blocks",
+        code: 400,
+      });
     }
 
     Logger.warn(`Deleting district ${district.name}`);
     await district.remove();
-    return index.generateSuccess("District deleted");
+    return responses.success({ message: "District deleted" });
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
     const districtsRaw = await District.find();
 
     if (districtsRaw.length === 0) {
-      return index.generateError("No districts found");
+      return responses.error({ message: "No districts found", code: 400 });
     }
 
     const districts = [];
@@ -96,7 +107,7 @@ export class DistrictController {
     });
 
     if (!district) {
-      return index.generateError("District not found");
+      return responses.error({ message: "District not found", code: 404 });
     }
     return district.toJson({ onlyProgress: false });
   }
@@ -107,10 +118,15 @@ export class DistrictController {
     });
 
     if (!district) {
-      return index.generateError("District not found");
+      return responses.error({ message: "District not found", code: 404 });
     }
 
     return district.edit(request.body);
+  }
+
+  async sync(request: Request, response: Response, next: NextFunction) {
+    await recalculateAll(request.params.district);
+    return responses.success({ message: "Done" });
   }
 
   async import(request: Request, response: Response, next: NextFunction) {
@@ -212,13 +228,13 @@ export class DistrictController {
                     })
                     .catch((error) => {
                       Logger.warn(`Error occurred for district ${d[1]}`);
-                      Logger.warn(error)
+                      Logger.warn(error);
                     });
                 }
               })
               .catch((error) => {
                 Logger.warn(`Error occurred for district ${d[1]}`);
-                Logger.warn(error)
+                Logger.warn(error);
               });
           }
         }
@@ -226,8 +242,8 @@ export class DistrictController {
       districtCounter++;
     }
 
-    return index.generateSuccess(
-      `${districtCounter} Districts and ${blocksCounter} Blocks imported`
-    );
+    return responses.success({
+      message: `${districtCounter} Districts and ${blocksCounter} Blocks imported`,
+    });
   }
 }

@@ -1,10 +1,9 @@
-import * as index from "../index";
-
 import { NextFunction, Request, Response } from "express";
 
 import { AdminSetting } from "../entity/AdminSetting";
 import Logger from "../utils/Logger";
 import { User } from "../entity/User";
+import responses from "../responses";
 
 export class AdminSettingController {
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -13,17 +12,20 @@ export class AdminSettingController {
     });
 
     if (!setting) {
-      return index.generateError("Admin Setting not found");
+      return responses.error({ message: "Admin Setting not found", code: 404 });
     }
     if (setting.permission > 0) {
       const user = await User.findOne({
         apikey: request.body.key || request.query.key,
       });
       if (!user) {
-        return index.generateError("Invalid or missing API-Key");
+        return responses.error({
+          message: "Invalid or missing API-Key",
+          code: 401,
+        });
       }
       if (user.permission < setting.permission) {
-        return index.generateError("No permission");
+        return responses.error({ message: "No Permission", code: 403 });
       }
     }
 
@@ -46,21 +48,35 @@ export class AdminSettingController {
     });
 
     if (!config) {
-      Logger.info("Creating new setting "+request.body.name);
+      Logger.info("Creating new setting " + request.body.name);
       config = new AdminSetting();
       config.key = request.body.name;
       config.permission = request.body.permission || 4;
     }
 
     if (typeof request.body.value !== "object") {
-      Logger.info("Set setting "+request.body.name+" from "+config.value+" to "+request.body.value);
+      Logger.info(
+        "Set setting " +
+          request.body.name +
+          " from " +
+          config.value +
+          " to " +
+          request.body.value
+      );
       config.value = request.body.value;
     } else {
-      Logger.info("Set setting "+request.body.name+" from "+config.value+" to "+JSON.stringify(request.body.value));
+      Logger.info(
+        "Set setting " +
+          request.body.name +
+          " from " +
+          config.value +
+          " to " +
+          JSON.stringify(request.body.value)
+      );
       config.value = JSON.stringify(request.body.value);
     }
 
-    return index.getValidation(config, "Setting updated");
+    return responses.validate(config, "Setting updated");
   }
 
   async getRandomImage(
@@ -71,13 +87,13 @@ export class AdminSettingController {
     const data = await AdminSetting.findOne({ key: "image_links" });
 
     if (!data) {
-      return index.generateError("No images found");
+      return responses.error({ message: "No images found", code: 404 });
     }
 
     const links = JSON.parse(data.value);
 
     if (links.length === 0) {
-      return index.generateError("No images found");
+      return responses.error({ message: "No images found", code: 404 });
     }
 
     const rand = Math.floor(Math.random() * links.length);

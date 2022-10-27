@@ -1,6 +1,6 @@
 import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import responses from "../responses";
 
-import { getValidation } from "../index";
 import { User } from "./User";
 
 @Entity({ name: "logs" })
@@ -49,5 +49,5 @@ export function log({
   log.old = oldValue;
   log.new = newValue;
 
-  getValidation(log, "Log created");
+  responses.validate(log, "Log created");
 }

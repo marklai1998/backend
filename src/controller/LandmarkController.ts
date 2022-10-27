@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import { generateError, generateSuccess, getValidation } from "../index";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import { Landmark } from "../entity/Landmark";
 import Logger from "../utils/Logger";
 import { User } from "../entity/User";
+import responses from "../responses";
 
 export class LandmarkController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -15,7 +15,10 @@ export class LandmarkController {
       !request.body.blockID ||
       !request.body.location
     ) {
-      return generateError("Specify name, district (ID), blockID and location");
+      return responses.error({
+        message: "Specify name, district (ID), blockID and location",
+        code: 400,
+      });
     }
 
     const district = await District.findOne({ id: request.body.district });
@@ -25,12 +28,15 @@ export class LandmarkController {
     });
 
     if (!block) {
-      return generateError("Block not found");
+      return responses.error({ message: "Block not found", code: 404 });
     }
 
     let landmark = await Landmark.findOne({ name: request.body.name });
     if (landmark) {
-      return generateError("A Landmark with this name already exists");
+      return responses.error({
+        message: "A Landmark with this name already exists",
+        code: 400,
+      });
     }
 
     landmark = new Landmark();
@@ -41,7 +47,7 @@ export class LandmarkController {
     landmark.location = request.body.location;
     Logger.info(`Creating landmark ${landmark.name}`);
 
-    return getValidation(landmark, "Landmark created", {
+    return responses.validate(landmark, "Landmark created", {
       name: landmark.name,
       blockID: landmark.blockID,
       location: landmark.location,
@@ -50,17 +56,17 @@ export class LandmarkController {
 
   async delete(request: Request, response: Response, next: NextFunction) {
     if (!request.body.id) {
-      return generateError("Specify ID");
+      return responses.error({ message: "Specify ID", code: 400 });
     }
     const landmark = await Landmark.findOne({ id: request.body.id });
 
     if (!landmark) {
-      return generateError("Landmark not found");
+      return responses.error({ message: "Landmark not found", code: 404 });
     }
 
     Logger.warn(`Deleting landmark ${landmark.name}`);
     await landmark.remove();
-    return generateSuccess("Landmark deleted");
+    return responses.success({ message: "Landmark deleted" });
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
@@ -96,7 +102,7 @@ export class LandmarkController {
     ]);
 
     if (!landmark) {
-      return generateError("Landmark not found");
+      return responses.error({ message: "Landmark not found", code: 404 });
     }
 
     const l = landmark.toJson();
@@ -114,7 +120,7 @@ export class LandmarkController {
 
   async edit(request: Request, response: Response, next: NextFunction) {
     if (!request.body.id) {
-      return generateError("Specify ID");
+      return responses.error({ message: "Specify ID", code: 400 });
     }
 
     const landmarkPromise = Landmark.findOne({ id: request.body.id });
@@ -125,7 +131,7 @@ export class LandmarkController {
     const [landmark, user] = await Promise.all([landmarkPromise, userPromise]);
 
     if (!landmark) {
-      return generateError("Landmark not found");
+      return responses.error({ message: "Landmark not found", code: 404 });
     }
 
     return landmark.edit(request.body, user);

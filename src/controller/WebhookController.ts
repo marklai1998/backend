@@ -1,22 +1,24 @@
-import * as index from "../index";
-
 import { NextFunction, Request, Response } from "express";
 
 import Logger from "../utils/Logger";
 import { User } from "../entity/User";
 import { Webhook } from "../entity/Webhook";
+import responses from "../responses";
 
 export class WebhookController {
   async create(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name || !request.body.link) {
-      return index.generateError("Specify name and link");
+      return responses.error({ message: "Specify name and link", code: 400 });
     }
     let webhook = await Webhook.findOne({
       name: request.body.name,
     });
 
     if (webhook) {
-      return index.generateError("Webhook with this name already exists");
+      return responses.error({
+        message: "Webhook with this name already exists",
+        code: 400,
+      });
     }
 
     webhook = new Webhook();
@@ -26,12 +28,15 @@ export class WebhookController {
     webhook.enabled = request.body.enabled || false;
     Logger.info(`Created webhook ${webhook.name}`);
 
-    return index.getValidation(webhook, "Webhook created");
+    return responses.validate(webhook, "Webhook created");
   }
 
   async delete(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name) {
-      return index.generateError("Specify the name of the webhook to delete");
+      return responses.error({
+        message: "Specify the name of the webhook to delete",
+        code: 400,
+      });
     }
 
     const webhook = await Webhook.findOne({
@@ -39,11 +44,14 @@ export class WebhookController {
     });
 
     if (!webhook) {
-      return index.generateError("No webhook found with this name");
+      return responses.error({
+        message: "No webhook found with this name",
+        code: 404,
+      });
     }
     Logger.warn(`Deleted webhook ${webhook.name}`);
     await webhook.remove();
-    return index.generateSuccess("Webhook deleted");
+    return responses.success({ message: "Webhook deleted" });
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
@@ -52,7 +60,7 @@ export class WebhookController {
     });
 
     if (!webhook) {
-      return index.generateError("Webhook not found");
+      return responses.error({ message: "Webhook not found", code: 404 });
     }
     return webhook;
   }
@@ -63,7 +71,10 @@ export class WebhookController {
 
   async update(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name || !request.body.type || !request.body.value) {
-      return index.generateError("Specify name, type and value");
+      return responses.error({
+        message: "Specify name, type and value",
+        code: 400,
+      });
     }
 
     const webhook = await Webhook.findOne({
@@ -71,25 +82,38 @@ export class WebhookController {
     });
 
     if (!webhook) {
-      return index.generateError("Webhook not found");
+      return responses.error({ message: "Webhook not found", code: 404 });
     }
 
     if (webhook[request.body.type] === undefined) {
-      return index.generateError("Invalid type");
+      return responses.error({ message: "Invalid type", code: 400 });
     }
 
-    Logger.info("Editing webhook " + webhook.name + " (" + request.body.type.toLocaleUpperCase() + ": " + webhook[request.body.type] + " -> " + request.body.valu + ")");
+    Logger.info(
+      "Editing webhook " +
+        webhook.name +
+        " (" +
+        request.body.type.toLocaleUpperCase() +
+        ": " +
+        webhook[request.body.type] +
+        " -> " +
+        request.body.valu +
+        ")"
+    );
     webhook[request.body.type] = request.body.value;
 
-    return index.getValidation(webhook, "Webhook updated");
+    return responses.validate(webhook, "Webhook updated");
   }
 
   async send(request: Request, response: Response, next: NextFunction) {
     if (!request.body.name) {
-      return index.generateError("Specify the webhook name");
+      return responses.error({
+        message: "Specify the webhook name",
+        code: 400,
+      });
     }
     if (typeof request.body.body !== "object") {
-      return index.generateError("Invalid body");
+      return responses.error({ message: "Invalid body", code: 400 });
     }
 
     const webhook = await Webhook.findOne({
@@ -97,7 +121,10 @@ export class WebhookController {
     });
 
     if (!webhook) {
-      return index.generateError("No webhook found with this name");
+      return responses.error({
+        message: "No webhook found with this name",
+        code: 404,
+      });
     }
 
     if (webhook.permission > 0) {
@@ -105,10 +132,13 @@ export class WebhookController {
         apikey: request.body.key || request.query.key,
       });
       if (!user) {
-        return index.generateError("Invalid or missing API-Key");
+        return responses.error({
+          message: "Invalid or missing API-Key",
+          code: 401,
+        });
       }
       if (user.permission < webhook.permission) {
-        return index.generateError("No permission");
+        return responses.error({ message: "No Permission", code: 403 });
       }
     }
 

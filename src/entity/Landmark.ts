@@ -7,11 +7,11 @@ import {
   Max,
   Min,
 } from "class-validator";
-import { generateError, generateSuccess, getValidation } from "../index";
 
 import Logger from "../utils/Logger";
 import { User } from "./User";
 import { log } from "./Log";
+import responses from "../responses";
 
 @Entity({ name: "landmarks" })
 export class Landmark extends BaseEntity {
@@ -182,7 +182,7 @@ export class Landmark extends BaseEntity {
       }
       counter++;
     }
-    return getValidation(this, `${counter} columns updated`);
+    return responses.validate(this, `${counter} columns updated`);
   }
 
   setDone(done: boolean) {
@@ -198,11 +198,14 @@ export class Landmark extends BaseEntity {
 
   addRequester(userID: number) {
     if (!this.enabled) {
-      return generateError("This landmark is currently not available to claim");
+      return responses.error({
+        message: "This landmark is currently not available to claim",
+        code: 400,
+      });
     }
     const requests = JSON.parse(this.requests);
     if (requests.some((e: any) => e.user === userID)) {
-      return generateError("Requester already added");
+      return responses.error({ message: "Requester already added", code: 400 });
     }
 
     requests.push({
@@ -210,37 +213,43 @@ export class Landmark extends BaseEntity {
       priority: 3,
     });
     this.requests = JSON.stringify(requests);
-    return generateSuccess("Requester added");
+    return responses.success({ message: "Requester added" });
   }
 
   removeRequester(userID: number) {
     const requests = JSON.parse(this.requests);
     const index = requests.findIndex((e: any) => e.user === userID);
     if (index === -1) {
-      return generateError("Requester not found for this landmark");
+      return responses.error({
+        message: "Requester not found for this landmark",
+        code: 404,
+      });
     }
 
     requests.splice(index, 1);
     this.requests = JSON.stringify(requests);
-    return generateSuccess("Requester removed");
+    return responses.success({ message: "Requester removed" });
   }
 
   addBuilder(userID: number) {
     const builder = JSON.parse(this.builder);
     const requests = JSON.parse(this.requests);
     if (builder.some((e: any) => e.user === userID)) {
-      return generateError("Builder already added");
+      return responses.error({ message: "Builder already added", code: 400 });
     }
     const indexRequest = requests.findIndex((e: any) => e.user === userID);
     if (indexRequest === -1) {
-      return generateError("The user has not applied for this block");
+      return responses.error({
+        message: "The user has not applied for this block",
+        code: 400,
+      });
     }
 
     builder.push(requests[indexRequest]);
     requests.splice(indexRequest, 1);
     this.builder = JSON.stringify(builder);
     this.requests = JSON.stringify(requests);
-    return generateSuccess("Builder added");
+    return responses.success({ message: "Builder added" });
   }
 
   removeBuilder(userID: number) {
@@ -248,7 +257,10 @@ export class Landmark extends BaseEntity {
     const requests = JSON.parse(this.requests);
     const index = builder.findIndex((e: any) => e.user === userID);
     if (index === -1) {
-      return generateError("Builder not found for this landmark");
+      return responses.error({
+        message: "Builder not found for this landmark",
+        code: 404,
+      });
     }
 
     if (!requests.some((e: any) => e.user === userID)) {
@@ -257,21 +269,24 @@ export class Landmark extends BaseEntity {
     builder.splice(index, 1);
     this.builder = JSON.stringify(builder);
     this.requests = JSON.stringify(requests);
-    return generateSuccess("Builder removed");
+    return responses.success({ message: "Builder removed" });
   }
 
   setPriority(user: number, priority: number) {
     const requests = JSON.parse(this.requests);
     const index = requests.findIndex((e: any) => e.user === user);
     if (index === -1) {
-      return generateError("Requester not found for this landmark");
+      return responses.error({
+        message: "Requester not found for this landmark",
+        code: 404,
+      });
     }
     if (requests[index].priority === priority) {
-      return generateError("Nothing changed");
+      return responses.error({ message: "Nothing changed", code: 400 });
     }
 
     requests[index].priority = priority;
     this.requests = JSON.stringify(requests);
-    return generateSuccess("Priority updated");
+    return responses.success({ message: "Priority updated" });
   }
 }

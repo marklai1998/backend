@@ -4,10 +4,10 @@ import {
   calculateCenterOfLatLong,
   getBlocksOfDistrict,
 } from "../utils/DistrictUtils";
-import { generateError, getValidation } from "../index";
 
 import Logger from "../utils/Logger";
 import { dynamicSort } from "../utils/JsonUtils";
+import responses from "../responses";
 
 @Entity({ name: "districts" })
 export class District extends BaseEntity {
@@ -122,7 +122,17 @@ export class District extends BaseEntity {
   edit(body: object): object {
     let counter = 0;
     for (const [key, value] of Object.entries(body)) {
-      Logger.info("Editing district " + this.name + " (" + key.toLocaleUpperCase()+": "+this[key]+" -> "+value+")");
+      Logger.info(
+        "Editing district " +
+          this.name +
+          " (" +
+          key.toLocaleUpperCase() +
+          ": " +
+          this[key] +
+          " -> " +
+          value +
+          ")"
+      );
       if (key.toLowerCase() === "areaadd") {
         this.addLocation(value);
       } else if (key.toLowerCase() === "arearemove") {
@@ -138,12 +148,12 @@ export class District extends BaseEntity {
       }
       counter++;
     }
-    return getValidation(this, `${counter} columns updated`);
+    return responses.validate(this, `${counter} columns updated`);
   }
 
   addLocation(coords: string): object {
     if (!this.validateCoords(coords))
-      return generateError("Invalid Coordinates");
+      return responses.error({ message: "Invalid Coordinates", code: 400 });
 
     const coordsNew = coords.split(",").map(function (e) {
       return parseFloat(e);
@@ -152,20 +162,21 @@ export class District extends BaseEntity {
     coordsArray.push(coordsNew);
 
     this.area = JSON.stringify(coordsArray);
-    return getValidation(this, "Location added");
+    return responses.validate(this, "Location added");
   }
 
   removeLocation(index: number): object {
-    if (typeof index !== "number") return generateError("Invalid index");
+    if (typeof index !== "number")
+      return responses.error({ message: "Invalid index", code: 400 });
 
     const coordsArray = JSON.parse(this.area);
     if (index >= coordsArray.length)
-      return generateError("Index out of bounds");
+      return responses.error({ message: "Index out of bounds", code: 400 });
 
     coordsArray.splice(index, 1);
 
     this.area = JSON.stringify(coordsArray);
-    return getValidation(this, "Location removed");
+    return responses.validate(this, "Location removed");
   }
 
   getLocationCenter() {
