@@ -9,23 +9,23 @@ import { ServerStatus } from "../entity/ServerStatus";
 import { fetch } from "..";
 import { getObjectDifferences } from "./JsonUtils";
 
-const nycServerStatus = [
-  "NewYorkCity",
-  "BuildingServer1",
-  "BuildingServer2",
-  "BuildingServer3",
-  "BuildingServer4",
-  "BuildingServer5",
-  "BuildingServer6",
-  "BuildingServer7",
-  "BuildingServer8",
-  "NYCMap",
-  "NYCLobby",
-  "Hub1",
-  "BTLobby",
-];
+const nycServerMapping = {
+  "NYC-1": "NewYorkCity",
+  Building1NYC: "BuildingServer1",
+  Building2NYC: "BuildingServer2",
+  Building3NYC: "BuildingServer3",
+  Building4NYC: "BuildingServer4",
+  Building5NYC: "BuildingServer5",
+  Building6NYC: "BuildingServer6",
+  Building7NYC: "BuildingServer7",
+  Building8NYC: "BuildingServer8",
+  MapNYC: "MapNYC",
+  LobbyNYC: "LobbyNYC",
+  Hub1: "Hub1",
+};
 const serversToPingRole = ["NewYorkCity", "BuildingServer1"];
 let currentlyUpdating = false;
+const serversOnTimeout = [];
 export const status = {};
 
 export async function pingNetworkServers() {
@@ -81,6 +81,7 @@ export async function pingNetworkServers() {
 
       // Update server status
       const savesNew = [];
+      let serverStatusChanged = false;
       for (let i = 0; i < serverNames.length; i++) {
         const res = responses[i];
         const oldValue = servers.find(
@@ -88,7 +89,25 @@ export async function pingNetworkServers() {
         );
 
         if (res.status === "rejected") {
+          if (Object.keys(nycServerMapping).includes(serverNames[i])) {
+            if (serversOnTimeout.includes(serverNames[i])) {
+              // Timeout --> Offline
+              const index = serversOnTimeout.indexOf(serverNames[i]);
+              if (index !== -1) {
+                serversOnTimeout.splice(index, 1);
+              }
+              serverStatusChanged = true;
+              // TODO: Send Log Message
+            }
+          }
           if (oldValue.online) {
+            if (Object.keys(nycServerMapping).includes(serverNames[i])) {
+              if (!serversOnTimeout.includes(serverNames[i])) {
+                // Online --> Timeout
+                serversOnTimeout.push(serverNames[i]);
+                serverStatusChanged = true;
+              }
+            }
             oldValue.online = false;
             oldValue.players = {
               online: 0,
@@ -98,6 +117,24 @@ export async function pingNetworkServers() {
             savesNew.push(oldValue.save());
           }
           continue;
+        } else {
+          if (Object.keys(nycServerMapping).includes(serverNames[i])) {
+            if (serversOnTimeout.includes(serverNames[i])) {
+              // Timeout --> Online
+              const index = serversOnTimeout.indexOf(serverNames[i]);
+              if (index !== -1) {
+                serversOnTimeout.splice(index, 1);
+              }
+              serverStatusChanged = true;
+            }
+          }
+        }
+        if (Object.keys(nycServerMapping).includes(serverNames[i])) {
+          if (!oldValue.online) {
+            // Offline --> Online
+            serverStatusChanged = true;
+            // TODO: Send Log Message
+          }
         }
 
         const newValue = {
@@ -105,7 +142,7 @@ export async function pingNetworkServers() {
           address: results[i].Address,
           online: true,
           version: /([a-zA-Z]\s\d\.\d\d\.\d)|(\d\.\d\d\.\d)/.test(
-            res.value.version
+            res.value.version.name
           )
             ? res.value.version
             : { name: "Unknown", protocol: -1 },
@@ -127,6 +164,9 @@ export async function pingNetworkServers() {
           savesNew.push(oldValue.save());
         }
       }
+      if (serverStatusChanged) {
+        updateStatusEmbed(servers);
+      }
       if (savesNew.length > 0) {
         await Promise.allSettled(savesNew);
         const successful = responses.filter(
@@ -143,6 +183,49 @@ export async function pingNetworkServers() {
       currentlyUpdating = false;
     }
   );
+}
+
+function updateStatusEmbed(servers: ServerStatus[]) {
+  Logger.info("Updating Server Status Embed");
+
+  const nycServers = servers
+    .filter((s: ServerStatus) => Object.keys(nycServerMapping).includes(s.id))
+    .sort((s1: ServerStatus, s2: ServerStatus) => {
+      const indexA = Object.keys(nycServerMapping).indexOf(s1.id);
+      const indexB = Object.keys(nycServerMapping).indexOf(s2.id);
+      return indexA - indexB;
+    });
+  let desc = "";
+  for (const server of nycServers) {
+    const version = server.version.name.split(" ")[1] || server.version.name;
+    desc += `${
+      server.online
+        ? ":green_circle: "
+        : serversOnTimeout.includes(server.id)
+        ? ":yellow_circle: "
+        : ":red_circle: "
+    }**${nycServerMapping[server.id]}** ${
+      server.version.protocol > -1 ? `[${version}]` : ""
+    }\n`;
+  }
+
+  const body = {
+    content: "",
+    embeds: [
+      {
+        title: "NYC Server Status",
+        description: desc,
+        color: Colors.MineFact_Green,
+        footer: {
+          text: "BTE NewYorkCity",
+          icon_url:
+            "https://cdn.discordapp.com/attachments/519576567718871053/1035577973467779223/BTE_NYC_Logo.png",
+        },
+      },
+    ],
+  };
+
+  sendWebhook("network_status", body);
 }
 
 export async function checkServerStatus() {
@@ -230,27 +313,27 @@ export async function checkServerStatus() {
     status[keys[i]] = newValue;
   }
 
-  if (update && Object.keys(status).length > 0) {
-    // Update server status embed
-    Logger.info("Updating Server Status Embed");
-    const body = {
-      content: "",
-      embeds: [
-        {
-          title: "Server Status",
-          description: serverDataToString(),
-          color: Colors.MineFact_Green,
-          footer: {
-            text: "MineFact Network",
-            icon_url:
-              "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
-          },
-        },
-      ],
-    };
+  // if (update && Object.keys(status).length > 0) {
+  //   // Update server status embed
+  //   Logger.info("Updating Server Status Embed");
+  //   const body = {
+  //     content: "",
+  //     embeds: [
+  //       {
+  //         title: "Server Status",
+  //         description: serverDataToString(),
+  //         color: Colors.MineFact_Green,
+  //         footer: {
+  //           text: "MineFact Network",
+  //           icon_url:
+  //             "https://cdn.discordapp.com/avatars/422633274918174721/7e875a4ccb7e52097b571af1925b2dc1.png",
+  //         },
+  //       },
+  //     ],
+  //   };
 
-    sendWebhook("network_status", body);
-  }
+  //   sendWebhook("network_status", body);
+  // }
 }
 
 export function serverDataToString() {
