@@ -108,7 +108,7 @@ export async function pingNetworkServers() {
             res.value.version
           )
             ? res.value.version
-            : "Unknown",
+            : { name: "Unknown", protocol: -1 },
           players: {
             online: res.value.players.online,
             max: res.value.players.max,
