@@ -1,11 +1,12 @@
 import * as minecraftUtil from "minecraft-server-util";
 
-import { fetch } from "..";
-import { AdminSetting } from "../entity/AdminSetting";
 import { Colors, sendWebhook } from "./DiscordMessageSender";
+
+import { AdminSetting } from "../entity/AdminSetting";
 import { DATABASES } from "./DatabaseConnector";
 import Logger from "./Logger";
 import { ServerStatus } from "../entity/ServerStatus";
+import { fetch } from "..";
 import { getObjectDifferences } from "./JsonUtils";
 
 const nycServerStatus = [
@@ -103,7 +104,11 @@ export async function pingNetworkServers() {
           id: serverNames[i],
           address: results[i].Address,
           online: true,
-          version: res.value.version,
+          version: /([a-zA-Z]\s\d\.\d\d\.\d)|(\d\.\d\d\.\d)/.test(
+            res.value.version
+          )
+            ? res.value.version
+            : "Unknown",
           players: {
             online: res.value.players.online,
             max: res.value.players.max,
