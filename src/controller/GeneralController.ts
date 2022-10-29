@@ -9,7 +9,6 @@ import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { getManager } from "typeorm";
 import { insidePolygon } from "../utils/Polygon";
-import { status } from "../utils/ServerStatusTracker";
 import responses from "../responses";
 
 const cache = require("../cache");
@@ -33,7 +32,6 @@ export class GeneralController {
 
     let java = undefined;
     let bedrock = undefined;
-    let spigot = undefined;
 
     if (!type || type.toLowerCase() === "java") {
       java = await minecraftUtil
@@ -157,11 +155,7 @@ export class GeneralController {
         });
     }
 
-    if (!type || type.toLowerCase() === "spigot") {
-      spigot = status;
-    }
-
-    return { java: java, bedrock: bedrock, spigot: spigot };
+    return { java: java, bedrock: bedrock };
   }
 
   async pingServer(request: Request, response: Response, next: NextFunction) {
