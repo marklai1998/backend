@@ -126,6 +126,12 @@ export async function pingNetworkServers() {
                 serversOnTimeout.splice(index, 1);
               }
               serverStatusChanged = true;
+            } else if (!oldValue.online) {
+              // Offline --> Online
+              sendWebhook(
+                "network_log",
+                generateNetworkLogEmbed(nycServerMapping[serverNames[i]], true)
+              );
             }
           }
         }
@@ -133,10 +139,6 @@ export async function pingNetworkServers() {
           if (!oldValue.online) {
             // Offline --> Online
             serverStatusChanged = true;
-            sendWebhook(
-              "network_log",
-              generateNetworkLogEmbed(nycServerMapping[serverNames[i]], true)
-            );
           }
         }
 
