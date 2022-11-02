@@ -97,7 +97,9 @@ export function startIntervals() {
     0,
     0,
     async function () {
-      const players = proxyStatus.java.players;
+      const players = proxyStatus.java?.players;
+
+      if (!players) return;
 
       const stats = {
         total: 0,
@@ -164,7 +166,7 @@ export function startIntervals() {
 
 function trackPlayerCount() {
   executeEveryXMinutesStartingNow(async function () {
-    const players = proxyStatus.java.players;
+    const players = proxyStatus.java?.players;
 
     if (!players) return;
 

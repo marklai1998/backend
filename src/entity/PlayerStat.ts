@@ -42,7 +42,9 @@ export async function createMissingDayEntries() {
       new Date(lastEntry.date).getTime() + 86400000 * (i + 1)
     );
 
-    const players = proxyStatus.java.players;
+    const players = proxyStatus.java?.players;
+
+    if (!players) return;
 
     const stats = {
       total: 0,
