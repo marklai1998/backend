@@ -7,6 +7,10 @@ import Logger from "./Logger";
 import { ServerStatus } from "../entity/ServerStatus";
 import { getObjectDifferences } from "./JsonUtils";
 
+export const proxyStatus = {
+  java: null,
+  bedrock: null,
+};
 const nycServerMapping = {
   "NYC-1": "NewYorkCity",
   Building1NYC: "BuildingServer1",
@@ -22,11 +26,15 @@ const nycServerMapping = {
   Hub1: "Hub1",
 };
 const serversToPingRole = ["NewYorkCity", "BuildingServer1"];
-let currentlyUpdating = false;
 const serversOnTimeout = [];
+let currentlyUpdating = false;
+
+const TIMEOUT = 20000;
 
 export async function pingNetworkServers() {
   if (currentlyUpdating) return;
+
+  pingProxyServers();
 
   currentlyUpdating = true;
   const time = new Date().getTime();
@@ -49,7 +57,7 @@ export async function pingNetworkServers() {
         const [ip, port] = server.Address.split(":");
         requests.push(
           minecraftUtil.status(ip, parseInt(port), {
-            timeout: 1000 * 20,
+            timeout: TIMEOUT,
             enableSRV: true,
           })
         );
@@ -188,6 +196,103 @@ export async function pingNetworkServers() {
       currentlyUpdating = false;
     }
   );
+}
+async function pingProxyServers() {
+  const requests = [
+    minecraftUtil.status("buildtheearth.net", 25565, {
+      timeout: TIMEOUT,
+      enableSRV: true,
+    }),
+    minecraftUtil.statusBedrock("bedrock.buildtheearth.net", 19132, {
+      timeout: TIMEOUT,
+      enableSRV: true,
+    }),
+  ];
+
+  const responses = await Promise.allSettled(requests);
+  const java = responses[0] as any;
+  const bedrock = responses[1] as any;
+
+  // Java Proxy
+  if (java.status === "rejected") {
+    proxyStatus.java = {
+      online: false,
+      last_updated: new Date(),
+    };
+  } else {
+    // Read groups
+    const groups = {};
+    let counter = 0;
+    for (const line of java.value.players.sample) {
+      if (line.name.includes("§8[§b") && line.name.includes("§8]§7 are in ")) {
+        const split = line.name
+          .replace("§8[§b", "")
+          .replace("§8]§7 are in", "")
+          .split(" §");
+        const players = parseInt(split[0]);
+        const type = split[1].substring(1).replace(" ", "").toLowerCase();
+
+        groups[type] = players;
+        counter += players;
+      }
+    }
+    groups["other"] = Math.max(java.value.players.online - counter, 0);
+
+    proxyStatus.java = {
+      online: true,
+      ip: {
+        default: "buildtheearth.net:25565",
+        fallback: "network.buildtheearth.net:25565",
+      },
+      version: {
+        fullName: java.value.version.name,
+        name: java.value.version.name.split(" ")[1],
+        protocol: java.value.version.protocol,
+        support: java.value.motd.clean
+          .split("\n")[0]
+          .split("|  ")[1]
+          .replace("[", "")
+          .replace("]", ""),
+      },
+      players: {
+        total: java.value.players.online,
+        max: java.value.players.max,
+        groups: groups,
+      },
+      motd: {
+        raw: java.value.motd.raw,
+        clean: java.value.motd.clean,
+        html: java.value.motd.html,
+        serverNews: java.value.motd.clean
+          .split("\n")[1]
+          .replace("|||  ", "")
+          .replace("  |||", ""),
+        rows: java.value.motd.clean.split("\n"),
+      },
+      favicon: java.value.favicon,
+      srvRecord: java.value.srvRecord,
+      last_updated: new Date(),
+    };
+  }
+
+  // Bedrock Proxy
+  if (bedrock.status === "rejected") {
+    proxyStatus.bedrock = {
+      online: false,
+      last_updated: new Date(),
+    };
+  } else {
+    proxyStatus.bedrock = {
+      online: true,
+      ip: "bedrock.buildtheearth.net:19132",
+      edition: bedrock.value.edition,
+      version: bedrock.value.version,
+      players: bedrock.value.players,
+      motd: bedrock.value.motd,
+      srvRecord: bedrock.value.srvRecord,
+      last_updated: new Date(),
+    };
+  }
 }
 
 function updateStatusEmbed(servers: ServerStatus[]) {

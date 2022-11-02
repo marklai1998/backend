@@ -10,6 +10,7 @@ import Logger from "../utils/Logger";
 import { getManager } from "typeorm";
 import { insidePolygon } from "../utils/Polygon";
 import responses from "../responses";
+import { proxyStatus } from "../utils/ServerStatusTracker";
 
 const cache = require("../cache");
 
@@ -34,128 +35,14 @@ export class GeneralController {
     let bedrock = undefined;
 
     if (!type || type.toLowerCase() === "java") {
-      java = await minecraftUtil
-        .status("buildtheearth.net", 25565, {
-          timeout: 1000 * 20,
-          enableSRV: true,
-        })
-        .then((result) => {
-          const groups = {};
-          var counter = 0;
-          for (const line of result.players.sample) {
-            if (
-              line.name.includes("§8[§b") &&
-              line.name.includes("§8]§7 are in ")
-            ) {
-              const split = line.name
-                .replace("§8[§b", "")
-                .replace("§8]§7 are in", "")
-                .split(" §");
-              const players = parseInt(split[0]);
-              const type = split[1].substring(1).replace(" ", "").toLowerCase();
-
-              groups[type] = players;
-              counter += players;
-            }
-          }
-          groups["other"] = Math.max(result.players.online - counter, 0);
-
-          return {
-            online: true,
-            ip: {
-              default: "buildtheearth.net:25565",
-              fallback: "network.buildtheearth.net:25565",
-            },
-            version: {
-              fullName: result.version.name,
-              name: result.version.name.split(" ")[1],
-              protocol: result.version.protocol,
-              support: result.motd.clean
-                .split("\n")[0]
-                .split("|  ")[1]
-                .replace("[", "")
-                .replace("]", ""),
-            },
-            players: {
-              total: result.players.online,
-              max: result.players.max,
-              groups: groups,
-            },
-            motd: {
-              raw: result.motd.raw,
-              clean: result.motd.clean,
-              html: result.motd.html,
-              serverNews: result.motd.clean
-                .split("\n")[1]
-                .replace("|||  ", "")
-                .replace("  |||", ""),
-              rows: [
-                result.motd.clean.split("\n")[0],
-                result.motd.clean.split("\n")[1],
-              ],
-            },
-            favicon: result.favicon,
-            srvRecord: result.srvRecord,
-          };
-        })
-        .catch((error) => {
-          if (error.toString().includes("Timed out")) {
-            return {
-              online: false,
-              error: "Timed out",
-            };
-          } else {
-            return {
-              online: false,
-              error: "Unexpected error",
-            };
-          }
-        });
+      java = proxyStatus.java;
     }
 
     if (!type || type.toLowerCase() === "bedrock") {
-      bedrock = await minecraftUtil
-        .statusBedrock("bedrock.buildtheearth.net", 19132, {
-          timeout: 1000 * 20,
-          enableSRV: true,
-        })
-        .then((result) => {
-          return {
-            online: true,
-            ip: "bedrock.buildtheearth.net:19132",
-            edition: result.edition,
-            version: {
-              name: result.version.name,
-              protocol: result.version.protocol,
-            },
-            players: {
-              online: result.players.online,
-              max: result.players.max,
-            },
-            motd: {
-              raw: result.motd.raw,
-              clean: result.motd.clean,
-              html: result.motd.html,
-            },
-            srvRecord: result.srvRecord,
-          };
-        })
-        .catch((error) => {
-          if (error.toString().includes("Timed out")) {
-            return {
-              online: false,
-              error: "Timed out",
-            };
-          } else {
-            return {
-              online: false,
-              error: "Unexpected error",
-            };
-          }
-        });
+      bedrock = proxyStatus.bedrock;
     }
 
-    return { java: java, bedrock: bedrock };
+    return { java, bedrock};
   }
 
   async pingServer(request: Request, response: Response, next: NextFunction) {
