@@ -3,6 +3,7 @@ import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
 import { IsJSON } from "class-validator";
 import Logger from "../utils/Logger";
 import { fetch, port } from "..";
+import { proxyStatus } from "../utils/ServerStatusTracker";
 
 @Entity({ name: "playerstats" })
 export class PlayerStat extends BaseEntity {
@@ -41,11 +42,7 @@ export async function createMissingDayEntries() {
       new Date(lastEntry.date).getTime() + 86400000 * (i + 1)
     );
 
-    const playersRaw = await fetch(
-      `http://localhost:${port}/api/network/ping?type=java`
-    );
-    const json = await playersRaw.json();
-    const players = json.java.players;
+    const players = proxyStatus.java.players;
 
     const stats = {
       total: 0,

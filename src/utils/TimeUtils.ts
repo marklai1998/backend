@@ -6,7 +6,7 @@ import { ProjectCount } from "../entity/ProjectCount";
 import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 import { getCpuUsage } from "./CpuUsage";
-import { pingNetworkServers } from "./ServerStatusTracker";
+import { pingNetworkServers, proxyStatus } from "./ServerStatusTracker";
 import { DATABASES } from "./DatabaseConnector";
 
 const cache = require("../cache");
@@ -97,11 +97,7 @@ export function startIntervals() {
     0,
     0,
     async function () {
-      const playersRaw = await fetch(
-        `http://localhost:${port}/api/network/ping?type=java`
-      );
-      const json = await playersRaw.json();
-      const players = json.java.players;
+      const players = proxyStatus.java.players;
 
       const stats = {
         total: 0,
@@ -168,11 +164,7 @@ export function startIntervals() {
 
 function trackPlayerCount() {
   executeEveryXMinutesStartingNow(async function () {
-    const playersRaw = await fetch(
-      `http://localhost:${port}/api/network/ping?type=java`
-    );
-    const json = await playersRaw.json();
-    const players = json.java.players;
+    const players = proxyStatus.java.players;
 
     if (!players) return;
 
