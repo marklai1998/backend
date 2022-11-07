@@ -469,23 +469,30 @@ const Routes = [
   // Custom Maps
   {
     method: "get",
-    route: "/api/maps/get",
+    route: "/api/maps",
     controller: MapController,
     action: "getAll",
     permission: Permissions.builder,
   },
   {
     method: "get",
-    route: "/api/maps/get/:id",
+    route: "/api/maps/:id",
     controller: MapController,
     action: "getOne",
     permission: Permissions.builder,
   },
   {
     method: "post",
-    route: "/api/maps/create",
+    route: "/api/maps",
     controller: MapController,
     action: "create",
+    permission: Permissions.builder,
+  },
+  {
+    method: "put",
+    route: "/api/maps",
+    controller: MapController,
+    action: "update",
     permission: Permissions.builder,
   },
   // Sheet Imports

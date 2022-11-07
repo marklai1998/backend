@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 
 import * as dbCache from "../utils/cache/DatabaseCache";
@@ -30,7 +31,12 @@ export class Map extends BaseEntity {
 
   // TODO: Add more types
   @Column("simple-json", { default: "[]" })
-  elements: { type: "MARKER" | "POLYGON"; color: string; coords: [number[]] }[];
+  elements: {
+    id: string;
+    type: "MARKER" | "POLYGON";
+    color: string;
+    coords: [number[]];
+  }[];
 
   // TODO: Add different map types
   @Column("simple-json", {
@@ -55,7 +61,7 @@ export class Map extends BaseEntity {
   @CreateDateColumn()
   created: Date;
 
-  @Column({ nullable: true })
+  @UpdateDateColumn({ nullable: true })
   last_updated: Date;
 
   toJson({ showDetails = true }: { showDetails?: boolean } = {}) {

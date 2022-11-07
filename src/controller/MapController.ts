@@ -3,6 +3,8 @@ import { Map } from "../entity/Map";
 import { User } from "../entity/User";
 import { generateUUID } from "../index";
 import responses from "../responses";
+import { updateJson } from "../utils/JsonUtils";
+import Logger from "../utils/Logger";
 
 export class MapController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -38,5 +40,22 @@ export class MapController {
     }
 
     return map.toJson();
+  }
+  async update(request: Request, response: Response, next: NextFunction) {
+    const id = request.body.id || request.body.uuid;
+    if (!id) {
+      return responses.error({ message: "Specify id or uuid", code: 400 });
+    }
+
+    const map =
+      (await Map.findOne({ id: id })) || (await Map.findOne({ uuid: id }));
+
+    if (!map) {
+      return responses.error({ message: "No map found", code: 404 });
+    }
+
+    updateJson(map, request.body);
+    Logger.info(`Updating map ${map.uuid}`);
+    return responses.validate(map, "Map updated successfully");
   }
 }
