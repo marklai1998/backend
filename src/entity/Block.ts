@@ -263,7 +263,7 @@ export class Block extends BaseEntity {
   }
 
   async getLandmarks() {
-    const landmarksRaw = await Landmark.find({ blockID: this.uid });
+    const landmarksRaw = await Landmark.findBy({ blockID: this.uid });
 
     return landmarksRaw.map((l: any) => l.toJson());
   }
@@ -380,7 +380,7 @@ async function setStatus(block: Block): Promise<number> {
     }
 
     if (block.status === 4) {
-      let blocks = await Block.find({ district: block.district });
+      let blocks = await Block.findBy({ district: block.district });
       var done = 0;
       for (const b of blocks) {
         if (b.status === 4) {
@@ -390,12 +390,12 @@ async function setStatus(block: Block): Promise<number> {
 
       if (done === blocks.length) {
         // District completed
-        let district = await District.findOne({ id: block.district });
+        let district = await District.findOneBy({ id: block.district });
         district.completionDate = new Date();
         await district.save();
       }
     } else {
-      let district = await District.findOne({ id: block.district });
+      let district = await District.findOneBy({ id: block.district });
       if (district.completionDate !== null) {
         district.completionDate = null;
         await district.save();

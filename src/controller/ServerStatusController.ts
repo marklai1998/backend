@@ -4,7 +4,7 @@ import responses from "../responses";
 
 export class ServerStatusController {
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const server = await ServerStatus.findOne({ id: request.params.server });
+    const server = await ServerStatus.findOneBy({ id: request.params.server });
 
     if (!server) {
       return responses.error({ message: "No server found", code: 404 });

@@ -59,10 +59,10 @@ export async function getDirectChildren(district: District) {
 
 // Converting
 export async function districtIdToName(id: number) {
-  return (await District.findOne({ id: id })).name;
+  return (await District.findOneBy({ id: id })).name;
 }
 export async function districtIdToDistrict(id: number): Promise<District> {
-  return await District.findOne({ id: id });
+  return await District.findOneBy({ id: id });
 }
 export function statusToName(status: number, formatted = false) {
   switch (status) {

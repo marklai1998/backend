@@ -17,12 +17,12 @@ export class BlockController {
       return responses.error({ message: "Specify a blockID", code: 400 });
     }
 
-    const district = await District.findOne({ name: request.body.district });
+    const district = await District.findOneBy({ name: request.body.district });
     if (!district) {
       return responses.error({ message: "District not found", code: 404 });
     }
 
-    let block = await Block.findOne({
+    let block = await Block.findOneBy({
       id: request.body.blockID,
       district: district.id,
     });
@@ -70,7 +70,7 @@ export class BlockController {
       return responses.error({ message: "Invalid number", code: 400 });
     }
 
-    const district = await District.findOne({ id: request.body.district });
+    const district = await District.findOneBy({ id: request.body.district });
     if (!district) {
       return responses.error({ message: "District not found", code: 404 });
     }
@@ -112,11 +112,11 @@ export class BlockController {
       return responses.error({ message: "Specify a BlockID", code: 400 });
     }
 
-    const district = await District.findOne({ name: request.body.district });
+    const district = await District.findOneBy({ name: request.body.district });
     if (!district) {
       return responses.error({ message: "District not found", code: 404 });
     }
-    const block = await Block.findOne({
+    const block = await Block.findOneBy({
       id: request.body.blockID,
       district: district.id,
     });
@@ -245,7 +245,7 @@ export class BlockController {
       return responses.error({ message: "Block not found", code: 404 });
     }
 
-    const user = await User.findOne({
+    const user = await User.findOneBy({
       apikey: request.body.key || request.query.key,
     });
 
@@ -273,7 +273,7 @@ export class BlockController {
       return responses.error({ message: "Block not found", code: 404 });
     }
 
-    const user = await User.findOne({
+    const user = await User.findOneBy({
       apikey: request.body.key || request.query.key,
     });
     Logger.info(
@@ -290,7 +290,7 @@ export class BlockController {
       return responses.error({ message: "Block not found", code: 404 });
     }
 
-    const user = await User.findOne({
+    const user = await User.findOneBy({
       apikey: request.body.key || request.query.key,
     });
     Logger.info(
@@ -307,7 +307,7 @@ export class BlockController {
       return responses.error({ message: "Block not found", code: 404 });
     }
 
-    const user = await User.findOne({
+    const user = await User.findOneBy({
       apikey: request.body.key || request.query.key,
     });
     Logger.info(
@@ -349,14 +349,14 @@ export class BlockController {
 async function getBlock(districtID: string | number, blockID: number) {
   const district =
     typeof districtID === "string"
-      ? await District.findOne({ name: districtID })
-      : await District.findOne({ id: districtID });
+      ? await District.findOneBy({ name: districtID })
+      : await District.findOneBy({ id: districtID });
 
   if (!district) {
     return null;
   }
 
-  const block = Block.findOne({ id: blockID, district: district.id });
+  const block = Block.findOneBy({ id: blockID, district: district.id });
   if (!block) {
     return null;
   }
@@ -366,8 +366,8 @@ async function getBlock(districtID: string | number, blockID: number) {
 async function getBlocks(districtID: string | number) {
   const district =
     typeof districtID === "string"
-      ? await District.findOne({ name: districtID })
-      : await District.findOne({ id: districtID });
+      ? await District.findOneBy({ name: districtID })
+      : await District.findOneBy({ id: districtID });
 
   if (!district) {
     return null;

@@ -14,7 +14,7 @@ export async function recalculateAll(district: number) {
 }
 
 export async function recalculateDistrictProgress(districtID: number) {
-  const district = await District.findOne({ id: districtID });
+  const district = await District.findOneBy({ id: districtID });
 
   if (!district) return;
 
@@ -58,7 +58,7 @@ export async function recalculateDistrictProgress(districtID: number) {
 }
 
 export async function recalculateDistrictBlocksDoneLeft(districtID: number) {
-  const district = await District.findOne({ id: districtID });
+  const district = await District.findOneBy({ id: districtID });
 
   if (!district) return;
 
@@ -113,7 +113,7 @@ export async function recalculateDistrictBlocksDoneLeft(districtID: number) {
 }
 
 export async function recalculateDistrictStatus(districtID: number) {
-  const district = await District.findOne({ id: districtID });
+  const district = await District.findOneBy({ id: districtID });
   const oldStatus = district.status;
   let changed = false;
 

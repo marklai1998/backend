@@ -15,14 +15,14 @@ export class DistrictController {
       return responses.error({ message: "Specify a parent", code: 400 });
     }
 
-    let district = await District.findOne({
+    let district = await District.findOneBy({
       name: request.body.name,
     });
     if (district) {
       return responses.error({ message: "District already exists", code: 400 });
     }
 
-    const parent = await District.findOne({
+    const parent = await District.findOneBy({
       id: request.body.parent,
     });
     if (!parent) {
@@ -59,14 +59,14 @@ export class DistrictController {
         code: 400,
       });
     }
-    const district = await District.findOne({
+    const district = await District.findOneBy({
       name: request.body.name,
     });
     if (!district) {
       return responses.error({ message: "District not found", code: 404 });
     }
 
-    const blocks = await Block.find({ district: district.id });
+    const blocks = await Block.findBy({ district: district.id });
 
     if (blocks.length > 0) {
       return responses.error({
@@ -98,7 +98,7 @@ export class DistrictController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const district = await District.findOne({
+    const district = await District.findOneBy({
       name: request.params.name,
     });
 
@@ -109,7 +109,7 @@ export class DistrictController {
   }
 
   async edit(request: Request, response: Response, next: NextFunction) {
-    const district = await District.findOne({
+    const district = await District.findOneBy({
       id: request.body.district,
     });
 

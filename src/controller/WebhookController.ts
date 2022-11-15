@@ -10,7 +10,7 @@ export class WebhookController {
     if (!request.body.name || !request.body.link) {
       return responses.error({ message: "Specify name and link", code: 400 });
     }
-    let webhook = await Webhook.findOne({
+    let webhook = await Webhook.findOneBy({
       name: request.body.name,
     });
 
@@ -39,7 +39,7 @@ export class WebhookController {
       });
     }
 
-    const webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOneBy({
       name: request.body.name,
     });
 
@@ -55,7 +55,7 @@ export class WebhookController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOneBy({
       name: request.params.name,
     });
 
@@ -77,7 +77,7 @@ export class WebhookController {
       });
     }
 
-    const webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOneBy({
       name: request.body.name,
     });
 
@@ -116,7 +116,7 @@ export class WebhookController {
       return responses.error({ message: "Invalid body", code: 400 });
     }
 
-    const webhook = await Webhook.findOne({
+    const webhook = await Webhook.findOneBy({
       name: request.body.name,
     });
 
@@ -128,7 +128,7 @@ export class WebhookController {
     }
 
     if (webhook.permission > 0) {
-      const user = await User.findOne({
+      const user = await User.findOneBy({
         apikey: request.body.key || request.query.key,
       });
       if (!user) {

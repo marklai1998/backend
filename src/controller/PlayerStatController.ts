@@ -20,7 +20,7 @@ export class PlayerStatController {
       isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
     }
 
-    const playerStat = await PlayerStat.findOne({
+    const playerStat = await PlayerStat.findOneBy({
       date: isoDate === null ? date : isoDate,
     });
 

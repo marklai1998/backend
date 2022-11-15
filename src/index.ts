@@ -7,10 +7,10 @@ import * as express from "express";
 import * as jwt from "./utils/JsonWebToken";
 import * as sockets from "./sockets/SocketManager";
 
-import { createConnection, getRepository } from "typeorm";
 import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import { Request, Response } from "express";
 
+import { AppDataSource } from "./data-sources";
 import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
@@ -32,7 +32,7 @@ const productionMode = process.argv.slice(2)[0] === "--i";
 const cache = require("./cache");
 
 Logger.debug("Connecting to main database...");
-createConnection()
+AppDataSource.initialize()
   .then(async (connection) => {
     Logger.debug("Connected to main database");
 
@@ -121,7 +121,7 @@ createConnection()
     Logger.debug("Registered routes");
 
     // Create root user
-    let root = await User.findOne({ username: "root" });
+    let root = await User.findOneBy({ username: "root" });
     if (root === undefined) {
       Logger.debug("Creating root user...");
       await connection.manager.save(
@@ -145,7 +145,7 @@ createConnection()
     }
 
     // Set default admin settings
-    let settings = await getRepository(AdminSetting).find();
+    let settings = await AdminSetting.find();
     AdminSettings.forEach(async (setting) => {
       if (!settings.some((e) => e.key === setting.key)) {
         Logger.debug(`Creating default setting ${setting.key}`);
@@ -153,7 +153,7 @@ createConnection()
         adminSetting.key = setting.key;
         adminSetting.value = JSON.stringify(setting.value);
         adminSetting.permission = setting.permission;
-        await getRepository(AdminSetting).save(adminSetting);
+        await adminSetting.save();
       }
     });
     if (productionMode) {

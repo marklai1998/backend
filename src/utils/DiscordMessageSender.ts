@@ -44,7 +44,7 @@ function statusToColor(status: number) {
 
 export async function sendOverview() {
   const districtIDs = JSON.parse(
-    (await AdminSetting.findOne({ key: "nyc_overview_districts" })).value
+    (await AdminSetting.findOneBy({ key: "nyc_overview_districts" })).value
   );
   const projects = await ProjectCount.find({ order: { projects: "DESC" } });
   const embeds = [
@@ -74,8 +74,8 @@ export async function sendOverview() {
   ];
 
   for (const id of districtIDs) {
-    const parent = await District.findOne({ id: id });
-    const children = (await District.find({ parent: id })).sort(
+    const parent = await District.findOneBy({ id: id });
+    const children = (await District.findBy({ parent: id })).sort(
       (a: District, b: District) => b.progress - a.progress
     );
 
@@ -293,7 +293,7 @@ export async function sendDistrictChange({
 }
 
 export async function sendWebhook(name: string, body: object) {
-  const webhook = await Webhook.findOne({ name: name });
+  const webhook = await Webhook.findOneBy({ name: name });
 
   if (!webhook) {
     // TODO send Error Webhook

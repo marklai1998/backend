@@ -173,7 +173,7 @@ function trackPlayerCount() {
     Logger.info(
       `Updating Player Count for ${date.toISOString().split("T")[0]}`
     );
-    let playerStat = await PlayerStat.findOne({
+    let playerStat = await PlayerStat.findOneBy({
       date: new Date(
         `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
       ),
@@ -181,7 +181,7 @@ function trackPlayerCount() {
 
     if (!playerStat) {
       await createMissingDayEntries();
-      playerStat = await PlayerStat.findOne({
+      playerStat = await PlayerStat.findOneBy({
         date: new Date(
           `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
         ),
@@ -232,7 +232,7 @@ async function trackProjectCount() {
           reviewCount += server.ToReview;
         }
         const date = new Date();
-        var project = await ProjectCount.findOne({
+        var project = await ProjectCount.findOneBy({
           date: new Date(
             `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
           ),

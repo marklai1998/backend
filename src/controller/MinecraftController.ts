@@ -5,7 +5,7 @@ import responses from "../responses";
 
 export class MinecraftController {
   async create(request: Request, response: Response, next: NextFunction) {
-    let user = await MinecraftUser.findOne({ uuid: request.body.uuid });
+    let user = await MinecraftUser.findOneBy({ uuid: request.body.uuid });
 
     if (user) {
       return responses.error({ message: "UUID already exists", code: 400 });
@@ -24,7 +24,7 @@ export class MinecraftController {
     if (!request.body.uuid) {
       return responses.error({ message: "Specify UUID", code: 400 });
     }
-    const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
+    const user = await MinecraftUser.findOneBy({ uuid: request.body.uuid });
 
     if (!user) {
       return responses.error({ message: "UUID not found", code: 404 });
@@ -47,8 +47,8 @@ export class MinecraftController {
 
   async getOne(request: Request, response: Response, next: NextFunction) {
     const player =
-      (await MinecraftUser.findOne({ username: request.params.user })) ||
-      (await MinecraftUser.findOne({ uuid: request.params.user }));
+      (await MinecraftUser.findOneBy({ username: request.params.user })) ||
+      (await MinecraftUser.findOneBy({ uuid: request.params.user }));
 
     if (!player) {
       return responses.error({ message: "Player not found", code: 404 });
@@ -67,7 +67,7 @@ export class MinecraftController {
       });
     }
 
-    const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
+    const user = await MinecraftUser.findOneBy({ uuid: request.body.uuid });
 
     if (!user) {
       return responses.error({ message: "UUID not found", code: 404 });
@@ -87,7 +87,7 @@ export class MinecraftController {
       });
     }
 
-    const user = await MinecraftUser.findOne({ uuid: request.body.uuid });
+    const user = await MinecraftUser.findOneBy({ uuid: request.body.uuid });
 
     if (!user) {
       return responses.error({ message: "UUID not found", code: 404 });

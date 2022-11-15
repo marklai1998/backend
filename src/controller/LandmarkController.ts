@@ -21,8 +21,8 @@ export class LandmarkController {
       });
     }
 
-    const district = await District.findOne({ id: request.body.district });
-    const block = await Block.findOne({
+    const district = await District.findOneBy({ id: request.body.district });
+    const block = await Block.findOneBy({
       district: district.id,
       id: request.body.blockID,
     });
@@ -31,7 +31,7 @@ export class LandmarkController {
       return responses.error({ message: "Block not found", code: 404 });
     }
 
-    let landmark = await Landmark.findOne({ name: request.body.name });
+    let landmark = await Landmark.findOneBy({ name: request.body.name });
     if (landmark) {
       return responses.error({
         message: "A Landmark with this name already exists",
@@ -58,7 +58,7 @@ export class LandmarkController {
     if (!request.body.id) {
       return responses.error({ message: "Specify ID", code: 400 });
     }
-    const landmark = await Landmark.findOne({ id: request.body.id });
+    const landmark = await Landmark.findOneBy({ id: request.body.id });
 
     if (!landmark) {
       return responses.error({ message: "Landmark not found", code: 404 });
@@ -95,7 +95,7 @@ export class LandmarkController {
 
   async getOne(request: Request, response: Response, next: NextFunction) {
     const usersPromise = User.find();
-    const landmarkPromise = Landmark.findOne({ id: request.params.id });
+    const landmarkPromise = Landmark.findOneBy({ id: request.params.id });
     const [users, landmark] = await Promise.all([
       usersPromise,
       landmarkPromise,
@@ -123,8 +123,8 @@ export class LandmarkController {
       return responses.error({ message: "Specify ID", code: 400 });
     }
 
-    const landmarkPromise = Landmark.findOne({ id: request.body.id });
-    const userPromise = User.findOne({
+    const landmarkPromise = Landmark.findOneBy({ id: request.body.id });
+    const userPromise = User.findOneBy({
       apikey: request.body.key || request.query.key,
     });
 

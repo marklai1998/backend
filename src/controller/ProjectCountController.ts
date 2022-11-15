@@ -18,7 +18,7 @@ export class ProjectCountController {
       isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
     }
 
-    const projectCount = await ProjectCount.findOne({
+    const projectCount = await ProjectCount.findOneBy({
       date: isoDate === null ? date : isoDate,
     });
 
@@ -55,8 +55,8 @@ export class ProjectCountController {
     }
 
     const date = new Date();
-    let projectCount = await ProjectCount.findOne({
-      date: date.toISOString().split("T")[0],
+    let projectCount = await ProjectCount.findOneBy({
+      date: date.toISOString().split("T")[0] as any,
     });
 
     if (!projectCount) {

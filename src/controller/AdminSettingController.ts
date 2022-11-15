@@ -7,7 +7,7 @@ import responses from "../responses";
 
 export class AdminSettingController {
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const setting = await AdminSetting.findOne({
+    const setting = await AdminSetting.findOneBy({
       key: request.params.setting,
     });
 
@@ -15,7 +15,7 @@ export class AdminSettingController {
       return responses.error({ message: "Admin Setting not found", code: 404 });
     }
     if (setting.permission > 0) {
-      const user = await User.findOne({
+      const user = await User.findOneBy({
         apikey: request.body.key || request.query.key,
       });
       if (!user) {
@@ -43,7 +43,7 @@ export class AdminSettingController {
   }
 
   async set(request: Request, response: Response, next: NextFunction) {
-    let config = await AdminSetting.findOne({
+    let config = await AdminSetting.findOneBy({
       key: request.body.name,
     });
 
@@ -84,7 +84,7 @@ export class AdminSettingController {
     response: Response,
     next: NextFunction
   ) {
-    const data = await AdminSetting.findOne({ key: "image_links" });
+    const data = await AdminSetting.findOneBy({ key: "image_links" });
 
     if (!data) {
       return responses.error({ message: "No images found", code: 404 });

@@ -38,7 +38,7 @@ async function joinRoom(
 
   if (room) {
     if (room.permission > Permissions.default) {
-      const user = await User.findOne({ apikey: key });
+      const user = await User.findOneBy({ apikey: key });
 
       if (user?.permission >= room.permission) {
         join(room);

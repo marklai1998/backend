@@ -16,9 +16,6 @@ export class Motd_Broadcast extends Broadcast {
     // Load Motds from database
     this.loadMotds();
     setInterval(async () => this.loadMotds(), 5 * 60 * 1000);
-    // // Refresh motd every x seconds
-    // this.refreshMotd();
-    // setInterval(() => this.refreshMotd(), this.interval() * 1000);
   }
 
   public eventName(): string {
@@ -39,7 +36,7 @@ export class Motd_Broadcast extends Broadcast {
 
   private async loadMotds() {
     this.motds = JSON.parse(
-      (await AdminSetting.findOne({ key: "motd" })).value
+      (await AdminSetting.findOneBy({ key: "motd" })).value
     );
     cache.set("current_motd", this.message());
   }

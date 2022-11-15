@@ -13,7 +13,7 @@ import responses from "../responses";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
-    const user = await User.findOne({
+    const user = await User.findOneBy({
       username: request.body.username,
     });
 
@@ -64,7 +64,7 @@ export class UserController {
       });
     }
 
-    let registration = await Registration.findOne({
+    let registration = await Registration.findOneBy({
       username: request.body.username,
     });
 
@@ -149,7 +149,7 @@ export class UserController {
       });
     }
 
-    const registration = await Registration.findOne({
+    const registration = await Registration.findOneBy({
       username: request.body.username,
     });
 
@@ -196,7 +196,7 @@ export class UserController {
     if (!res.error) {
       registration.remove();
 
-      const accepter = await User.findOne({
+      const accepter = await User.findOneBy({
         apikey: request.body.apikey || request.params.apikey,
       });
 
@@ -282,7 +282,7 @@ export class UserController {
       return responses.error({ message: "Specify rank of player", code: 400 });
     }
 
-    const registration = await Registration.findOne({ id: request.body.id });
+    const registration = await Registration.findOneBy({ id: request.body.id });
 
     if (!registration) {
       return responses.error({
@@ -333,8 +333,8 @@ export class UserController {
     }
 
     let user =
-      (await User.findOne({ email: request.body.email })) ||
-      (await User.findOne({ username: request.body.username }));
+      (await User.findOneBy({ email: request.body.email })) ||
+      (await User.findOneBy({ username: request.body.username }));
 
     if (user) {
       return responses.error({
@@ -508,7 +508,7 @@ export class UserController {
     });
   }
   async delete(request: Request, response: Response, next: NextFunction) {
-    const user = await User.findOne({ uid: request.body.uid });
+    const user = await User.findOneBy({ uid: request.body.uid });
 
     if (!user) {
       return responses.error({ message: "User not found", code: 404 });

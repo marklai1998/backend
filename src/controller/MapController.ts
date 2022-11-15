@@ -12,7 +12,7 @@ export class MapController {
       return responses.error({ message: "Specify a name", code: 400 });
     }
 
-    const user = await User.findOne({
+    const user = await User.findOneBy({
       apikey: request.body.key || request.query.key,
     });
 
@@ -48,7 +48,7 @@ export class MapController {
     }
 
     const map =
-      (await Map.findOne({ id: id })) || (await Map.findOne({ uuid: id }));
+      (await Map.findOneBy({ id: id })) || (await Map.findOneBy({ uuid: id }));
 
     if (!map) {
       return responses.error({ message: "No map found", code: 404 });

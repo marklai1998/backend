@@ -46,7 +46,7 @@ export class GeneralController {
   }
 
   async pingServer(request: Request, response: Response, next: NextFunction) {
-    const ips = JSON.parse((await AdminSetting.findOne({ key: "ips" })).value);
+    const ips = JSON.parse((await AdminSetting.findOneBy({ key: "ips" })).value);
 
     if (ips === undefined) {
       return responses.error({message: "Ips not set in Admin Settings", code: 500})
@@ -347,7 +347,7 @@ export class GeneralController {
   }
 
   async redirect(request: Request, respone: Response, next: NextFunction) {
-    const links = await AdminSetting.findOne({ key: "links" });
+    const links = await AdminSetting.findOneBy({ key: "links" });
     // @ts-ignore
     const link = links.toJson().value.filter(
         (l) => l.short.toLowerCase() === request.params.link.toLowerCase()
