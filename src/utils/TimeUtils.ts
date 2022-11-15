@@ -1,4 +1,3 @@
-import { fetch, port } from "../index";
 import { PlayerStat, createMissingDayEntries } from "../entity/PlayerStat";
 
 import Logger from "./Logger";

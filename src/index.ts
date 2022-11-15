@@ -27,7 +27,6 @@ require("events").EventEmitter.prototype._maxListeners = 20;
 var cors = require("cors");
 var helmet = require("helmet");
 var fetch = require("node-fetch");
-var axios = require("axios");
 const port = process.env.PORT || 8080;
 const productionMode = process.argv.slice(2)[0] === "--i";
 const cache = require("./cache");
@@ -204,7 +203,7 @@ export function generateUUID() {
   return uuidv4();
 }
 
-export { fetch, axios, port };
+export { fetch, port };
 
 function trackResponseTime(route: string, time: number) {
   const response_times = cache.get("response_time");

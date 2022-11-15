@@ -2,7 +2,6 @@ import { BaseEntity, Column, Entity, PrimaryColumn } from "typeorm";
 
 import { IsJSON } from "class-validator";
 import Logger from "../utils/Logger";
-import { fetch, port } from "..";
 import { proxyStatus } from "../utils/ServerStatusTracker";
 
 @Entity({ name: "playerstats" })
