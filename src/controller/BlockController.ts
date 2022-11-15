@@ -1,5 +1,3 @@
-import * as google from "../utils/SheetUtils";
-
 import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
@@ -7,7 +5,6 @@ import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { User } from "../entity/User";
 import { getClaims } from "../utils/DistrictUtils";
-import { statusToNumber } from "../utils/DistrictUtils";
 import * as progress from "../utils/ProgressCalculation";
 import responses from "../responses";
 
@@ -346,66 +343,6 @@ export class BlockController {
     );
 
     return await block.removeBuilder(request.body.builder);
-  }
-
-  async import(request: Request, response: Response, next: NextFunction) {
-    const district = await District.findOne({
-      name: request.params.district,
-    });
-
-    if (!district) {
-      return responses.error({ message: "District not found", code: 404 });
-    }
-
-    var counter = 0;
-    try {
-      Logger.warn(`Importing blocks from ${request.params.district}`);
-      const getData = await google.googleSheets.spreadsheets.values.get({
-        auth: google.authGoogle,
-        spreadsheetId: google.sheetID,
-        range: `${district.name.replace("'", "´")}!B6:G`,
-      });
-      const data = getData.data.values;
-
-      for (const d of data) {
-        if (!d[0]) break;
-
-        const block = new Block();
-        block.id = parseInt(d[0]);
-        block.district = district.id;
-        block.status = statusToNumber(d[1]);
-        block.progress = !d[2] ? 0.0 : parseFloat(d[2].replace(",", "."));
-        block.details = d[3] === "TRUE" ? true : false;
-        block.builder = !d[4] ? "" : d[4];
-        block.area = "[]";
-
-        if (!d[5]) {
-          block.completionDate = null;
-        } else {
-          const dateSplit = d[5].split(".");
-          if (dateSplit.length !== 3) {
-            block.completionDate = null;
-          } else {
-            const isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
-            const date = new Date(isoDate);
-            block.completionDate =
-              date.toString() === "Invalid Date" ? null : date;
-          }
-        }
-
-        await block.save();
-        counter++;
-      }
-    } catch {
-      Logger.error(
-        `Error importing blocks from ${request.params.district}: No data found for this district`
-      );
-      return responses.error({
-        message: "No data found for this district",
-        code: 404,
-      });
-    }
-    return responses.success({ message: `${counter} Blocks imported` });
   }
 }
 

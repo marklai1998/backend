@@ -495,35 +495,6 @@ const Routes = [
     action: "update",
     permission: Permissions.builder,
   },
-  // Sheet Imports
-  {
-    method: "get",
-    route: "/api/import/projects",
-    controller: ProjectCountController,
-    action: "import",
-    permission: Permissions.admin,
-  },
-  {
-    method: "get",
-    route: "/api/import/playerstats",
-    controller: PlayerStatController,
-    action: "import",
-    permission: Permissions.admin,
-  },
-  {
-    method: "get",
-    route: "/api/import/districts",
-    controller: DistrictController,
-    action: "import",
-    permission: Permissions.admin,
-  },
-  {
-    method: "get",
-    route: "/api/import/blocks/:district",
-    controller: BlockController,
-    action: "import",
-    permission: Permissions.admin,
-  },
   // Other
   {
     method: "get",

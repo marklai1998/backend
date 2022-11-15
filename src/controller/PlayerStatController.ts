@@ -1,8 +1,5 @@
-import * as google from "../utils/SheetUtils";
-
 import { NextFunction, Request, Response } from "express";
 
-import Logger from "../utils/Logger";
 import { PlayerStat } from "../entity/PlayerStat";
 import responses from "../responses";
 
@@ -87,49 +84,5 @@ export class PlayerStatController {
     }
 
     return stats;
-  }
-
-  async import(request: Request, response: Response, next: NextFunction) {
-    Logger.info("Importing player stats");
-    const getData = await google.googleSheets.spreadsheets.values.get({
-      auth: google.authGoogle,
-      spreadsheetId: google.sheetID,
-      range: `ServerData!A2:M`,
-    });
-    const playerStats = getData.data.values;
-    let counter = 0;
-
-    await PlayerStat.clear();
-    for (const s of playerStats) {
-      if (!s[1]) break;
-
-      const dateSplit = s[0].split(".");
-      const isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
-
-      const stat = new PlayerStat();
-      stat.date = new Date(isoDate);
-      stat.max = JSON.stringify({
-        total: parseInt(s[1]),
-        lobby: parseInt(s[2]),
-        building: parseInt(s[3]),
-        buildteams: parseInt(s[4]),
-        other: parseInt(s[5]),
-      });
-      stat.avg = JSON.stringify({
-        total: parseInt(s[7]),
-        lobby: parseInt(s[8]),
-        building: parseInt(s[9]),
-        buildteams: parseInt(s[10]),
-        other: parseInt(s[11]),
-        counter: parseInt(s[12]),
-      });
-
-      await stat.save();
-      counter++;
-    }
-
-    return responses.success({
-      message: `Player Stats of ${counter} days imported`,
-    });
   }
 }

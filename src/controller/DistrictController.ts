@@ -1,12 +1,8 @@
-import * as google from "../utils/SheetUtils";
-import * as index from "../index";
-
 import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
-import { statusToNumber } from "../utils/DistrictUtils";
 import { recalculateAll } from "../utils/ProgressCalculation";
 import responses from "../responses";
 
@@ -127,123 +123,5 @@ export class DistrictController {
   async sync(request: Request, response: Response, next: NextFunction) {
     await recalculateAll(request.params.district);
     return responses.success({ message: "Done" });
-  }
-
-  async import(request: Request, response: Response, next: NextFunction) {
-    const blocks = request.query.blocks;
-    const getData = await google.googleSheets.spreadsheets.values.get({
-      auth: google.authGoogle,
-      spreadsheetId: google.sheetID,
-      range: `New York City (Overview)!A5:H`,
-    });
-    const data = getData.data.values;
-    var districtCounter = 0;
-    var blocksCounter = 0;
-
-    District.clear();
-    District.query("ALTER TABLE districts AUTO_INCREMENT = 1");
-
-    if (blocks) {
-      Block.clear();
-      Block.query("ALTER TABLE blocks AUTO_INCREMENT = 1");
-    }
-
-    const boroughs = [];
-    var isBorough = true;
-    var currentParent = null;
-    var boroughCounter = -1;
-    for (const d of data) {
-      Logger.info(`Importing district ${d[1]}`);
-      if (d[1] === undefined || d[1] === null || d[1] === "") {
-        isBorough = false;
-        boroughCounter++;
-        continue;
-      }
-
-      let district = new District();
-      district.name = d[1];
-      district.status = statusToNumber(d[2]);
-      district.blocksDone = parseInt(d[3]);
-      district.blocksLeft = parseInt(d[4]);
-      district.progress = parseFloat(d[5].replace("%", "").replace(",", "."));
-      district.area = "[]";
-      district.image = "[]";
-
-      if (isBorough) {
-        district.parent = currentParent;
-      } else {
-        if (d[0] === "P") {
-          district.parent = boroughs[boroughCounter];
-        } else {
-          district.parent = currentParent;
-        }
-      }
-
-      const dateSplit = d[6].split(".");
-      if (dateSplit.length === 3) {
-        district.completionDate = new Date(
-          `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`
-        );
-      } else {
-        district.completionDate = null;
-      }
-
-      let parent = await district.save();
-
-      if (d[0] === "P") {
-        currentParent = parent.id;
-      } else {
-        if (isBorough) {
-          boroughs.push(parent.id);
-        } else {
-          const totalBlocks = parseInt(d[3]) + parseInt(d[4]);
-          if (blocks && totalBlocks > 0) {
-            const key = request.query.key || request.body.key;
-            await index.axios
-              .get(`http://localhost:8080/api/import/blocks/${d[1]}?key=${key}`)
-              .then(async (res) => {
-                if (!res.data.error) {
-                  blocksCounter += parseInt(
-                    res.data.message.replace(" Blocks imported", "")
-                  );
-                  Logger.info(`Blocks of ${d[1]} imported`);
-                } else {
-                  // No blocks found in sheet --> Create new blocks
-                  await index.axios
-                    .post(`http://localhost:8080/api/blocks/createmultiple`, {
-                      key: key,
-                      district: d[1],
-                      number: totalBlocks,
-                      done: d[2] === "Done",
-                    })
-                    .then((res) => {
-                      if (!res.data.error) {
-                        blocksCounter += parseInt(
-                          res.data.message.replace(" Blocks imported", "")
-                        );
-                        Logger.info(`Blocks of ${d[1]} imported`);
-                      } else {
-                        Logger.warn(`No data found for ${d[1]}`);
-                      }
-                    })
-                    .catch((error) => {
-                      Logger.warn(`Error occurred for district ${d[1]}`);
-                      Logger.warn(error);
-                    });
-                }
-              })
-              .catch((error) => {
-                Logger.warn(`Error occurred for district ${d[1]}`);
-                Logger.warn(error);
-              });
-          }
-        }
-      }
-      districtCounter++;
-    }
-
-    return responses.success({
-      message: `${districtCounter} Districts and ${blocksCounter} Blocks imported`,
-    });
   }
 }

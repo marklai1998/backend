@@ -1,5 +1,3 @@
-import * as google from "../utils/SheetUtils";
-
 import { NextFunction, Request, Response } from "express";
 
 import Logger from "../utils/Logger";
@@ -123,33 +121,5 @@ export class ProjectCountController {
     }
 
     return milestones;
-  }
-
-  async import(request: Request, response: Response, next: NextFunction) {
-    Logger.info("Importing project counts");
-    const getData = await google.googleSheets.spreadsheets.values.get({
-      auth: google.authGoogle,
-      spreadsheetId: google.sheetID,
-      range: `DataNYC!A2:B`,
-    });
-    const projects = getData.data.values;
-    var counter = 0;
-
-    await ProjectCount.clear();
-    for (const p of projects) {
-      if (!p[1]) break;
-
-      const dateSplit = p[0].split(".");
-      const isoDate = `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}`;
-
-      const project = new ProjectCount();
-      project.date = new Date(isoDate);
-      project.projects = p[1];
-
-      await project.save();
-      counter++;
-    }
-
-    return responses.success({ message: `${counter} days imported` });
   }
 }
