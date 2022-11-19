@@ -7,10 +7,10 @@ import { AdminSetting } from "../entity/AdminSetting";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
-import { getManager } from "typeorm";
 import { insidePolygon } from "../utils/Polygon";
 import responses from "../responses";
 import { proxyStatus } from "../utils/ServerStatusTracker";
+import { AppDataSource } from "../data-sources";
 
 const cache = require("../cache");
 
@@ -222,7 +222,7 @@ export class GeneralController {
 
   async adminOverview(request: Request, respone: Response, next: NextFunction) {
     const backend_version = process.env.npm_package_version;
-    const manager = getManager();
+    const manager = AppDataSource.manager;
     // const ram = Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB";
     const ram = date.memoryUsage.ram.at(-1);
     const maxRam = Math.round(os.totalmem() / 1024 / 1024) + "MB";
@@ -286,7 +286,7 @@ export class GeneralController {
     const now = new Date().getTime();
     try {
       Logger.info("Executing admin query: " + request.body.query);
-      const manager = getManager();
+      const manager = AppDataSource.manager;
       const query = request.body.query || request.query.query;
       if (
         [
