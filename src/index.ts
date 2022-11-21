@@ -5,13 +5,12 @@ import * as date from "./utils/TimeUtils";
 import * as dbCache from "./utils/cache/DatabaseCache";
 import * as express from "express";
 import createRouter, { router } from "express-file-routing";
-import * as jwt from "./utils/JsonWebToken";
 import * as sockets from "./sockets/SocketManager";
 
 import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import { Request, Response } from "express";
 
-import { AppDataSource } from "./data-sources";
+import { AppDataSource, LocalAppDataSource } from "./data-sources";
 import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
@@ -23,6 +22,7 @@ import { connectToDatabases } from "./utils/DatabaseConnector";
 import responses from "./responses";
 import auth from "./middleware/auth";
 import response from "./middleware/response";
+import { hash } from "./utils/encryption/bcrypt";
 
 // Increase EventEmitter limit
 require("events").EventEmitter.prototype._maxListeners = 20;
@@ -32,14 +32,18 @@ var helmet = require("helmet");
 var fetch = require("node-fetch");
 const port = process.env.PORT || 8080;
 const productionMode = process.argv.slice(2)[0] === "--i";
+const localDatabase = process.argv.slice(2)[0] === "--local";
 const cache = require("./cache");
 
-Logger.debug("Connecting to main database...");
-AppDataSource.initialize()
+Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
+(localDatabase ? LocalAppDataSource : AppDataSource)
+  .initialize()
   .then(async (connection) => {
-    Logger.debug("Connected to main database");
+    Logger.debug(`Connected to ${localDatabase ? "local" : "main"} database`);
 
-    connectToDatabases();
+    if (!localDatabase) {
+      connectToDatabases();
+    }
 
     // create express app
     const app = express();
@@ -152,7 +156,7 @@ AppDataSource.initialize()
             "https://cdn.discordapp.com/attachments/714797791913705472/831352332163350603/2021-04-12_19.11.21.png",
           picture:
             "https://i.picsum.photos/id/568/200/300.jpg?hmac=vQmkZRQt1uS-LMo2VtIQ7fn08mmx8Fz3Yy3lql5wkzM",
-          password: jwt.generateToken("Progress2022", jwt.secretInternal),
+          password: await hash("Progress2022"),
           apikey: generateUUID(),
         })
       );

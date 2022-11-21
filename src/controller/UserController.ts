@@ -10,46 +10,39 @@ import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 import { Registration } from "../entity/Registration";
 import * as dbCache from "../utils/cache/DatabaseCache";
 import responses from "../responses";
+import { check, hash } from "../utils/encryption/bcrypt";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
+    if (!request.body.username || !request.body.password) {
+      return responses.error({
+        message: "Specify username and password",
+        code: 400,
+      });
+    }
     const user = await User.findOneBy({
       username: request.body.username,
     });
 
     if (!user) {
       return responses.error({
-        message: "There is no user matching this username",
+        message: "Invalid username or password",
         code: 404,
       });
     }
 
-    return jwt.jwt.verify(
-      user.password,
-      jwt.secretInternal,
-      function (err, decoded) {
-        Logger.warn("Login error: ");
-        Logger.warn(err);
-        if (err) {
-          return responses.error({ message: "Invalid Password", code: 400 });
-        } else {
-          if (decoded.data === request.body.password) {
-            Logger.info(`User logged in (${user.username})`);
-            return responses.success({
-              message: "Login successful",
-              data: {
-                user: jwt.generateToken(
-                  JSON.stringify(user),
-                  jwt.secretUserData
-                ),
-              },
-            });
-          } else {
-            return responses.error({ message: "Invalid Password", code: 400 });
-          }
-        }
-      }
-    );
+    if (await check(request.body.password, user.password)) {
+      return responses.success({
+        message: "Login successful",
+        data: {
+          user: jwt.generateToken(JSON.stringify(user), jwt.secretUserData),
+        },
+      });
+    }
+    return responses.error({
+      message: "Invalid username or password",
+      code: 404,
+    });
   }
 
   async register(request: Request, response: Response, next: NextFunction) {
@@ -78,12 +71,7 @@ export class UserController {
     registration = new Registration();
     registration.username = request.body.username;
     registration.discord = request.body.discord;
-    registration.password = jwt.jwt.sign(
-      {
-        data: jwt.jwt.verify(request.body.password, jwt.secretUserData),
-      },
-      jwt.secretInternal
-    );
+    registration.password = await hash(request.body.password);
     registration.verification = generateVerificationKey();
 
     const res = await responses.validate(
@@ -353,7 +341,7 @@ export class UserController {
     user.picture = "";
     user.image = "";
     user.settings = "{}";
-    user.password = jwt.generateToken(ssoPw, jwt.secretInternal);
+    user.password = await hash(ssoPw);
     user.apikey = generateUUID();
     Logger.info(
       `User created (${user.username}, Permission: ${user.permission})`
@@ -489,12 +477,7 @@ export class UserController {
               key.toLocaleUpperCase() +
               ")"
           );
-          user[key] = jwt.jwt.sign(
-            {
-              data: jwt.jwt.verify(value, jwt.secretUserData),
-            },
-            jwt.secretInternal
-          );
+          user[key] = await hash(value as string);
         }
         counter++;
         user.save();

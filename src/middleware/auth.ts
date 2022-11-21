@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-const bcrypt = require("bcrypt");
 
 import { User } from "../entity/User";
 import responses from "../responses";
-import jwt, { AUTH_SECRET } from "../utils/jwt";
+import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
+import { check } from "../utils/encryption/bcrypt";
 
 export async function loginUser(username: string, password: string) {
   const user = await User.findOneBy({
@@ -22,14 +22,14 @@ export async function loginUser(username: string, password: string) {
       message: "Login successful",
       code: 200,
       data: {
-        token: jwt.sign({ uid: user.uid }, AUTH_SECRET, { expiresIn: "1d" }),
+        token: jwt.sign({ uid: user.uid }, AUTH_SECRET, { expiresIn: "30d" }),
       },
     });
   }
-}
-
-async function check(toCheck: string, hash: string) {
-  return bcrypt.compare(toCheck, hash);
+  return responses.error({
+    message: "Invalid username or password",
+    code: 401,
+  });
 }
 
 async function auth(req: Request, res: Response, next: NextFunction) {
