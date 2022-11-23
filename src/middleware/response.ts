@@ -1,20 +1,19 @@
+"use strict";
 import { Request, Response } from "express";
 
 const mung = require("express-mung");
 
 export function generateResponse(body: any, req: Request, res: Response) {
-  const isError = !res.statusCode.toString().startsWith("2");
-  body.error = undefined;
-
+  const isError = body.code && !body.code.toString().startsWith("2");
   if (isError) {
-    body.code = res.statusCode;
+    res.status(body.code);
   }
 
   return {
     path: req.path,
     method: req.method,
-    result: isError ? undefined : body,
-    error: isError ? body : undefined,
+    data: isError ? undefined : body,
+    error: isError ? body.error : undefined,
   };
 }
 

@@ -1,13 +1,19 @@
 import { BaseEntity } from "typeorm";
+import { Block } from "../../entity/Block";
+import { District } from "../../entity/District";
 import { User } from "../../entity/User";
 import Logger from "../Logger";
 
 type DBCache = {
   users: User[];
+  districts: District[];
+  blocks: Block[];
 };
 
 const DatabaseCache: DBCache = {
   users: null,
+  districts: null,
+  blocks: null,
 };
 
 async function loadAll(): Promise<void> {
@@ -21,6 +27,10 @@ async function loadAll(): Promise<void> {
 async function reload(updatedObject: BaseEntity): Promise<void> {
   if (updatedObject instanceof User) {
     reloadFromDatabase("users");
+  } else if (updatedObject instanceof District) {
+    reloadFromDatabase("districts");
+  } else if (updatedObject instanceof Block) {
+    reloadFromDatabase("blocks");
   }
 }
 async function reloadFromDatabase(type: string): Promise<void> {
@@ -28,6 +38,12 @@ async function reloadFromDatabase(type: string): Promise<void> {
     // TODO: Add other tables
     case "users":
       DatabaseCache.users = await User.find();
+      break;
+    case "districts":
+      DatabaseCache.districts = await District.find();
+      break;
+    case "blocks":
+      DatabaseCache.blocks = await Block.find();
       break;
   }
 }
