@@ -121,7 +121,7 @@ export class DistrictController {
   }
 
   async sync(request: Request, response: Response, next: NextFunction) {
-    await recalculateAll(request.params.district);
+    await recalculateAll(parseInt(request.params.district));
     return responses.success({ message: "Done" });
   }
 }

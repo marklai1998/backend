@@ -4,13 +4,13 @@ import * as minecraftUtil from "minecraft-server-util";
 import { NextFunction, Request, Response } from "express";
 
 import { AdminSetting } from "../entity/AdminSetting";
+import { AppDataSource } from "../data-sources";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { insidePolygon } from "../utils/Polygon";
-import responses from "../responses";
 import { proxyStatus } from "../utils/ServerStatusTracker";
-import { AppDataSource } from "../data-sources";
+import responses from "../responses";
 
 const cache = require("../cache");
 
@@ -19,7 +19,7 @@ const ormconfig = require("../../ormconfig.json");
 
 export class GeneralController {
   async pingNetwork(request: Request, response: Response, next: NextFunction) {
-    const type = request.query.type;
+    const type = request.query.type.toString();
 
     if (
       type &&

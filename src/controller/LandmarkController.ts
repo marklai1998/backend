@@ -95,7 +95,9 @@ export class LandmarkController {
 
   async getOne(request: Request, response: Response, next: NextFunction) {
     const usersPromise = User.find();
-    const landmarkPromise = Landmark.findOneBy({ id: request.params.id });
+    const landmarkPromise = Landmark.findOneBy({
+      id: parseInt(request.params.id),
+    });
     const [users, landmark] = await Promise.all([
       usersPromise,
       landmarkPromise,

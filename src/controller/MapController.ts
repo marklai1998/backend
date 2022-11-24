@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from "express";
+
+import Logger from "../utils/Logger";
 import { Map } from "../entity/Map";
 import { User } from "../entity/User";
 import { generateUUID } from "../index";
 import responses from "../responses";
 import { updateJson } from "../utils/JsonUtils";
-import Logger from "../utils/Logger";
 
 export class MapController {
   async create(request: Request, response: Response, next: NextFunction) {
@@ -33,7 +34,7 @@ export class MapController {
       return responses.error({ message: "Specify id or uuid", code: 400 });
     }
     const maps = await Map.find();
-    const map = maps.find((m: Map) => m.id == id || m.uuid === id);
+    const map = maps.find((m: Map) => m.id == parseInt(id) || m.uuid === id);
 
     if (!map) {
       return responses.error({ message: "No map found", code: 404 });

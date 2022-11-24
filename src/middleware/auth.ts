@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
+import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
 
 import { User } from "../entity/User";
-import responses from "../responses";
-import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
 import { check } from "../utils/encryption/bcrypt";
+import responses from "../responses";
 
 export async function loginUser(username: string, password: string) {
   const user = await User.findOneBy({
@@ -57,7 +57,9 @@ async function auth(req: Request, res: Response, next: NextFunction) {
     }
     const user = await User.findOneBy({ uid: auth.uid });
 
+    // @ts-ignore
     req.user = user;
+    // @ts-ignore
     req.token = { raw: token, ...auth };
     return next();
   });

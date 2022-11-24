@@ -4,25 +4,25 @@ import * as bodyParser from "body-parser";
 import * as date from "./utils/TimeUtils";
 import * as dbCache from "./utils/cache/DatabaseCache";
 import * as express from "express";
-import createRouter, { router } from "express-file-routing";
 import * as sockets from "./sockets/SocketManager";
 
+import { AppDataSource, LocalAppDataSource } from "./data-sources";
 import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import { Request, Response } from "express";
+import createRouter, { router } from "express-file-routing";
 
-import { AppDataSource, LocalAppDataSource } from "./data-sources";
 import { AdminSetting } from "./entity/AdminSetting";
 import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
 import { Routes } from "./routes";
 import { User } from "./entity/User";
-import { createServer } from "http";
-import { v4 as uuidv4 } from "uuid";
-import { connectToDatabases } from "./utils/DatabaseConnector";
-import responses from "./responses";
 import auth from "./middleware/auth";
-import response from "./middleware/response";
+import { connectToDatabases } from "./utils/DatabaseConnector";
+import { createServer } from "http";
 import { hash } from "./utils/encryption/bcrypt";
+import response from "./middleware/response";
+import responses from "./responses";
+import { v4 as uuidv4 } from "uuid";
 
 // Increase EventEmitter limit
 require("events").EventEmitter.prototype._maxListeners = 20;
@@ -54,6 +54,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
     app.use("/v1/", (req, res, next) => {
       // Logger (TODO: enable for all routes if other routes are deleted)
       Logger.http(
+        // @ts-ignore
         `${req.method} ${req.path}${req.user ? ` (${req.user.username})` : ""}`
       );
       next();

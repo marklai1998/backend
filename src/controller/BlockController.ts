@@ -1,3 +1,5 @@
+import * as progress from "../utils/ProgressCalculation";
+
 import { NextFunction, Request, Response } from "express";
 
 import { Block } from "../entity/Block";
@@ -5,7 +7,6 @@ import { District } from "../entity/District";
 import Logger from "../utils/Logger";
 import { User } from "../entity/User";
 import { getClaims } from "../utils/DistrictUtils";
-import * as progress from "../utils/ProgressCalculation";
 import responses from "../responses";
 
 export class BlockController {
@@ -142,7 +143,7 @@ export class BlockController {
   async getOne(request: Request, response: Response, next: NextFunction) {
     const block = await getBlock(
       request.params.district,
-      request.params.blockID
+      parseInt(request.params.blockID)
     );
 
     if (!block) {
