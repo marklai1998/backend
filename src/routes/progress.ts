@@ -9,7 +9,10 @@ export const get = async (req: Request, res: Response) => {
   const districts = await District.find();
   const nyc = districts.find((d) => d.name == "New York City");
 
-  const playersRw = await PlayerStat.find({ take: 30, order: { date: "ASC" } });
+  const playersRw = await PlayerStat.find({
+    take: 30,
+    order: { date: "DESC" },
+  });
   var players = [];
   for (const s of playersRw) {
     const date = new Date(s.date);
@@ -38,7 +41,7 @@ export const get = async (req: Request, res: Response) => {
 
   const projectsRw = await ProjectCount.find({
     take: 30,
-    order: { date: "ASC" },
+    order: { date: "DESC" },
   });
   var projects = [];
   for (const p of projectsRw) {
