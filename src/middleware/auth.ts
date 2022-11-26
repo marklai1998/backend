@@ -23,6 +23,7 @@ export async function loginUser(username: string, password: string) {
       code: 200,
       data: {
         token: jwt.sign({ uid: user.uid }, AUTH_SECRET, { expiresIn: "30d" }),
+        ...user,
       },
     });
   }
