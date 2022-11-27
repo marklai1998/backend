@@ -34,36 +34,66 @@ export async function loginUser(username: string, password: string) {
 }
 
 async function auth(req: Request, res: Response, next: NextFunction) {
-  const token = req.headers.authorization;
+  const token = req.headers.authorization.split(" ");
 
-  if (token === null) {
-    res
+  //@ts-ignore
+  req.token = token[1];
+
+  if (token === null || token[0] != "Bearer") {
+    /*res
       .status(401)
-      .send(responses.error({ message: "Unauthorized", code: 401 }));
-    return;
+      .send(responses.error({ message: "Unauthorized", code: 401 }));*/
+    //@ts-ignore
+    req.user = {};
+    return next();
   }
 
-  jwt.verify(token, AUTH_SECRET, async (err: any, auth: any) => {
+  jwt.verify(token[1], AUTH_SECRET, async (err: any, auth: any) => {
     if (err) {
       if (err.name === "TokenExpiredError") {
         res
           .status(403)
           .send(responses.error({ message: "Token expired", code: 403 }));
-        return;
+        return next();
       }
-      res
+      /*res
         .status(403)
-        .send(responses.error({ message: "Forbidden", code: 403 }));
-      return;
+        .send(responses.error({ message: "Forbidden", code: 403 }));*/
+      //@ts-ignore
+      req.user = {};
+      return next();
     }
     const user = await User.findOneBy({ uid: auth.uid });
 
     // @ts-ignore
     req.user = user;
-    // @ts-ignore
-    req.token = { raw: token, ...auth };
     return next();
   });
+}
+
+export async function allowed(
+  permission: number,
+  req: Request,
+  res: Response,
+  callback: () => void
+) {
+  if (permission <= 0) {
+    callback();
+    return;
+  }
+  //@ts-ignore
+  const user = req.user;
+
+  if (!user) {
+    responses.error({ message: "Unauthorized", code: 401 });
+    return;
+  }
+
+  if (permission <= user.permission) {
+    callback();
+    return;
+  }
+  res.send(responses.error({ message: "Forbidden", code: 403 }));
 }
 
 export default auth;
