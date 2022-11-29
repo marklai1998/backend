@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
 
-import { District } from "../entity/District";
-import { DistrictController } from "../controller/DistrictController";
-import { PlayerStat } from "../entity/PlayerStat";
-import { ProjectCount } from "../entity/ProjectCount";
+import { District } from "../../entity/District";
+import { PlayerStat } from "../../entity/PlayerStat";
+import { ProjectCount } from "../../entity/ProjectCount";
 
 export const get = async (req: Request, res: Response) => {
   const districts = await District.find();
