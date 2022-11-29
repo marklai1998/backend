@@ -5,10 +5,8 @@ import { Request, Response } from "express";
 const mung = require("express-mung");
 
 export function generateResponse(body: any, req: Request, res: Response) {
-  const isError = body.code && !body.code.toString().startsWith("2");
-  if (isError) {
-    res.status(body.code);
-  }
+  const isError = !res.statusCode.toString().startsWith("2");
+
   if (body.secret) body.secret = "****";
   if (body.password) body.password = "****";
 
@@ -20,4 +18,4 @@ export function generateResponse(body: any, req: Request, res: Response) {
   };
 }
 
-export default mung.json(generateResponse);
+export default mung.json(generateResponse, { mungError: true });
