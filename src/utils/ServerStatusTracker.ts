@@ -93,7 +93,10 @@ export async function pingNetworkServers() {
           (s: ServerStatus) => s.id === serverNames[i]
         );
 
-        if (!oldValue) continue;
+        if (!oldValue) {
+          Logger.debug(`Skipping server ${serverNames[i]}! No oldValue found`);
+          continue;
+        }
 
         if (res.status === "rejected") {
           if (Object.keys(nycServerMapping).includes(serverNames[i])) {
