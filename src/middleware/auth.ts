@@ -34,12 +34,9 @@ export async function loginUser(username: string, password: string) {
 }
 
 async function auth(req: Request, res: Response, next: NextFunction) {
-  const token = req.headers.authorization.split(" ");
+  const token = req.headers.authorization?.split(" ");
 
-  //@ts-ignore
-  req.token = token[1];
-
-  if (token === null || token[0] != "Bearer") {
+  if (!token || token[0] != "Bearer") {
     /*res
       .status(401)
       .send(responses.error({ message: "Unauthorized", code: 401 }));*/
@@ -47,6 +44,9 @@ async function auth(req: Request, res: Response, next: NextFunction) {
     req.user = {};
     return next();
   }
+
+  //@ts-ignore
+  req.token = token[1];
 
   jwt.verify(token[1], AUTH_SECRET, async (err: any, auth: any) => {
     if (err) {
