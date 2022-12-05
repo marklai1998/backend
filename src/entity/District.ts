@@ -5,6 +5,7 @@ import {
   getBlocksOfDistrict,
 } from "../utils/DistrictUtils";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
 import Logger from "../utils/Logger";
 import { dynamicSort } from "../utils/JsonUtils";
 import responses from "../responses";
@@ -41,10 +42,10 @@ export class District extends BaseEntity {
   @Column({ nullable: true })
   completionDate: Date;
 
-  @Column("text", { nullable: true })
+  @Column("text", { default: "[]" })
   image: string;
 
-  @Column("text" /*{ default: "[]" -}*/)
+  @Column("text", { default: "[]" })
   area: string;
 
   @Column({ nullable: true })
@@ -110,7 +111,7 @@ export class District extends BaseEntity {
   }
 
   async getBlocks(): Promise<object[]> {
-    const blocksRaw = await getBlocksOfDistrict(this);
+    const blocksRaw = dbCache.find("blocks", { district: this.id });
 
     const blocks = [];
     for (const block of blocksRaw) {
@@ -122,6 +123,7 @@ export class District extends BaseEntity {
   edit(body: object): object {
     let counter = 0;
     for (const [key, value] of Object.entries(body)) {
+      if (key === "id") continue;
       Logger.info(
         "Editing district " +
           this.name +
