@@ -1,9 +1,10 @@
-import { Request, Response } from "express";
-import { allowed } from "../../../middleware/auth";
-import { Permissions } from "../../../routes";
-
 import * as dbCache from "../../../utils/cache/DatabaseCache";
+
+import { Request, Response } from "express";
+
 import Logger from "../../../utils/Logger";
+import { Permissions } from "../../../routes";
+import { allowed } from "../../../middleware/auth";
 
 export const get = async (req: Request, res: Response) => {
   allowed(Permissions.default, req, res, async () => {
@@ -21,7 +22,7 @@ export const del = async (req: Request, res: Response) => {
     if (!req.params.id) {
       return res.status(400).send({ error: "Specify an id" });
     }
-    if (req.params.id === 1) {
+    if (req.params.id == "1") {
       return res
         .status(400)
         .send({ error: "You cannot delete initial district" });

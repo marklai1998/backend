@@ -59,6 +59,9 @@ export const get = async (req: Request, res: Response) => {
     districts: {
       count: districts.length,
       boroughs: districts.filter((d: any) => d.parent == 1).length,
+      progress: districts
+        .filter((d: any) => d.parent == 1)
+        .map((d) => ({ name: d.name, progress: d.progress })),
     },
     players,
     projects,
