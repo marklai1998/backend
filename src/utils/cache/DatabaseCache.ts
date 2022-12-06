@@ -27,7 +27,11 @@ async function loadAll(): Promise<void> {
   await Promise.allSettled(promises);
   Logger.debug("Updated cache from Database");
 }
-async function reload(updatedObject: BaseEntity): Promise<void> {
+async function reload(updatedObject: BaseEntity | string): Promise<void> {
+  if (typeof updatedObject === "string") {
+    reloadFromDatabase(updatedObject);
+    return;
+  }
   if (updatedObject instanceof User) {
     reloadFromDatabase("users");
   } else if (updatedObject instanceof District) {

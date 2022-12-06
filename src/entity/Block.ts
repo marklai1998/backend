@@ -72,7 +72,7 @@ export class Block extends BaseEntity {
   @IsOptional()
   completionDate: Date;
 
-  @Column("text" /*{ default: "[]" }*/)
+  @Column("text", { default: "[]" })
   area: string;
 
   toJson({ showDistrict = true }: { showDistrict?: boolean } = {}): object {
