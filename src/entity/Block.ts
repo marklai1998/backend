@@ -10,7 +10,6 @@ import {
 import {
   calculateAreaOfLatLong,
   calculateCenterOfLatLong,
-  districtIdToName,
 } from "../utils/DistrictUtils";
 import {
   recalculateDistrictBlocksDoneLeft,
@@ -22,6 +21,7 @@ import {
   sendOverview,
 } from "../utils/DiscordMessageSender";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
 import { District } from "./District";
 import { Landmark } from "./Landmark";
 import Logger from "../utils/Logger";
@@ -75,16 +75,14 @@ export class Block extends BaseEntity {
   @Column("text" /*{ default: "[]" }*/)
   area: string;
 
-  async toJson({
-    showDistrict = true,
-  }: { showDistrict?: boolean } = {}): Promise<object> {
+  toJson({ showDistrict = true }: { showDistrict?: boolean } = {}): object {
     return {
       uid: this.uid,
       id: this.id,
       district: showDistrict
         ? {
             id: this.district,
-            name: await districtIdToName(this.district),
+            name: dbCache.findOne("districts", { id: this.district }).name,
           }
         : undefined,
       status: this.status,
@@ -92,7 +90,9 @@ export class Block extends BaseEntity {
       details: this.details,
       builders: this.builder ? this.builder.split(",") : [],
       completionDate: this.completionDate,
-      landmarks: await this.getLandmarks(),
+      landmarks: dbCache
+        .find("landmarks", { blockID: this.uid })
+        .map((landmark: Landmark) => landmark.toJson()),
       center: this.getLocationCenter(),
       size: this.getAreaSize(),
       area: JSON.parse(this.area),
@@ -260,12 +260,6 @@ export class Block extends BaseEntity {
 
     this.area = JSON.stringify(coordsArray);
     return responses.validate(this, "Location removed");
-  }
-
-  async getLandmarks() {
-    const landmarksRaw = await Landmark.findBy({ blockID: this.uid });
-
-    return landmarksRaw.map((l: any) => l.toJson());
   }
 
   getLocationCenter() {

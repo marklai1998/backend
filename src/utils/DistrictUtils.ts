@@ -39,13 +39,13 @@ export async function getClaims(user: string) {
     });
     if (index !== -1) {
       json.claims.districts[index].blocks.push(
-        await block.toJson({ showDistrict: false })
+        block.toJson({ showDistrict: false })
       );
     } else {
       json.claims.districts.push({
         id: block.district,
         name: districtName,
-        blocks: [await block.toJson({ showDistrict: false })],
+        blocks: [block.toJson({ showDistrict: false })],
       });
     }
   }

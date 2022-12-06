@@ -164,7 +164,7 @@ export class BlockController {
     for (const block of blocksRaw) {
       blocks.push(block.toJson());
     }
-    return await Promise.all(blocks);
+    return blocks;
   }
 
   async getEvery(request: Request, response: Response, next: NextFunction) {
