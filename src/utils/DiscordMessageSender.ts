@@ -6,6 +6,7 @@ import { District } from "../entity/District";
 import { ProjectCount } from "../entity/ProjectCount";
 import { AdminSetting } from "../entity/AdminSetting";
 import { User } from "../entity/User";
+import { productionMode } from "..";
 
 const cache = require("../cache");
 
@@ -178,7 +179,7 @@ export async function sendDistrictChange({
   newValue?: string | number | boolean;
   user?: User;
 } = {}) {
-  if (block === null) return;
+  if (block === null || !productionMode) return;
 
   let color = Colors.MineFact_Green;
   switch (block.status) {

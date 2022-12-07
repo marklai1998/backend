@@ -38,6 +38,6 @@ export const del = (req: Request, res: Response) => {
     dbCache.reload("blocks");
     recalculateAll(block.district);
 
-    return res.send({ message: "Block deleted" });
+    return res.send({ message: "Block deleted", block: block.toJson() });
   });
 };

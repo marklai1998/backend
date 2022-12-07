@@ -223,7 +223,7 @@ export function generateUUID() {
   return uuidv4();
 }
 
-export { fetch, port };
+export { fetch, port, productionMode };
 
 function trackResponseTime(route: string, time: number) {
   const response_times = cache.get("response_time");

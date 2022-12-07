@@ -1,4 +1,5 @@
 import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import { productionMode } from "..";
 import responses from "../responses";
 
 import { User } from "./User";
@@ -40,6 +41,8 @@ export function log({
   oldValue: any;
   newValue: any;
 }) {
+  if (!productionMode) return;
+
   const log = new Log();
 
   log.date = new Date();
