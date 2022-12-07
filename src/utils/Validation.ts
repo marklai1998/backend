@@ -11,7 +11,13 @@ export async function validate(
     successMessage = undefined,
     successData = undefined,
     updateCache = false,
-  }: { successMessage?: string; successData?: any; updateCache?: boolean }
+    onSuccess = undefined,
+  }: {
+    successMessage?: string;
+    successData?: any;
+    updateCache?: boolean;
+    onSuccess?: Function;
+  }
 ) {
   const errors = await val(object);
 
@@ -22,6 +28,9 @@ export async function validate(
   }
 
   await object.save();
+  if (onSuccess) {
+    await onSuccess();
+  }
 
   if (updateCache) {
     dbCache.reload(object);

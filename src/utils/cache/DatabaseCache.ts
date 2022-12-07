@@ -27,7 +27,11 @@ async function loadAll(): Promise<void> {
   await Promise.allSettled(promises);
   Logger.debug("Updated cache from Database");
 }
-async function reload(updatedObject: BaseEntity): Promise<void> {
+async function reload(updatedObject: BaseEntity | string): Promise<void> {
+  if (typeof updatedObject === "string") {
+    reloadFromDatabase(updatedObject);
+    return;
+  }
   if (updatedObject instanceof User) {
     reloadFromDatabase("users");
   } else if (updatedObject instanceof District) {
@@ -62,6 +66,27 @@ function findOne(type: string, conditions?: any) {
 function find(type: string, conditions?: any) {
   return search(type, conditions, false);
 }
+async function update(entity: BaseEntity, updates: any) {
+  const { id, ...rest } = updates;
+
+  const changedValues = {};
+  Object.keys(rest).forEach((key) => {
+    if (!(key in entity)) {
+      delete rest[key];
+    } else {
+      if (entity[key] !== rest[key]) {
+        changedValues[key] = {
+          oldValue: entity[key],
+          newValue: updates[key],
+        };
+      }
+    }
+  });
+
+  const updated = Object.assign(entity, rest);
+  await updated.save();
+  return { block: await updated.toJson(), changedValues };
+}
 
 function search(type: string, conditions: any, onlyOne: boolean) {
   const res = [];
@@ -85,4 +110,4 @@ function search(type: string, conditions: any, onlyOne: boolean) {
   return onlyOne ? res[0] : res;
 }
 
-export { loadAll, reload, findOne, find };
+export { loadAll, reload, findOne, find, update };

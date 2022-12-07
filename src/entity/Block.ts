@@ -72,7 +72,7 @@ export class Block extends BaseEntity {
   @IsOptional()
   completionDate: Date;
 
-  @Column("text" /*{ default: "[]" }*/)
+  @Column("text", { default: "[]" })
   area: string;
 
   toJson({ showDistrict = true }: { showDistrict?: boolean } = {}): object {
@@ -280,7 +280,10 @@ export class Block extends BaseEntity {
   }
 }
 
-async function setStatus(block: Block): Promise<number> {
+export async function setStatus(
+  block: Block,
+  returnNewStatus?: boolean
+): Promise<number> {
   const oldStatus = block.status;
   let changed = false;
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
@@ -396,10 +399,10 @@ async function setStatus(block: Block): Promise<number> {
       }
     }
   }
-  return changed ? oldStatus : -1;
+  return changed ? (returnNewStatus ? block.status : oldStatus) : -1;
 }
 
-async function update({
+export async function update({
   block = null,
   successMessage = null,
   oldStatus = -1,

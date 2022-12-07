@@ -2,6 +2,7 @@ import * as progress from "../utils/ProgressCalculation";
 
 import { NextFunction, Request, Response } from "express";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
@@ -41,6 +42,7 @@ export class BlockController {
 
     const res = await responses.validate(block, "Block created");
     if (!res.error) {
+      dbCache.reload(block);
       progress.recalculateAll(district.id);
     }
 
@@ -100,6 +102,7 @@ export class BlockController {
       Logger.info(`Creating block ${block.uid}`);
     }
 
+    dbCache.reload("blocks");
     progress.recalculateAll(district.id);
 
     return responses.success({ message: `${counter} Blocks created` });
@@ -135,6 +138,7 @@ export class BlockController {
       `Deleting block ${block.uid} (ID: ${block.id}, District: ${block.district})`
     );
 
+    dbCache.reload("blocks");
     progress.recalculateAll(district.id);
 
     return responses.success({ message: "Block deleted" });
