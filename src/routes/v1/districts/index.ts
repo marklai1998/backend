@@ -7,7 +7,7 @@ import { District } from "../../../entity/District";
 import Logger from "../../../utils/Logger";
 import { validate } from "../../../utils/Validation";
 
-export const get = async (req: Request, res: Response) => {
+export const get = (req: Request, res: Response) => {
   //@ts-ignore
   allowed(Permissions.default, req, res, async () => {
     const result = dbCache.find("districts");
@@ -23,7 +23,7 @@ export const get = async (req: Request, res: Response) => {
   });
 };
 
-export const post = async (req: Request, res: Response) => {
+export const post = (req: Request, res: Response) => {
   allowed(Permissions.moderator, req, res, async () => {
     if (!req.body.name) {
       return res.status(400).send({ error: "Specify a name" });
@@ -55,20 +55,25 @@ export const post = async (req: Request, res: Response) => {
   });
 };
 
-export const put = async (req: Request, res: Response) => {
-  if (!req.body.id) {
-    return res.status(400).send({ error: "Specify an id" });
-  }
+export const put = (req: Request, res: Response) => {
+  allowed(Permissions.moderator, req, res, async () => {
+    if (!req.body.id) {
+      return res.status(400).send({ error: "Specify an id" });
+    }
 
-  const district = dbCache.findOne("districts", { id: req.body.id });
-  if (!district) {
-    return res.status(404).send({ error: "District not found" });
-  }
+    const district = dbCache.findOne("districts", { id: req.body.id });
+    if (!district) {
+      return res.status(404).send({ error: "District not found" });
+    }
 
-  const validation = await district.edit(req.body);
+    const ret = await dbCache.update(district, req.body, {
+      showDetails: false,
+    });
 
-  if (validation.error) {
-    return res.status(validation.code).send({ error: validation.message });
-  }
-  return res.send({ message: validation.message });
+    if (ret.error) {
+      return res.status(400).send({ error: ret.error });
+    }
+
+    return res.send(ret);
+  });
 };

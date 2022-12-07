@@ -77,6 +77,10 @@ export const put = (req: Request, res: Response) => {
 
     const ret = await dbCache.update(block, req.body);
 
+    if (ret.error) {
+      return res.status(400).send({ error: ret.error });
+    }
+
     // Update Status
     const newStatus = await setStatus(block, true);
     if (oldStatus !== newStatus) {

@@ -1,3 +1,4 @@
+import { validate } from "class-validator";
 import { BaseEntity } from "typeorm";
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
@@ -66,7 +67,7 @@ function findOne(type: string, conditions?: any) {
 function find(type: string, conditions?: any) {
   return search(type, conditions, false);
 }
-async function update(entity: BaseEntity, updates: any) {
+async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
   const { id, ...rest } = updates;
 
   const changedValues = {};
@@ -84,8 +85,21 @@ async function update(entity: BaseEntity, updates: any) {
   });
 
   const updated = Object.assign(entity, rest);
+
+  const errors = await validate(updated);
+  if (errors.length > 0) {
+    return {
+      error: Object.values(errors[0].constraints)[0],
+    };
+  }
+
   await updated.save();
-  return { block: await updated.toJson(), changedValues };
+  return {
+    [updated.constructor.name.toLowerCase()]: await updated.toJson(
+      toJsonParams
+    ),
+    changedValues,
+  };
 }
 
 function search(type: string, conditions: any, onlyOne: boolean) {
