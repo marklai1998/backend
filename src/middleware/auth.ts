@@ -1,14 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
 
-import { User } from "../entity/User";
+import * as dbCache from "../utils/cache/DatabaseCache";
 import { check } from "../utils/encryption/bcrypt";
 import responses from "../responses";
 
 export async function loginUser(username: string, password: string) {
-  const user = await User.findOneBy({
-    username: username,
-  });
+  const user = dbCache.findOne("users", { username: username });
 
   if (!user) {
     return responses.error({
@@ -23,7 +21,7 @@ export async function loginUser(username: string, password: string) {
       code: 200,
       data: {
         token: jwt.sign({ uid: user.uid }, AUTH_SECRET, { expiresIn: "30d" }),
-        ...user,
+        user: user.toJson({ hasPermission: true }),
       },
     });
   }
@@ -63,7 +61,7 @@ async function auth(req: Request, res: Response, next: NextFunction) {
       req.user = {};
       return next();
     }
-    const user = await User.findOneBy({ uid: auth.uid });
+    const user = dbCache.findOne("users", { uid: auth.uid });
 
     // @ts-ignore
     req.user = user;
