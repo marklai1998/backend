@@ -6,7 +6,11 @@ import { createMissingProjectEntries } from "../entity/ProjectCount";
 import { sendOverview } from "./DiscordMessageSender";
 import { getCpuUsage } from "./CpuUsage";
 import { pingNetworkServers, proxyStatus } from "./ServerStatusTracker";
-import { DATABASES } from "./DatabaseConnector";
+import {
+  connectToDatabase,
+  DATABASES,
+  DATABASE_NAMES,
+} from "./DatabaseConnector";
 
 const cache = require("../cache");
 
@@ -218,7 +222,16 @@ async function trackProjectCount() {
     await DATABASES.MineFactServernetzwerk.query(
       "SELECT * FROM `BuildingServers`",
       async (error, results, fields) => {
-        if (error) Logger.error(error);
+        if (error) {
+          Logger.error(error);
+
+          // Reconnect on fatal error
+          if (error.fatal) {
+            connectToDatabase(DATABASE_NAMES.minefact);
+          }
+          return;
+        }
+
         if (!results) {
           Logger.error(
             "Error occurred while getting data from BuildingServers table"

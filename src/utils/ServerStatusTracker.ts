@@ -2,7 +2,11 @@ import * as minecraftUtil from "minecraft-server-util";
 
 import { Colors, sendWebhook } from "./DiscordMessageSender";
 
-import { DATABASES } from "./DatabaseConnector";
+import {
+  connectToDatabase,
+  DATABASES,
+  DATABASE_NAMES,
+} from "./DatabaseConnector";
 import Logger from "./Logger";
 import { ServerStatus } from "../entity/ServerStatus";
 import { getObjectDifferences } from "./JsonUtils";
@@ -44,6 +48,11 @@ export async function pingNetworkServers() {
     async (error, results, fields) => {
       if (error) {
         Logger.error(error);
+
+        // Reconnect on fatal error
+        if (error.fatal) {
+          connectToDatabase(DATABASE_NAMES.terrabungee);
+        }
         return;
       }
       if (!results) {
