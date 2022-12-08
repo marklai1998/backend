@@ -68,7 +68,7 @@ function find(type: string, conditions?: any) {
   return search(type, conditions, false);
 }
 async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
-  const { id, ...rest } = updates;
+  const { id, uid, ...rest } = updates;
 
   const changedValues = {};
   Object.keys(rest).forEach((key) => {
