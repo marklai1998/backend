@@ -68,18 +68,31 @@ function find(type: string, conditions?: any) {
   return search(type, conditions, false);
 }
 async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
-  const { id, uid, ...rest } = updates;
-
+  const { id, uid, status, ...rest } = updates;
   const changedValues = {};
+
+  const addChange = (key: string, oldValue: any, newValue: any) => {
+    changedValues[key] = {
+      oldValue,
+      newValue,
+    };
+  };
+
   Object.keys(rest).forEach((key) => {
     if (!(key in entity)) {
       delete rest[key];
     } else {
-      if (entity[key] !== rest[key]) {
-        changedValues[key] = {
-          oldValue: entity[key],
-          newValue: updates[key],
-        };
+      const update = updateExceptions(entity.constructor.name, key, rest);
+      if (update && entity[key] !== update) {
+        addChange(key, entity[key], update);
+      } else {
+        // Transform if entity is not an object
+        if (typeof entity[key] === "string" && typeof rest[key] === "object") {
+          rest[key] = JSON.stringify(rest[key]);
+        }
+        if (entity[key] !== rest[key]) {
+          addChange(key, entity[key], updates[key]);
+        }
       }
     }
   });
@@ -100,6 +113,20 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
     ),
     changedValues,
   };
+}
+
+function updateExceptions(type: string, key: any, rest: any): boolean {
+  let newValue = undefined;
+  // Block - Builder
+  if (type === "Block" && key === "builder") {
+    newValue = rest[key].join(",");
+  }
+
+  if (newValue !== undefined) {
+    rest[key] = newValue;
+  }
+
+  return newValue;
 }
 
 function search(type: string, conditions: any, onlyOne: boolean) {
