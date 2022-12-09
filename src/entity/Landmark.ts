@@ -1,13 +1,7 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  Matches,
-  Max,
-  Min,
-} from "class-validator";
+import { IsBoolean, IsInt, IsOptional, Matches } from "class-validator";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
 import Logger from "../utils/Logger";
 import { User } from "./User";
 import { log } from "./Log";
@@ -25,13 +19,13 @@ export class Landmark extends BaseEntity {
   @IsInt({ message: "Invalid Block ID" })
   blockID: number;
 
-  @Column()
-  @IsInt({ message: "Invalid District ID" })
-  district: number;
+  // @Column()
+  // @IsInt({ message: "Invalid District ID" })
+  // district: number;
 
-  @Column()
-  @IsInt({ message: "Invalid Block ID" })
-  block: number;
+  // @Column()
+  // @IsInt({ message: "Invalid Block ID" })
+  // block: number;
 
   @Column({ default: 0 })
   enabled: boolean;
@@ -59,12 +53,13 @@ export class Landmark extends BaseEntity {
   location: string;
 
   toJson(): object {
+    const block = dbCache.findOne("blocks", { uid: this.blockID });
     return {
       id: this.id,
       name: this.name,
       block: this.blockID,
-      district: this.district,
-      blockID: this.block,
+      district: block.district,
+      blockID: block.id,
       enabled: this.enabled,
       completed: this.done,
       requests: JSON.parse(this.requests),
