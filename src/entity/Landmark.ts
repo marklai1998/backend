@@ -45,15 +45,31 @@ export class Landmark extends BaseEntity {
   @IsOptional()
   completionDate: Date;
 
-  @Column("text", { nullable: true })
-  @Matches(/^((\-?|\+?)?\d+(\.\d+)?),\s*((\-?|\+?)?\d+(\.\d+)?)$/, {
-    message: "Invalid Latitude/Longitude or not separated by a comma",
-  })
+  @Column("simple-json", { default: "[]" })
   @IsOptional()
-  location: string;
+  location: number[];
 
-  toJson(): object {
+  toJson({ newVersion = false }: { newVersion?: boolean } = {}): object {
     const block = dbCache.findOne("blocks", { uid: this.blockID });
+
+    if (newVersion) {
+      return {
+        id: this.id,
+        name: this.name,
+        block: {
+          uid: block.uid,
+          district: block.district,
+          id: block.id,
+        },
+        enabled: this.enabled,
+        completed: this.done,
+        requests: this.requests ? JSON.parse(this.requests) : [],
+        builder: this.builder ? JSON.parse(this.builder) : [],
+        completionDate: this.completionDate,
+        location: this.location,
+      };
+    }
+
     return {
       id: this.id,
       name: this.name,
@@ -62,10 +78,10 @@ export class Landmark extends BaseEntity {
       blockID: block.id,
       enabled: this.enabled,
       completed: this.done,
-      requests: JSON.parse(this.requests),
-      builder: JSON.parse(this.builder),
+      requests: this.requests ? JSON.parse(this.requests) : [],
+      builder: this.builder ? JSON.parse(this.builder) : [],
       completionDate: this.completionDate,
-      location: this.location?.split(", ") || null,
+      location: this.location,
     };
   }
 
