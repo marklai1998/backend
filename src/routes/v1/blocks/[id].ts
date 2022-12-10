@@ -1,15 +1,16 @@
-import { Request, Response } from "express";
-import { Block, setStatus, update } from "../../../entity/Block";
-import { log } from "../../../entity/Log";
-import { allowed } from "../../../middleware/auth";
-import { Permissions } from "../../../routes";
-
 import * as dbCache from "../../../utils/cache/DatabaseCache";
-import Logger from "../../../utils/Logger";
+
+import { Block, setStatus, update } from "../../../entity/Block";
+import { Request, Response } from "express";
 import {
   recalculateAll,
   recalculateDistrictProgress,
 } from "../../../utils/ProgressCalculation";
+
+import Logger from "../../../utils/Logger";
+import { Permissions } from "../../../routes";
+import { allowed } from "../../../middleware/auth";
+import { log } from "../../../entity/Log";
 
 export const get = async (req: Request, res: Response) => {
   allowed(Permissions.default, req, res, () => {
@@ -53,7 +54,7 @@ export const put = (req: Request, res: Response) => {
         log({
           user: req.user,
           type: `BLOCK_${type.toUpperCase()}`,
-          edited: id,
+          edited: parseInt(id),
           oldValue: data["oldValue"],
           newValue: data["newValue"],
         });
