@@ -62,6 +62,9 @@ export const del = async (req: Request, res: Response) => {
 
     Logger.warn(`Deleting district #${district.id} (${district.name})`);
     await district.remove();
-    return res.send({ message: "District deleted" });
+    return res.send({
+      message: "District deleted successfully",
+      data: district.toJson({ showDetails: false }),
+    });
   });
 };

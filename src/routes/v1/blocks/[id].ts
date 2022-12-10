@@ -75,7 +75,7 @@ export const put = (req: Request, res: Response) => {
       recalculateDistrictProgress(block.district);
     }
 
-    res.send(ret);
+    return res.send(ret);
   });
 };
 
@@ -98,6 +98,9 @@ export const del = (req: Request, res: Response) => {
     dbCache.reload("blocks");
     recalculateAll(block.district);
 
-    return res.send({ message: "Block deleted", block: block.toJson() });
+    return res.send({
+      message: "Block deleted successfully",
+      data: block.toJson(),
+    });
   });
 };

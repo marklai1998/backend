@@ -27,7 +27,8 @@ export async function validate(
     });
   }
 
-  await object.save();
+  const newObject = await object.save();
+
   if (onSuccess) {
     await onSuccess();
   }
@@ -38,6 +39,7 @@ export async function validate(
 
   return res.send({
     message: successMessage,
-    data: successData,
+    data:
+      successData || newObject["toJson"] ? newObject["toJson"]() : newObject,
   });
 }

@@ -1,5 +1,4 @@
 import lodash = require("lodash");
-import { number } from "yup";
 
 function getObjectDifferences(obj1: any, obj2: any) {
   const diff = Object.keys(obj1).reduce((result, key) => {
@@ -12,6 +11,14 @@ function getObjectDifferences(obj1: any, obj2: any) {
     return result;
   }, Object.keys(obj2));
   return diff;
+}
+
+function checkJsonKeys(json: object, keys: string[]) {
+  for (const key of keys) {
+    if (!json.hasOwnProperty(key)) {
+      return { error: `Specify ${key}` };
+    }
+  }
 }
 
 function updateJson(orgiginalJson: any, updates: any): number {
@@ -69,4 +76,10 @@ function dynamicSort(property: string) {
   };
 }
 
-export { getObjectDifferences, updateJson, setAttributeJson, dynamicSort };
+export {
+  getObjectDifferences,
+  checkJsonKeys,
+  updateJson,
+  setAttributeJson,
+  dynamicSort,
+};
