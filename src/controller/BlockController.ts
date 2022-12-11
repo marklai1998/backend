@@ -351,17 +351,20 @@ export class BlockController {
   }
 }
 
-async function getBlock(districtID: string | number, blockID: number) {
+function getBlock(districtID: string | number, blockID: number) {
   const district =
     typeof districtID === "string"
-      ? await District.findOneBy({ name: districtID })
-      : await District.findOneBy({ id: districtID });
+      ? dbCache.findOne("districts", { name: districtID })
+      : dbCache.findOne("districts", { id: districtID });
 
   if (!district) {
     return null;
   }
 
-  const block = Block.findOneBy({ id: blockID, district: district.id });
+  const block = dbCache.findOne("blocks", {
+    id: blockID,
+    district: district.id,
+  });
   if (!block) {
     return null;
   }
