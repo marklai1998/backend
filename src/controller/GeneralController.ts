@@ -19,7 +19,7 @@ const ormconfig = require("../../ormconfig.json");
 
 export class GeneralController {
   async pingNetwork(request: Request, response: Response, next: NextFunction) {
-    const type = request.query.type.toString();
+    const type = request.query.type?.toString();
 
     if (
       type &&
