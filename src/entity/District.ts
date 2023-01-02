@@ -9,6 +9,7 @@ import * as dbCache from "../utils/cache/DatabaseCache";
 import Logger from "../utils/Logger";
 import { dynamicSort } from "../utils/JsonUtils";
 import responses from "../responses";
+import { Block } from "./Block";
 
 @Entity({ name: "districts" })
 export class District extends BaseEntity {
@@ -110,14 +111,10 @@ export class District extends BaseEntity {
     return builders;
   }
 
-  async getBlocks(): Promise<object[]> {
-    const blocksRaw = dbCache.find("blocks", { district: this.id });
-
-    const blocks = [];
-    for (const block of blocksRaw) {
-      blocks.push(block.toJson({ showDistrict: false }));
-    }
-    return await Promise.all(blocks);
+  getBlocks(): object[] {
+    return dbCache
+      .find("blocks", { district: this.id })
+      .map((block: Block) => block.toJson());
   }
 
   edit(body: object): object {

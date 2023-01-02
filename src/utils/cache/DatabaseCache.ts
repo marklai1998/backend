@@ -23,27 +23,27 @@ const DatabaseCache: DBCache = {
 async function loadAll(): Promise<void> {
   const promises = [];
   for (const key of Object.keys(DatabaseCache)) {
-    promises.push(reloadFromDatabase(key));
+    promises.push(reloadAll(key));
   }
   await Promise.allSettled(promises);
   Logger.debug("Updated cache from Database");
 }
 async function reload(updatedObject: BaseEntity | string): Promise<void> {
   if (typeof updatedObject === "string") {
-    reloadFromDatabase(updatedObject);
+    reloadAll(updatedObject);
     return;
   }
   if (updatedObject instanceof User) {
-    reloadFromDatabase("users");
+    reloadAll("users");
   } else if (updatedObject instanceof District) {
-    reloadFromDatabase("districts");
+    reloadAll("districts");
   } else if (updatedObject instanceof Block) {
-    reloadFromDatabase("blocks");
+    reloadAll("blocks");
   } else if (updatedObject instanceof Landmark) {
-    reloadFromDatabase("landmarks");
+    reloadAll("landmarks");
   }
 }
-async function reloadFromDatabase(type: string): Promise<void> {
+async function reloadAll(type: string): Promise<void> {
   switch (type) {
     // TODO: Add other tables
     case "users":
@@ -151,4 +151,4 @@ function search(type: string, conditions: any, onlyOne: boolean) {
   return onlyOne ? res[0] : res;
 }
 
-export { loadAll, reload, findOne, find, update };
+export { loadAll, reloadAll, reload, findOne, find, update };

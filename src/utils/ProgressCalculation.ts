@@ -4,6 +4,7 @@ import {
   getDirectChildren,
 } from "../utils/DistrictUtils";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
 import { District } from "../entity/District";
 import Logger from "./Logger";
 
@@ -54,6 +55,9 @@ export async function recalculateDistrictProgress(districtID: number) {
   }
   if (district.parent) {
     recalculateDistrictProgress(district.parent);
+  } else {
+    // Update district cache
+    dbCache.reloadAll("districts");
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
 import { Block } from "../entity/Block";
 import { District } from "../entity/District";
 import Logger from "../utils/Logger";
@@ -98,7 +99,7 @@ export class DistrictController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const district = await District.findOneBy({
+    const district = dbCache.findOne("districts", {
       name: request.params.name,
     });
 
