@@ -287,6 +287,7 @@ export async function setStatus(
   const oldStatus = block.status;
   let changed = false;
   if (oldStatus !== 4 && block.progress === 100 && block.details) {
+    // Status --> Done
     Logger.info(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
         block.district
@@ -298,10 +299,8 @@ export async function setStatus(
     block.completionDate = new Date();
 
     changed = true;
-
-    // Update Block Counts & District Status
-    recalculateDistrictBlocksDoneLeft(block.district);
   } else if (oldStatus !== 3 && block.progress === 100 && !block.details) {
+    // Status --> Detailing
     Logger.info(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
         block.district
@@ -318,6 +317,7 @@ export async function setStatus(
     ((block.progress > 0 && block.progress < 100) ||
       (block.progress === 0 && block.details))
   ) {
+    // Status --> Building
     Logger.info(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
         block.district
@@ -336,6 +336,7 @@ export async function setStatus(
     block.builder !== "" &&
     block.builder !== null
   ) {
+    // Status --> Reserved
     Logger.info(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
         block.district
@@ -353,6 +354,7 @@ export async function setStatus(
     !block.details &&
     !block.builder
   ) {
+    // Status --> Not Started
     Logger.info(
       `[${new Date().toLocaleString()}] Block Status changed - District: ${
         block.district
@@ -371,7 +373,7 @@ export async function setStatus(
     await Block.save(block);
 
     // Update Block Counts & District Status
-    if (oldStatus === 4) {
+    if (oldStatus === 4 || block.status === 4) {
       await recalculateDistrictBlocksDoneLeft(block.district);
       recalculateDistrictStatus(block.district);
     }
