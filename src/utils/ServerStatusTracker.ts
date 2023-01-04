@@ -33,6 +33,7 @@ const serversToPingRole = ["NewYorkCity", "BuildingServer1"];
 const serversOnTimeout = [];
 let currentlyUpdating = false;
 
+const TIMEOUT_COUNTER = 2;
 const TIMEOUT = 20000;
 
 export async function pingNetworkServers() {
@@ -108,26 +109,37 @@ export async function pingNetworkServers() {
         }
 
         if (res.status === "rejected") {
+          // Server offline now
           if (Object.keys(nycServerMapping).includes(serverNames[i])) {
-            if (serversOnTimeout.includes(serverNames[i])) {
-              // Timeout --> Offline
-              const index = serversOnTimeout.indexOf(serverNames[i]);
-              if (index !== -1) {
+            const index = serversOnTimeout.findIndex(
+              (s) => s.name === serverNames[i]
+            );
+            if (index >= 0) {
+              if (serversOnTimeout[index].timeouts >= TIMEOUT_COUNTER) {
+                // Timeout --> Offline
                 serversOnTimeout.splice(index, 1);
+                serverStatusChanged = true;
+                sendWebhook(
+                  "network_log",
+                  generateNetworkLogEmbed(
+                    nycServerMapping[serverNames[i]],
+                    false
+                  )
+                );
+              } else {
+                // Timeout --> Timeout
+                serversOnTimeout[index].timeouts++;
               }
-              serverStatusChanged = true;
-              sendWebhook(
-                "network_log",
-                generateNetworkLogEmbed(nycServerMapping[serverNames[i]], false)
-              );
             }
           }
           if (oldValue.online) {
             if (Object.keys(nycServerMapping).includes(serverNames[i])) {
-              if (!serversOnTimeout.includes(serverNames[i])) {
+              if (!serversOnTimeout.find((s) => s.name === serverNames[i])) {
                 // Online --> Timeout
-                serversOnTimeout.push(serverNames[i]);
-                serverStatusChanged = true;
+                serversOnTimeout.push({
+                  name: serverNames[i],
+                  timeouts: 1,
+                });
               }
             }
             oldValue.online = false;
@@ -140,13 +152,14 @@ export async function pingNetworkServers() {
           }
           continue;
         } else {
+          // Server online now
           if (Object.keys(nycServerMapping).includes(serverNames[i])) {
-            if (serversOnTimeout.includes(serverNames[i])) {
+            const index = serversOnTimeout.findIndex(
+              (s) => s.name === serverNames[i]
+            );
+            if (index >= 0) {
               // Timeout --> Online
-              const index = serversOnTimeout.indexOf(serverNames[i]);
-              if (index !== -1) {
-                serversOnTimeout.splice(index, 1);
-              }
+              serversOnTimeout.splice(index, 1);
               serverStatusChanged = true;
             } else if (!oldValue.online) {
               // Offline --> Online
@@ -325,7 +338,7 @@ function updateStatusEmbed(servers: ServerStatus[]) {
     desc += `${
       server.online
         ? ":green_circle: "
-        : serversOnTimeout.includes(server.id)
+        : serversOnTimeout.find((s) => s.name === server.id)
         ? ":yellow_circle: "
         : ":red_circle: "
     }**${nycServerMapping[server.id]}** ${
