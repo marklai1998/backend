@@ -140,6 +140,7 @@ export async function pingNetworkServers() {
                   name: serverNames[i],
                   timeouts: 1,
                 });
+                serverStatusChanged = true;
               }
             }
             oldValue.online = false;
