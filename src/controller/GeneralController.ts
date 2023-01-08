@@ -28,7 +28,10 @@ export class GeneralController {
           type.toLowerCase() !== "bedrock" &&
           type.toLowerCase() !== "spigot"))
     ) {
-      return responses.error({message: "Invalid type. Select 'Java', 'Bedrock' or 'Spigot'", code: 400})
+      return responses.error({
+        message: "Invalid type. Select 'Java', 'Bedrock' or 'Spigot'",
+        code: 400,
+      });
     }
 
     let java = undefined;
@@ -42,14 +45,19 @@ export class GeneralController {
       bedrock = proxyStatus.bedrock;
     }
 
-    return { java, bedrock};
+    return { java, bedrock };
   }
 
   async pingServer(request: Request, response: Response, next: NextFunction) {
-    const ips = JSON.parse((await AdminSetting.findOneBy({ key: "ips" })).value);
+    const ips = JSON.parse(
+      (await AdminSetting.findOneBy({ key: "ips" })).value
+    );
 
     if (ips === undefined) {
-      return responses.error({message: "Ips not set in Admin Settings", code: 500})
+      return responses.error({
+        message: "Ips not set in Admin Settings",
+        code: 500,
+      });
     }
 
     const serverName = request.params.server;
@@ -61,7 +69,7 @@ export class GeneralController {
       ];
 
     if (server === undefined) {
-      return responses.error({message: "Invalid Server", code: 404})
+      return responses.error({ message: "Invalid Server", code: 404 });
     }
 
     const serverIp = server.split(":")[0];
@@ -147,7 +155,7 @@ export class GeneralController {
                 status: b.status,
                 progress: b.progress,
                 details: b.details,
-                builder: b.builder,
+                builder: b.builder.join(","),
                 completionDate: b.completionDate,
                 center: b.getLocationCenter(),
                 area: JSON.parse(b.area),

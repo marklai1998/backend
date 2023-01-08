@@ -133,7 +133,7 @@ export async function sendOverview() {
       value:
         `» ${block.progress.toFixed(2)}%\n` +
         `» Details: ${block.details ? ":white_check_mark:" : ":x:"}\n` +
-        `» Builder: ${block.builder}`,
+        `» Builder: ${block.builder.join(",")}`,
       inline: true,
     });
   }
@@ -179,7 +179,7 @@ export async function sendDistrictChange({
   newValue?: string | number | boolean;
   user?: User;
 } = {}) {
-  if (block === null || !productionMode) return;
+  if (block === null) return;
 
   let color = Colors.MineFact_Green;
   switch (block.status) {
@@ -226,7 +226,7 @@ export async function sendDistrictChange({
     if (newValue !== null) {
       // Build builder string
       let builders = "";
-      for (const builder of block.builder.split(",")) {
+      for (const builder of block.builder) {
         if (builder === newValue) {
           if (title.split(" ")[1] === "Added") {
             builders += `- **${builder}**\n`;
@@ -294,12 +294,10 @@ export async function sendDistrictChange({
 }
 
 export async function sendWebhook(name: string, body: object) {
+  if (!productionMode) return;
   const webhook = await Webhook.findOneBy({ name: name });
 
-  if (!webhook) {
-    // TODO send Error Webhook
-    return;
-  }
+  if (!webhook) return;
 
   webhook.send(body);
 }

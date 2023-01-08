@@ -28,6 +28,7 @@ import Logger from "../utils/Logger";
 import { User } from "./User";
 import { log } from "./Log";
 import responses from "../responses";
+import _ = require("lodash");
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -61,12 +62,9 @@ export class Block extends BaseEntity {
   @IsOptional()
   details: boolean;
 
-  @Column("text", { nullable: true })
-  /*@Matches(/^$|^(([a-zA-Z0-9_]{3,16}[,]?){1,})|Building Session$/, {
-    message: "Invalid Minecraft-Name found or not separated with a comma",
-  })*/
+  @Column("simple-json", { default: "[]" })
   @IsOptional()
-  builder: string;
+  builder: string[];
 
   @Column({ nullable: true })
   @IsOptional()
@@ -88,7 +86,7 @@ export class Block extends BaseEntity {
       status: this.status,
       progress: this.progress,
       details: this.details,
-      builders: this.builder ? this.builder.split(",") : [],
+      builders: this.builder,
       completionDate: this.completionDate,
       landmarks: dbCache
         .find("landmarks", { blockID: this.uid })
@@ -154,8 +152,8 @@ export class Block extends BaseEntity {
     });
   }
 
-  async setBuilder(builder: string, user: User) {
-    if (this.builder === builder) {
+  async setBuilder(builder: string[], user: User) {
+    if (_.isEqual(this.builder, builder)) {
       return responses.error({ message: "Nothing changed", code: 400 });
     }
     const oldValue = this.builder;
@@ -175,26 +173,25 @@ export class Block extends BaseEntity {
       block: this,
       successMessage: "Builder Updated",
       oldStatus: oldStatus,
-      oldValue: oldValue,
-      newValue: builder,
+      oldValue: oldValue.join(","),
+      newValue: builder.join(","),
       user: user,
     });
   }
 
   async addBuilder(builder: string): Promise<object> {
-    const builderSplit = this.builder === null ? [] : this.builder.split(",");
-    for (const b of builderSplit) {
+    for (const b of this.builder) {
       if (b.toLowerCase() === builder.toLowerCase()) {
         return responses.error({ message: "Builder already added", code: 400 });
       }
     }
 
     let oldStatus = -1;
-    if (this.builder === "" || this.builder === null) {
-      this.builder = builder;
+    if (!this.builder.length) {
+      this.builder = [builder];
       oldStatus = await setStatus(this);
     } else {
-      this.builder += `,${builder}`;
+      this.builder.push(builder);
     }
 
     return await update({
@@ -206,31 +203,27 @@ export class Block extends BaseEntity {
   }
 
   async removeBuilder(builder: string): Promise<object> {
-    const builderSplit = this.builder === null ? [] : this.builder.split(",");
-    for (const b of builderSplit) {
-      if (b.toLowerCase() === builder.toLowerCase()) {
-        let oldStatus = -1;
-        if (builderSplit.length === 1) {
-          this.builder = null;
-          oldStatus = await setStatus(this);
-        } else {
-          if (builderSplit[0].toLowerCase() === builder.toLowerCase()) {
-            this.builder.replace(`${builder},`, "");
-          } else {
-            this.builder.replace(`,${builder}`, "");
-          }
-        }
-        return await update({
-          block: this,
-          successMessage: "Builder Removed",
-          oldStatus: oldStatus,
-          newValue: builder,
-        });
-      }
+    // const builderSplit = this.builder;
+    const index = this.builder.findIndex(
+      (b) => b.toLowerCase() === builder.toLowerCase()
+    );
+    if (index === -1) {
+      return responses.error({
+        message: "Builder not found for this block",
+        code: 404,
+      });
     }
-    return responses.error({
-      message: "Builder not found for this block",
-      code: 404,
+    let oldStatus = -1;
+    if (this.builder.length === 1) {
+      oldStatus = await setStatus(this);
+    }
+
+    this.builder.splice(index, 1);
+    return await update({
+      block: this,
+      successMessage: "Builder Removed",
+      oldStatus: oldStatus,
+      newValue: builder,
     });
   }
 
@@ -333,8 +326,7 @@ export async function setStatus(
     oldStatus !== 1 &&
     block.progress === 0 &&
     !block.details &&
-    block.builder !== "" &&
-    block.builder !== null
+    block.builder.length
   ) {
     // Status --> Reserved
     Logger.info(

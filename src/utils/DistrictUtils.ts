@@ -11,9 +11,7 @@ export async function getBlocksOfDistrict(district: District) {
 export async function getClaims(user: string) {
   const blocksRaw = await Block.find();
   const blocks = blocksRaw.filter((b: Block) => {
-    if (b.builder === null) return false;
-    const builders = b.builder.split(",");
-    for (const builder of builders) {
+    for (const builder of b.builder) {
       if (builder.toLowerCase().includes(user.toLowerCase())) {
         return true;
       }

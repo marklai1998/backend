@@ -93,7 +93,7 @@ export class District extends BaseEntity {
 
     const builders = [];
     for (const block of blocks) {
-      const buildersSplit = block.builder ? block.builder.split(",") : [];
+      const buildersSplit = block.builder;
 
       for (let i = 0; i < buildersSplit.length; i++) {
         if (builders.some((e) => e.name === buildersSplit[i])) {
