@@ -15,9 +15,7 @@ export const get = async (req: Request, res: Response) => {
 
     const blocks = [];
     for (const block of blocksRaw) {
-      block["center"] = block.getLocationCenter();
-      block.area = JSON.parse(block.area);
-      blocks.push(block);
+      blocks.push(block.toJson());
     }
     return res.send(blocks);
   });
