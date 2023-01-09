@@ -176,9 +176,7 @@ export class BlockController {
 
     const blocks = [];
     for (const block of blocksAll) {
-      block["center"] = block.getLocationCenter();
-      block.area = JSON.parse(block.area);
-      blocks.push(block);
+      blocks.push(block.toJson());
     }
 
     return blocks;
