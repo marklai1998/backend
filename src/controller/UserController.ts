@@ -57,6 +57,13 @@ export class UserController {
       });
     }
 
+    if (dbCache.findOne("users", { username: request.body.username })) {
+      return responses.error({
+        message:
+          "A user with this username already exists. Try to login instead!",
+        code: 400,
+      });
+    }
     let registration = await Registration.findOneBy({
       username: request.body.username,
     });
