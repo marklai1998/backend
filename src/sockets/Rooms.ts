@@ -28,7 +28,6 @@ async function joinRoom(
 
   const join = (r: Room) => {
     socket.join(r.name);
-    Logger.info("[Socket] User joined room " + r.name);
     if (r.join_message) {
       sendToRoom(
         socket.id,

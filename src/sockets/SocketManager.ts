@@ -26,7 +26,8 @@ function init(server: http.Server): void {
 
     // Join Room
     socket.on("join", (msg: any) => {
-      const roomName = msg.data?.room;
+      const json = typeof msg === "string" ? JSON.parse(msg) : msg;
+      const roomName = json.data?.room;
       if (roomName) {
         joinRoom(socket, roomName, msg.apikey);
       }
