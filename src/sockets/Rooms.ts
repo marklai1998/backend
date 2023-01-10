@@ -1,5 +1,6 @@
 import { User } from "../entity/User";
 import { Permissions } from "../routes";
+import Logger from "../utils/Logger";
 import { sendToRoom } from "./SocketManager";
 
 const cache = require("../cache");
@@ -27,6 +28,7 @@ async function joinRoom(
 
   const join = (r: Room) => {
     socket.join(r.name);
+    Logger.info("[Socket] User joined room " + r.name);
     if (r.join_message) {
       sendToRoom(
         socket.id,
