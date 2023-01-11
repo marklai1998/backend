@@ -1,6 +1,5 @@
 import { User } from "../entity/User";
 import { Permissions } from "../routes";
-import Logger from "../utils/Logger";
 import { sendToRoom } from "./SocketManager";
 
 const cache = require("../cache");
@@ -8,14 +7,34 @@ const cache = require("../cache");
 interface Room {
   name: string;
   permission: number;
-  join_message: { event: string; message_key: string };
+  join_message?: { event: string; message_key: string };
+  events?: { name: string; callback: (msg: any) => void }[];
 }
 
 const Rooms: Room[] = [
+  // Send Message of the day Broadcast
   {
     name: "motd",
     permission: Permissions.default,
     join_message: { event: "motd", message_key: "current_motd" },
+  },
+  // Send Player Locations
+  {
+    name: "playerdata",
+    permission: Permissions.default,
+  },
+  // Receive playerdata from nyc server
+  {
+    name: "nyc_server",
+    permission: Permissions.default,
+    events: [
+      {
+        name: "players",
+        callback: (msg: any) => {
+          sendToRoom("playerdata", "player_locations", msg);
+        },
+      },
+    ],
   },
 ];
 
@@ -28,12 +47,18 @@ async function joinRoom(
 
   const join = (r: Room) => {
     socket.join(r.name);
+
     if (r.join_message) {
       sendToRoom(
         socket.id,
         r.join_message.event,
         cache.get(r.join_message.message_key)
       );
+    }
+    if (r.events) {
+      for (const event of r.events) {
+        socket.on(event.name, event.callback);
+      }
     }
   };
 
