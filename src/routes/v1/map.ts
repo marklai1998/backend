@@ -36,6 +36,7 @@ export const get = async (req: Request, res: Response) => {
       area.push(area[0]);
       const b = { ...bl };
       b.area = undefined;
+      b.builder = bl.builder.join(",");
 
       result.push({
         type: "Feature",
