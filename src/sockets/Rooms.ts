@@ -1,5 +1,5 @@
-import { User } from "../entity/User";
 import { Permissions } from "../routes";
+import { User } from "../entity/User";
 import { sendToRoom } from "./SocketManager";
 
 const cache = require("../cache");
@@ -32,6 +32,24 @@ const Rooms: Room[] = [
         name: "players",
         callback: (msg: any) => {
           sendToRoom("playerdata", "player_locations", msg);
+        },
+      },
+      {
+        name: "join",
+        callback: (msg: any) => {
+          sendToRoom("playerdata", "player_join", msg);
+        },
+      },
+      {
+        name: "leave",
+        callback: (msg: any) => {
+          sendToRoom("playerdata", "player_leave", msg);
+        },
+      },
+      {
+        name: "chat",
+        callback: (msg: any) => {
+          sendToRoom("playerdata", "player_chat", msg);
         },
       },
     ],
