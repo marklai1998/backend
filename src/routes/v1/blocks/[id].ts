@@ -25,12 +25,23 @@ export const get = async (req: Request, res: Response) => {
 };
 
 export const put = (req: Request, res: Response) => {
-  allowed(Permissions.builder, req, res, async () => {
+  allowed(Permissions.default, req, res, async () => {
     const id = req.params.id;
     const block = dbCache.findOne("blocks", { uid: id });
     if (!block) {
       return res.status(404).send({ error: "Block not found" });
     }
+
+    if (
+      // @ts-ignore
+      (req.user.permission || Permissions.default) < Permissions.builder &&
+      !block.eventBlock
+    ) {
+      return res
+        .status(403)
+        .send({ error: "You are only allowed to update event blocks" });
+    }
+
     const oldStatus = block.status;
 
     const ret = await dbCache.update(block, req.body);
