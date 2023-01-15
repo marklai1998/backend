@@ -52,6 +52,7 @@ export const put = (req: Request, res: Response) => {
     for (const [type, data] of Object.entries(ret.changedValues)) {
       if (["progress", "details", "builder"].includes(type.toLowerCase())) {
         log({
+          //@ts-ignore
           user: req.user,
           type: `BLOCK_${type.toUpperCase()}`,
           edited: parseInt(id),
@@ -66,6 +67,7 @@ export const put = (req: Request, res: Response) => {
           oldStatus: oldStatus,
           oldValue: data["oldValue"],
           newValue: data["newValue"],
+          //@ts-ignore
           user: req.user,
         });
       }

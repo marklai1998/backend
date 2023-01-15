@@ -73,6 +73,9 @@ export class Block extends BaseEntity {
   @Column("text", { default: "[]" })
   area: string;
 
+  @Column()
+  eventBlock: boolean;
+
   toJson({ showDistrict = true }: { showDistrict?: boolean } = {}): object {
     return {
       uid: this.uid,
@@ -94,6 +97,7 @@ export class Block extends BaseEntity {
       center: this.getLocationCenter(),
       size: this.getAreaSize(),
       area: JSON.parse(this.area),
+      eventBlock: this.eventBlock,
     };
   }
 
