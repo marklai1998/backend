@@ -31,13 +31,13 @@ export class User extends BaseEntity {
   @Column("text", { nullable: true })
   rank: string;
 
-  @Column("text")
+  @Column("text", { nullable: true })
   about: string;
 
-  @Column("text")
+  @Column("text", { nullable: true })
   image: string;
 
-  @Column("text")
+  @Column("text", { nullable: true })
   picture: string;
 
   @Column("text", {
