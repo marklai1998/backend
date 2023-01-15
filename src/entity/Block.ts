@@ -79,7 +79,10 @@ export class Block extends BaseEntity {
   @Column("text")
   comment: string;
 
-  toJson({ showDistrict = true }: { showDistrict?: boolean } = {}): object {
+  toJson({
+    showDistrict = true,
+    showLandmarks = true,
+  }: { showDistrict?: boolean; showLandmarks?: boolean } = {}): object {
     return {
       uid: this.uid,
       id: this.id,
@@ -94,9 +97,11 @@ export class Block extends BaseEntity {
       details: this.details,
       builders: this.builder,
       completionDate: this.completionDate,
-      landmarks: dbCache
-        .find("landmarks", { blockID: this.uid })
-        .map((landmark: Landmark) => landmark.toJson()),
+      landmarks: showLandmarks
+        ? dbCache
+            .find("landmarks", { blockID: this.uid })
+            .map((landmark: Landmark) => landmark.toJson())
+        : undefined,
       center: this.getLocationCenter(),
       size: this.getAreaSize(),
       area: JSON.parse(this.area),
