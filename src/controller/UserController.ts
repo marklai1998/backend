@@ -170,7 +170,6 @@ export class UserController {
     // }
 
     const user = new User();
-    user.email = `${request.body.username}@gmail.com`;
     user.username = request.body.username;
     user.permission = mcRankToPermission(request.body.rank);
     user.rank = request.body.rank;
@@ -289,7 +288,6 @@ export class UserController {
     if (request.body.accept) {
       // Create new user
       const user = new User();
-      user.email = `${registration.username}@gmail.com`;
       user.username = registration.username;
 
       user.permission = mcRankToPermission(request.body.rank);
@@ -320,16 +318,14 @@ export class UserController {
   }
 
   async create(request: Request, response: Response, next: NextFunction) {
-    if (!request.body.username || !request.body.email) {
+    if (!request.body.username) {
       return responses.error({
-        message: "Specify Email and Username",
+        message: "Specify Username",
         code: 400,
       });
     }
 
-    let user =
-      (await User.findOneBy({ email: request.body.email })) ||
-      (await User.findOneBy({ username: request.body.username }));
+    let user = await User.findOneBy({ username: request.body.username });
 
     if (user) {
       return responses.error({
@@ -339,7 +335,6 @@ export class UserController {
     }
     const ssoPw = generatePassword(8, 16);
     user = new User();
-    user.email = request.body.email;
     user.username = request.body.username;
     user.permission = request.body.permission ?? 1;
     user.rank = request.body.rank || null;

@@ -5,12 +5,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { IsEmail, IsJSON, IsOptional, IsUUID, Matches } from "class-validator";
-
-import { MinecraftUser } from "./MinecraftUser";
+import { IsBoolean, IsOptional, IsUUID } from "class-validator";
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
@@ -18,25 +15,18 @@ export class User extends BaseEntity {
   uid: number;
 
   @Column({ unique: true })
-  @IsEmail({}, { message: "Invalid email address" })
-  email: string;
-
-  @Column({ unique: true })
   username: string;
+
+  @Column({ unique: true, nullable: true, length: 36 })
+  @IsUUID("4", { message: "Invalid UUID" })
+  @IsOptional()
+  uuid: string;
 
   @Column({ default: 0 })
   permission: number;
 
   @Column({ nullable: true })
-  @IsOptional()
-  //@Matches(/^.{3,32}#[0-9]{4}$/, { message: "Invalid Discord Tag" })
   discord: string;
-
-  @ManyToOne(() => MinecraftUser, (user) => user.uid, {
-    nullable: true,
-    eager: true,
-  })
-  minecraft: MinecraftUser;
 
   @Column("text", { nullable: true })
   rank: string;
@@ -57,10 +47,15 @@ export class User extends BaseEntity {
   })
   stats: string;
 
-  @Column("text" /*{ default: "{}" }*/)
-  @IsJSON({ message: "Settings must be a valid JSON-String" })
-  @IsOptional()
-  settings: string;
+  @Column("simple-json", { default: "{}" })
+  settings: {};
+
+  @Column()
+  @IsBoolean()
+  online: boolean;
+
+  @Column({ nullable: true })
+  last_online: Date;
 
   @Column("text")
   password: string;
@@ -84,8 +79,8 @@ export class User extends BaseEntity {
   } = {}): object {
     return {
       uid: this.uid,
-      email: hasPermission ? this.email : undefined,
       username: this.username,
+      uuid: this.uuid,
       permission: this.permission,
       rank: this.rank,
       discord: this.discord,
@@ -93,8 +88,9 @@ export class User extends BaseEntity {
       image: this.image,
       picture: this.picture,
       stats: JSON.parse(this.stats),
-      settings: hasPermission ? JSON.parse(this.settings) : undefined,
-      minecraft: !this.minecraft ? null : this.minecraft.toJson(),
+      settings: hasPermission ? this.settings : undefined,
+      online: this.online,
+      last_online: this.last_online,
       password: showPassword ? this.password : undefined,
       apikey:
         showAPIKey && hasPermission

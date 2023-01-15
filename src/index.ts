@@ -146,7 +146,6 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
       Logger.debug("Creating root user...");
       await connection.manager.save(
         connection.manager.create(User, {
-          email: "root@roo.com",
           username: "root",
           permission: 4,
           discord: "Root#1234",
