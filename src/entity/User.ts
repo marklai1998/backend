@@ -50,7 +50,7 @@ export class User extends BaseEntity {
   @Column("simple-json", { default: "{}" })
   settings: {};
 
-  @Column()
+  @Column({ default: false })
   online: boolean;
 
   @Column({ nullable: true })
