@@ -7,7 +7,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { IsBoolean, IsOptional, IsUUID } from "class-validator";
+import { IsOptional, IsUUID } from "class-validator";
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
@@ -51,7 +51,6 @@ export class User extends BaseEntity {
   settings: {};
 
   @Column()
-  @IsBoolean()
   online: boolean;
 
   @Column({ nullable: true })
