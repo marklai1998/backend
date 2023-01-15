@@ -76,6 +76,9 @@ export class Block extends BaseEntity {
   @Column()
   eventBlock: boolean;
 
+  @Column("text")
+  comment: string;
+
   toJson({ showDistrict = true }: { showDistrict?: boolean } = {}): object {
     return {
       uid: this.uid,
@@ -98,6 +101,7 @@ export class Block extends BaseEntity {
       size: this.getAreaSize(),
       area: JSON.parse(this.area),
       eventBlock: this.eventBlock,
+      comment: this.comment,
     };
   }
 
