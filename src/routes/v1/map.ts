@@ -30,6 +30,9 @@ export const get = async (req: Request, res: Response) => {
         bl.district != parseInt(req.query.district.toString() || "")
       )
         continue;
+      if (req.query.event) {
+        if (!bl.eventBlock) continue;
+      }
       // if (bl.uid < parseInt(req.query.min.toString() || "0")) continue;
       //if (bl.uid >= parseInt(req.query.max.toString() || "100")) continue;
       const area = JSON.parse(bl.area).map((a: number[]) => [a[1], a[0]]);
