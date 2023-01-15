@@ -1,16 +1,16 @@
-import { generateUUID } from "../index";
+import * as dbCache from "../utils/cache/DatabaseCache";
 import * as jwt from "../utils/JsonWebToken";
 
+import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 import { NextFunction, Request, Response } from "express";
+import { Permissions, mcRankToPermission } from "../utils/Permissions";
+import { check, hash } from "../utils/encryption/bcrypt";
 
 import Logger from "../utils/Logger";
-import { mcRankToPermission, Permissions } from "../utils/Permissions";
-import { User } from "../entity/User";
-import { Colors, sendWebhook } from "../utils/DiscordMessageSender";
 import { Registration } from "../entity/Registration";
-import * as dbCache from "../utils/cache/DatabaseCache";
+import { User } from "../entity/User";
+import { generateUUID } from "../index";
 import responses from "../responses";
-import { check, hash } from "../utils/encryption/bcrypt";
 
 export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
@@ -342,6 +342,8 @@ export class UserController {
     user.about = "";
     user.picture = "";
     user.image = "";
+    user.online = false;
+    user.last_online = new Date();
     user.settings = "{}";
     user.password = await hash(ssoPw);
     user.apikey = generateUUID();
