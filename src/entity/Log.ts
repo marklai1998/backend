@@ -49,8 +49,8 @@ export function log({
   log.user = user;
   log.type = type;
   log.edited = edited;
-  log.old = oldValue;
-  log.new = newValue;
+  log.old = typeof oldValue === "object" ? JSON.stringify(oldValue) : oldValue;
+  log.new = typeof newValue === "object" ? JSON.stringify(newValue) : newValue;
 
   responses.validate(log, "Log created");
 }
