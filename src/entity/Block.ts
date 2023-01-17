@@ -357,7 +357,7 @@ export async function setStatus(
     oldStatus !== 0 &&
     block.progress === 0 &&
     !block.details &&
-    !block.builder
+    !block.builder.length
   ) {
     // Status --> Not Started
     Logger.info(
