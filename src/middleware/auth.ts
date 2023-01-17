@@ -4,9 +4,10 @@ import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
 import * as dbCache from "../utils/cache/DatabaseCache";
 import { check } from "../utils/encryption/bcrypt";
 import responses from "../responses";
+import { User } from "../entity/User";
 
 export async function loginUser(username: string, password: string) {
-  const user = dbCache.findOne("users", { username: username });
+  const user = await User.findOneBy({ username: username });
 
   if (!user) {
     return responses.error({
