@@ -1,12 +1,13 @@
+import * as dbCache from "../../../utils/cache/DatabaseCache";
+
 import { Request, Response } from "express";
 
-import * as dbCache from "../../../utils/cache/DatabaseCache";
-import { allowed } from "../../../middleware/auth";
 import { Permissions } from "../../../routes";
 import { User } from "../../../entity/User";
+import { allowed } from "../../../middleware/auth";
+import { generateUUID } from "../../..";
 import { hash } from "../../../utils/encryption/bcrypt";
 import { validate } from "../../../utils/Validation";
-import { generateUUID } from "../../..";
 
 export const get = (req: Request, res: Response) => {
   allowed(Permissions.default, req, res, () => {
@@ -44,6 +45,7 @@ export const post = (req: Request, res: Response) => {
       rank: "Player",
       password: await hash(req.body.password),
       apikey: generateUUID(),
+      permission: 1,
     });
 
     return validate(res, user, {
