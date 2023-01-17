@@ -118,9 +118,9 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
 function updateExceptions(type: string, key: any, rest: any): boolean {
   let newValue = undefined;
   // Block - Builder
-  // if (type === "Block" && key === "builder") {
-  //   newValue = rest[key].join(",");
-  // }
+  if (type === "Block" && key === "builder" && rest[key][0] === "") {
+    newValue = [];
+  }
 
   if (newValue !== undefined) {
     rest[key] = newValue;
