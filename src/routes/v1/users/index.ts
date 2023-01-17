@@ -8,6 +8,7 @@ import { allowed } from "../../../middleware/auth";
 import { generateUUID } from "../../..";
 import { hash } from "../../../utils/encryption/bcrypt";
 import { validate } from "../../../utils/Validation";
+import { Colors, sendWebhook } from "../../../utils/DiscordMessageSender";
 
 export const get = (req: Request, res: Response) => {
   allowed(Permissions.default, req, res, () => {
@@ -52,6 +53,39 @@ export const post = (req: Request, res: Response) => {
       successMessage: "Account created successfully",
       successData: user,
       updateCache: true,
+      onSuccess: () => {
+        sendWebhook("user_log", {
+          content: "",
+          embeds: [
+            {
+              title: "Account registered",
+              description: "",
+              color: Colors.Green,
+              timestamp: new Date().toISOString(),
+              footer: {
+                text: "BTE NewYorkCity",
+                icon_url:
+                  "https://cdn.discordapp.com/attachments/519576567718871053/1035577973467779223/BTE_NYC_Logo.png",
+              },
+              thumbnail: {
+                url: "https://mc-heads.net/avatar/" + user.username,
+              },
+              fields: [
+                {
+                  name: "Username",
+                  value: user.username,
+                  inline: true,
+                },
+                {
+                  name: "Discord",
+                  value: user.discord,
+                  inline: true,
+                },
+              ],
+            },
+          ],
+        });
+      },
     });
   });
 };
