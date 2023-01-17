@@ -1,7 +1,8 @@
 export const Permissions = {
   default: 0,
-  builder: 1,
-  moderator: 2,
+  event: 1,
+  builder: 2,
+  moderator: 3,
   admin: 4,
 };
 

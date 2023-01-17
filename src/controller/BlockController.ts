@@ -264,7 +264,7 @@ export class BlockController {
       counter++;
     }
     if (values.builder !== undefined) {
-      await block.setBuilder(values.builder.split(","), user);
+      await block.setBuilder(values.builder === "" ? [] : values.builder.split(","), user);
       counter++;
     }
     Logger.info(`Updating block ${block.uid} (${counter} columns updated)`);

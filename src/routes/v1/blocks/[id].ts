@@ -25,7 +25,7 @@ export const get = async (req: Request, res: Response) => {
 };
 
 export const put = (req: Request, res: Response) => {
-  allowed(Permissions.default, req, res, async () => {
+  allowed(Permissions.event, req, res, async () => {
     const id = req.params.id;
     const block = dbCache.findOne("blocks", { uid: id });
     if (!block) {
@@ -34,7 +34,7 @@ export const put = (req: Request, res: Response) => {
 
     if (
       // @ts-ignore
-      (req.user.permission || Permissions.default) < Permissions.builder &&
+      (req.user.permission || Permissions.default) <= Permissions.event &&
       !block.eventBlock
     ) {
       return res
