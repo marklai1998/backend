@@ -75,7 +75,7 @@ export const put = (req: Request, res: Response) => {
           successMessage: `${type.charAt(0).toUpperCase()}${type.slice(
             1
           )} Updated`,
-          oldStatus: oldStatus,
+          oldStatus: oldStatus !== newStatus ? oldStatus : -1,
           oldValue: data["oldValue"],
           newValue: data["newValue"],
           //@ts-ignore
