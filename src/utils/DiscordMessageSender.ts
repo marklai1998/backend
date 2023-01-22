@@ -190,12 +190,16 @@ export async function sendDistrictChange2({
       break;
   }
 
-  const addedBuilders = block.builder.filter(
-    (b: string) => !changedValues.builder?.oldValue.includes(b)
-  );
-  const removedBuilders = changedValues.builder?.oldValue.filter(
-    (b: string) => !block.builder.includes(b)
-  );
+  const addedBuilders = changedValues.builder
+    ? block.builder.filter(
+        (b: string) => !changedValues.builder?.oldValue.includes(b)
+      )
+    : [];
+  const removedBuilders = changedValues.builder
+    ? changedValues.builder?.oldValue.filter(
+        (b: string) => !block.builder.includes(b)
+      )
+    : [];
 
   let builders = "";
   for (let i = 0; i < changedValues.builder?.oldValue.length; i++) {
@@ -207,7 +211,12 @@ export async function sendDistrictChange2({
     }
   }
   for (const builder of addedBuilders) {
-    builders += `- **${builder}**\n`;
+    builders += `- __${builder}__\n`;
+  }
+  if (!changedValues.builder) {
+    for (const builder of block.builder) {
+      builders += `- ${builder}\n`;
+    }
   }
 
   const fields = [
