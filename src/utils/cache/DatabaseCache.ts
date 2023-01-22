@@ -1,4 +1,5 @@
 import { validate } from "class-validator";
+import _ = require("lodash");
 import { BaseEntity } from "typeorm";
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
@@ -21,12 +22,17 @@ const DatabaseCache: DBCache = {
 };
 
 async function loadAll(): Promise<void> {
+  const time = new Date().getTime();
   const promises = [];
   for (const key of Object.keys(DatabaseCache)) {
     promises.push(reloadAll(key));
   }
   await Promise.allSettled(promises);
-  Logger.debug("Updated cache from Database");
+  Logger.debug(
+    `Updated cache from Database in ${
+      (new Date().getTime() - time) / 1000
+    } seconds`
+  );
 }
 async function reload(updatedObject: BaseEntity | string): Promise<void> {
   if (typeof updatedObject === "string") {
@@ -90,8 +96,15 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
         if (typeof entity[key] === "string" && typeof rest[key] === "object") {
           rest[key] = JSON.stringify(rest[key]);
         }
+        // Check for array equality
+        if (
+          !Array.isArray(entity[key]) ||
+          !Array.isArray(rest[key]) ||
+          !_.isEqual(entity[key], rest[key])
+        ) {
         if (entity[key] !== rest[key]) {
           addChange(key, entity[key], updates[key]);
+          }
         }
       }
     }

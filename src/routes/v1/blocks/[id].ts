@@ -11,6 +11,7 @@ import Logger from "../../../utils/Logger";
 import { Permissions } from "../../../routes";
 import { allowed } from "../../../middleware/auth";
 import { log } from "../../../entity/Log";
+import { sendDistrictChange2 } from "../../../utils/DiscordMessageSender";
 
 export const get = async (req: Request, res: Response) => {
   allowed(Permissions.default, req, res, () => {
@@ -70,19 +71,15 @@ export const put = (req: Request, res: Response) => {
           oldValue: data["oldValue"],
           newValue: data["newValue"],
         });
-        update({
-          block: block,
-          successMessage: `${type.charAt(0).toUpperCase()}${type.slice(
-            1
-          )} Updated`,
-          oldStatus: oldStatus !== newStatus ? oldStatus : -1,
-          oldValue: data["oldValue"],
-          newValue: data["newValue"],
-          //@ts-ignore
-          user: req.user,
-        });
       }
     }
+
+    sendDistrictChange2({
+      block,
+      changedValues: ret.changedValues,
+      // @ts-ignore
+      user: req.user,
+    });
 
     // Update districts
     if (ret.changedValues["progress"]) {

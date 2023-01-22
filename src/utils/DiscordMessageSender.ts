@@ -162,6 +162,132 @@ export async function sendOverview() {
   await sendWebhook("nyc_overview", body);
 }
 
+export async function sendDistrictChange2({
+  block = null,
+  changedValues = {},
+  user = null,
+}: { block?: Block; changedValues?: any; user?: User } = {}) {
+  if (Object.keys(changedValues).length === 0) {
+    // Nothing changed
+    return;
+  }
+  let color = Colors.MineFact_Green;
+  switch (block.status) {
+    case 4:
+      color = Colors.Status_Done;
+      break;
+    case 3:
+      color = Colors.Status_Detailing;
+      break;
+    case 2:
+      color = Colors.Status_Building;
+      break;
+    case 1:
+      color = Colors.Status_Reserved;
+      break;
+    default:
+      color = Colors.Status_Not_Started;
+      break;
+  }
+
+  const addedBuilders = block.builder.filter(
+    (b: string) => !changedValues.builder?.oldValue.includes(b)
+  );
+  const removedBuilders = changedValues.builder?.oldValue.filter(
+    (b: string) => !block.builder.includes(b)
+  );
+
+  let builders = "";
+  for (let i = 0; i < changedValues.builder?.oldValue.length; i++) {
+    const builder = changedValues.builder?.oldValue[i];
+    if (removedBuilders.includes(builder)) {
+      builders += `- ~~${builder}~~\n`;
+    } else {
+      builders += `- ${builder}\n`;
+    }
+  }
+  for (const builder of addedBuilders) {
+    builders += `- **${builder}**\n`;
+  }
+
+  const fields = [
+    {
+      name: "District",
+      value: await districtIdToName(block.district),
+      inline: true,
+    },
+    {
+      name: "Block",
+      value: block.id,
+      inline: true,
+    },
+    {
+      name: "Status",
+      value: `${
+        changedValues.status
+          ? `${statusToName(changedValues.status.oldValue, true)} → `
+          : ""
+      }${statusToName(block.status, true)}`,
+      inline: true,
+    },
+    {
+      name: "Builder",
+      value: builders,
+      inline: true,
+    },
+    {
+      name: "Progress",
+      value: `${
+        changedValues.progress ? `${changedValues.progress.oldValue}% → ` : ""
+      }${block.progress}%`,
+      inline: true,
+    },
+    {
+      name: "Details",
+      value: `${
+        changedValues.details ? `${changedValues.details.oldValue} → ` : ""
+      }${block.details}`,
+      inline: true,
+    },
+  ];
+
+  const body = {
+    content: "",
+    embeds: [
+      {
+        author: {
+          name: user.username,
+          icon_url:
+            user.picture || `https://mc-heads.net/avatar/${user.username}`,
+        },
+        title:
+          changedValues.status && block.status === 4
+            ? "New Block Completed :tada:"
+            : changedValues.status
+            ? "Status Changed"
+            : "Block Updated",
+        description: "",
+        color,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: "BTE NewYorkCity",
+          icon_url:
+            "https://cdn.discordapp.com/attachments/519576567718871053/1035577973467779223/BTE_NYC_Logo.png",
+        },
+        fields,
+      },
+    ],
+  };
+
+  await sendWebhook("district_log", body);
+
+  // Modify embed for #new-york-city channel
+  body.embeds[0].description = `__**Last Change**__\n${body.embeds[0].title}`;
+  body.embeds[0].title = "";
+  delete body.embeds[0].author;
+  await sendWebhook("last_change", body);
+}
+
 export async function sendDistrictChange({
   block = null,
   title = "No title set",
