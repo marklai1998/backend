@@ -21,18 +21,16 @@ const DatabaseCache: DBCache = {
   landmarks: null,
 };
 
-async function loadAll(): Promise<void> {
+async function loadAll(): Promise<number> {
   const time = new Date().getTime();
   const promises = [];
   for (const key of Object.keys(DatabaseCache)) {
     promises.push(reloadAll(key));
   }
   await Promise.allSettled(promises);
-  Logger.debug(
-    `Updated cache from Database in ${
-      (new Date().getTime() - time) / 1000
-    } seconds`
-  );
+  const elapsedTime = (new Date().getTime() - time) / 1000;
+  Logger.debug(`Updated cache from Database in ${elapsedTime} seconds`);
+  return elapsedTime;
 }
 async function reload(updatedObject: BaseEntity | string): Promise<void> {
   if (typeof updatedObject === "string") {
