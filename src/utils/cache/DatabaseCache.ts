@@ -5,6 +5,7 @@ import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
 import { Landmark } from "../../entity/Landmark";
 import { User } from "../../entity/User";
+import { hash } from "../encryption/bcrypt";
 import Logger from "../Logger";
 
 type DBCache = {
@@ -82,11 +83,11 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
     };
   };
 
-  Object.keys(rest).forEach((key) => {
+  for (const key of Object.keys(rest)) {
     if (!(key in entity)) {
       delete rest[key];
     } else {
-      const update = updateExceptions(entity.constructor.name, key, rest);
+      const update = await updateExceptions(entity.constructor.name, key, rest);
       if (update && entity[key] !== update) {
         addChange(key, entity[key], update);
       } else {
@@ -106,7 +107,7 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
         }
       }
     }
-  });
+  }
 
   const updated = Object.assign(entity, rest);
 
@@ -126,11 +127,19 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
   };
 }
 
-function updateExceptions(type: string, key: any, rest: any): boolean {
+async function updateExceptions(
+  type: string,
+  key: any,
+  rest: any
+): Promise<boolean> {
   let newValue = undefined;
   // Block - Builder
   if (type === "Block" && key === "builder" && rest[key][0] === "") {
     newValue = [];
+  }
+  // User - password
+  if (type === "User" && key === "password") {
+    newValue = await hash(rest[key]);
   }
 
   if (newValue !== undefined) {
