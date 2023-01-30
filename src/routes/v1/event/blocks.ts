@@ -5,13 +5,18 @@ import { Permissions } from "../../../routes";
 import * as dbCache from "../../../utils/cache/DatabaseCache";
 
 export const get = (req: Request, res: Response) => {
-  allowed(Permissions.default, req, res, () => {
-    const blocksRaw = dbCache.find("blocks", { eventBlock: true });
+  allowed({
+    permission: Permissions.default,
+    req,
+    res,
+    callback: () => {
+      const blocksRaw = dbCache.find("blocks", { eventBlock: true });
 
-    const blocks = [];
-    for (const block of blocksRaw) {
-      blocks.push(block.toJson({ showLandmarks: false }));
-    }
-    res.send(blocks);
+      const blocks = [];
+      for (const block of blocksRaw) {
+        blocks.push(block.toJson({ showLandmarks: false }));
+      }
+      res.send(blocks);
+    },
   });
 };

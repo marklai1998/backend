@@ -36,15 +36,11 @@ async function auth(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.split(" ");
 
   if (!token || token[0] != "Bearer") {
-    /*res
-      .status(401)
-      .send(responses.error({ message: "Unauthorized", code: 401 }));*/
-    //@ts-ignore
+    // @ts-ignore
     req.user = {};
     return next();
   }
 
-  //@ts-ignore
   req.token = token[1];
 
   jwt.verify(token[1], AUTH_SECRET, async (err: any, auth: any) => {
@@ -55,44 +51,88 @@ async function auth(req: Request, res: Response, next: NextFunction) {
           .send(responses.error({ message: "Token expired", code: 403 }));
         return next();
       }
-      /*res
-        .status(403)
-        .send(responses.error({ message: "Forbidden", code: 403 }));*/
-      //@ts-ignore
+      // @ts-ignore
       req.user = {};
       return next();
     }
     const user = dbCache.findOne("users", { uid: auth.uid });
 
-    // @ts-ignore
     req.user = user;
     return next();
   });
 }
 
-export async function allowed(
-  permission: number,
-  req: Request,
-  res: Response,
-  callback: () => void
-) {
+export function allowed({
+  permission = 0,
+  requiredArgs,
+  optionalArgs,
+  req,
+  res,
+  callback,
+}: {
+  permission?: number;
+  requiredArgs?: object;
+  optionalArgs?: object;
+  req: Request;
+  res: Response;
+  callback: () => void;
+}): void {
   if (permission <= 0) {
     callback();
     return;
   }
-  //@ts-ignore
-  const user = req.user;
 
+  const user = req.user;
   if (!user) {
-    responses.error({ message: "Unauthorized", code: 401 });
+    res.status(401).send({ error: "Unauthorized" });
     return;
   }
 
   if (permission <= user.permission) {
-    callback();
+    checkArgs(req.body, res, requiredArgs, optionalArgs, callback);
     return;
   }
-  res.send(responses.error({ message: "Forbidden", code: 403 }));
+  res.status(403).send({ error: "Forbidden" });
+}
+
+function checkArgs(
+  body: object,
+  res: Response,
+  required: object,
+  optional: object,
+  callback: () => void
+): void {
+  // Check required arguments
+  if (required) {
+    for (const [key, value] of Object.entries(required)) {
+      if (!body[key]) {
+        res
+          .status(400)
+          .send({ error: `Required body key '${key}' is missing` });
+        return;
+      }
+      if (typeof body[key] !== value) {
+        res
+          .status(400)
+          .send({ error: `The body key '${key}' must be of type '${value}'` });
+        return;
+      }
+    }
+  }
+  // Check optional arguments
+  if (optional) {
+    for (const [key, value] of Object.entries(optional)) {
+      if (!body[key]) {
+        continue;
+      }
+      if (typeof body[key] !== value) {
+        res
+          .status(400)
+          .send({ error: `The body key '${key}' must be of type '${value}'` });
+      }
+    }
+  }
+  callback();
 }
 
 export default auth;
