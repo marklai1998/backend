@@ -19,7 +19,7 @@ export async function validate(
     onSuccess?: Function;
   }
 ) {
-  const errors = await val(object);
+  const errors = await val(object, { skipMissingProperties: true });
 
   if (errors.length > 0) {
     return res.status(400).send({
@@ -39,7 +39,10 @@ export async function validate(
 
   return res.send({
     message: successMessage,
-    data:
-      successData || newObject["toJson"] ? newObject["toJson"]() : newObject,
+    data: successData
+      ? successData
+      : newObject["toJson"]
+      ? newObject["toJson"]()
+      : newObject,
   });
 }

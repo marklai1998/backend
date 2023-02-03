@@ -3,6 +3,8 @@ import _ = require("lodash");
 import { BaseEntity } from "typeorm";
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
+import { Event } from "../../entity/events/Event";
+import { EventTeam } from "../../entity/events/EventTeam";
 import { Landmark } from "../../entity/Landmark";
 import { User } from "../../entity/User";
 import { hash } from "../encryption/bcrypt";
@@ -13,6 +15,8 @@ type DBCache = {
   districts: District[];
   blocks: Block[];
   landmarks: Landmark[];
+  events: Event[];
+  eventteams: EventTeam[];
 };
 
 const DatabaseCache: DBCache = {
@@ -20,6 +24,8 @@ const DatabaseCache: DBCache = {
   districts: null,
   blocks: null,
   landmarks: null,
+  events: null,
+  eventteams: null,
 };
 
 async function loadAll(): Promise<number> {
@@ -46,6 +52,10 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("blocks");
   } else if (updatedObject instanceof Landmark) {
     reloadAll("landmarks");
+  } else if (updatedObject instanceof Event) {
+    reloadAll("events");
+  } else if (updatedObject instanceof EventTeam) {
+    reloadAll("eventteams");
   }
 }
 async function reloadAll(type: string): Promise<void> {
@@ -63,6 +73,12 @@ async function reloadAll(type: string): Promise<void> {
     case "landmarks":
       DatabaseCache.landmarks = await Landmark.find();
       break;
+    case "events":
+      DatabaseCache.events = await Event.find();
+      break;
+    case "eventteams":
+      DatabaseCache.eventteams = await EventTeam.find();
+      break;
   }
 }
 
@@ -73,7 +89,7 @@ function find(type: string, conditions?: any) {
   return search(type, conditions, false);
 }
 async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
-  const { id, uid, status, ...rest } = updates;
+  const { id, uid, uuid, status, ...rest } = updates;
   const changedValues = {};
 
   const addChange = (key: string, oldValue: any, newValue: any) => {
@@ -101,8 +117,8 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
           !Array.isArray(rest[key]) ||
           !_.isEqual(entity[key], rest[key])
         ) {
-        if (entity[key] !== rest[key]) {
-          addChange(key, entity[key], updates[key]);
+          if (entity[key] !== rest[key]) {
+            addChange(key, entity[key], updates[key]);
           }
         }
       }
@@ -111,7 +127,7 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
 
   const updated = Object.assign(entity, rest);
 
-  const errors = await validate(updated);
+  const errors = await validate(updated, { skipMissingProperties: true });
   if (errors.length > 0) {
     return {
       error: Object.values(errors[0].constraints)[0],
@@ -120,9 +136,9 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
 
   await updated.save();
   return {
-    [updated.constructor.name.toLowerCase()]: await updated.toJson(
-      toJsonParams
-    ),
+    [updated.constructor.name.toLowerCase()]: updated.toJson
+      ? await updated.toJson(toJsonParams)
+      : updated,
     changedValues,
   };
 }
