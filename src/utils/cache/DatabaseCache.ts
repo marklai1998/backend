@@ -1,6 +1,7 @@
 import { validate } from "class-validator";
 import _ = require("lodash");
 import { BaseEntity } from "typeorm";
+import { AdminSetting } from "../../entity/AdminSetting";
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
 import { Event } from "../../entity/events/Event";
@@ -15,6 +16,7 @@ type DBCache = {
   districts: District[];
   blocks: Block[];
   landmarks: Landmark[];
+  adminsettings: AdminSetting[];
   events: Event[];
   eventteams: EventTeam[];
 };
@@ -24,6 +26,7 @@ const DatabaseCache: DBCache = {
   districts: null,
   blocks: null,
   landmarks: null,
+  adminsettings: null,
   events: null,
   eventteams: null,
 };
@@ -52,6 +55,8 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("blocks");
   } else if (updatedObject instanceof Landmark) {
     reloadAll("landmarks");
+  } else if (updatedObject instanceof AdminSetting) {
+    reloadAll("adminsettings");
   } else if (updatedObject instanceof Event) {
     reloadAll("events");
   } else if (updatedObject instanceof EventTeam) {
@@ -72,6 +77,9 @@ async function reloadAll(type: string): Promise<void> {
       break;
     case "landmarks":
       DatabaseCache.landmarks = await Landmark.find();
+      break;
+    case "adminsettings":
+      DatabaseCache.adminsettings = await AdminSetting.find();
       break;
     case "events":
       DatabaseCache.events = await Event.find();

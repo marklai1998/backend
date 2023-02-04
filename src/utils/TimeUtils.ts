@@ -11,6 +11,7 @@ import {
   DATABASES,
   DATABASE_NAMES,
 } from "./DatabaseConnector";
+import { checkForNewMinecraftVersions } from "../components/McVersionFetch";
 
 const cache = require("../cache");
 
@@ -165,6 +166,9 @@ export function startIntervals() {
 
   // Request network server status
   executeEveryXMinutesStartingNow(pingNetworkServers, 0.5);
+
+  // Check if new minecraft version has released
+  executeEveryXMinutesStartingNow(checkForNewMinecraftVersions, 60);
 }
 
 function trackPlayerCount() {
