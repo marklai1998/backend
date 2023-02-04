@@ -4,6 +4,9 @@ import Logger from "../utils/Logger";
 import { Motd_Broadcast } from "./broadcasts/Motd_Broadcast";
 import { Broadcast } from "./broadcasts/Broadcast";
 import { joinRoom } from "./Rooms";
+import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
+import * as dbCache from "../utils/cache/DatabaseCache";
+import { User } from "../entity/User";
 
 const cache = require("../cache");
 
@@ -20,7 +23,18 @@ function init(server: http.Server): void {
   startSchedulers();
 
   io.on("connection", (socket: any) => {
-    Logger.info(`[Socket] User connected`);
+    // Auth
+    const { token } = socket.handshake.auth;
+    let user: User = <User>{};
+
+    jwt.verify(token, AUTH_SECRET, (err: any, auth: any) => {
+      if (err) {
+        return;
+      }
+      user = dbCache.findOne("users", { uid: auth.uid });
+    });
+
+    Logger.info(`[Socket] ${user.username || "User"} connected`);
 
     cache.set("connected_clients", io.engine.clientsCount);
 
@@ -43,7 +57,7 @@ function init(server: http.Server): void {
     // Disconnect
     socket.on("disconnect", () => {
       cache.set("connected_clients", io.engine.clientsCount);
-      Logger.info(`[Socket] User disconnected`);
+      Logger.info(`[Socket] ${user.username || "User"} disconnected`);
     });
   });
 }

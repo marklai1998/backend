@@ -18,6 +18,11 @@ const Rooms: Room[] = [
     permission: Permissions.default,
     join_message: { event: "motd", message_key: "current_motd" },
   },
+  // Send Block Update Information
+  {
+    name: "block_updates",
+    permission: Permissions.default,
+  },
   // Send Player Locations
   {
     name: "playerdata",

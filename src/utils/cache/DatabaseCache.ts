@@ -103,7 +103,7 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
     if (!(key in entity)) {
       delete rest[key];
     } else {
-      const update = await updateExceptions(entity.constructor.name, key, rest);
+      const update = await updateExceptions(entity, key, rest);
       if (update && entity[key] !== update) {
         addChange(key, entity[key], update);
       } else {
@@ -118,7 +118,7 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
           !_.isEqual(entity[key], rest[key])
         ) {
           if (entity[key] !== rest[key]) {
-            addChange(key, entity[key], updates[key]);
+            addChange(key, entity[key], rest[key]);
           }
         }
       }
@@ -144,18 +144,29 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
 }
 
 async function updateExceptions(
-  type: string,
+  entity: BaseEntity,
   key: any,
   rest: any
 ): Promise<boolean> {
   let newValue = undefined;
-  // Block - Builder
-  if (type === "Block" && key === "builder" && rest[key][0] === "") {
-    newValue = [];
+  // Block
+  if (entity instanceof Block) {
+    // Builder
+    if (key === "builder" && rest[key][0] === "") {
+      // newValue = [];
+      rest[key] = [];
+    }
   }
-  // User - password
-  if (type === "User" && key === "password") {
-    newValue = await hash(rest[key]);
+  // User
+  if (entity instanceof User) {
+    // Password
+    if (key === "password") {
+      newValue = await hash(rest[key]);
+    }
+    // Username
+    if (key === "username") {
+      entity.old_username = entity.username;
+    }
   }
 
   if (newValue !== undefined) {
