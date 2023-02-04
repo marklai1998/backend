@@ -80,7 +80,13 @@ function checkForNewMinecraftVersions() {
   });
 }
 
-function countNewerVersions(type: string, version: string): number {
+async function countNewerVersions(
+  type: string,
+  version: string
+): Promise<number> {
+  if (versions_java.length === 0 || versions_bedrock.length === 0) {
+    await scrapeData();
+  }
   if (type === "Java") {
     return versions_java
       .filter((v) => v.type === "Release")

@@ -324,7 +324,7 @@ async function pingProxyServers() {
   }
 }
 
-function updateStatusEmbed(servers: ServerStatus[]) {
+async function updateStatusEmbed(servers: ServerStatus[]) {
   Logger.info("Updating Server Status Embed");
 
   const nycServers = servers
@@ -337,7 +337,7 @@ function updateStatusEmbed(servers: ServerStatus[]) {
   let desc = "";
   for (const server of nycServers) {
     const version = server.version.name.split(" ")[1] || server.version.name;
-    const newerVersions = countNewerVersions("Java", version);
+    const newerVersions = await countNewerVersions("Java", version);
     desc += `${
       server.online
         ? ":green_circle: "
