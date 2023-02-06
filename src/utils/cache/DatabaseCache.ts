@@ -1,6 +1,7 @@
 import { validate } from "class-validator";
 import _ = require("lodash");
 import { BaseEntity } from "typeorm";
+import { AdminSetting } from "../../entity/AdminSetting";
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
 import { Event } from "../../entity/events/Event";
@@ -15,6 +16,7 @@ type DBCache = {
   districts: District[];
   blocks: Block[];
   landmarks: Landmark[];
+  adminsettings: AdminSetting[];
   events: Event[];
   eventteams: EventTeam[];
 };
@@ -24,6 +26,7 @@ const DatabaseCache: DBCache = {
   districts: null,
   blocks: null,
   landmarks: null,
+  adminsettings: null,
   events: null,
   eventteams: null,
 };
@@ -52,6 +55,8 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("blocks");
   } else if (updatedObject instanceof Landmark) {
     reloadAll("landmarks");
+  } else if (updatedObject instanceof AdminSetting) {
+    reloadAll("adminsettings");
   } else if (updatedObject instanceof Event) {
     reloadAll("events");
   } else if (updatedObject instanceof EventTeam) {
@@ -72,6 +77,9 @@ async function reloadAll(type: string): Promise<void> {
       break;
     case "landmarks":
       DatabaseCache.landmarks = await Landmark.find();
+      break;
+    case "adminsettings":
+      DatabaseCache.adminsettings = await AdminSetting.find();
       break;
     case "events":
       DatabaseCache.events = await Event.find();
@@ -103,7 +111,7 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
     if (!(key in entity)) {
       delete rest[key];
     } else {
-      const update = await updateExceptions(entity.constructor.name, key, rest);
+      const update = await updateExceptions(entity, key, rest);
       if (update && entity[key] !== update) {
         addChange(key, entity[key], update);
       } else {
@@ -118,7 +126,7 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
           !_.isEqual(entity[key], rest[key])
         ) {
           if (entity[key] !== rest[key]) {
-            addChange(key, entity[key], updates[key]);
+            addChange(key, entity[key], rest[key]);
           }
         }
       }
@@ -144,18 +152,29 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
 }
 
 async function updateExceptions(
-  type: string,
+  entity: BaseEntity,
   key: any,
   rest: any
 ): Promise<boolean> {
   let newValue = undefined;
-  // Block - Builder
-  if (type === "Block" && key === "builder" && rest[key][0] === "") {
-    newValue = [];
+  // Block
+  if (entity instanceof Block) {
+    // Builder
+    if (key === "builder" && rest[key][0] === "") {
+      // newValue = [];
+      rest[key] = [];
+    }
   }
-  // User - password
-  if (type === "User" && key === "password") {
-    newValue = await hash(rest[key]);
+  // User
+  if (entity instanceof User) {
+    // Password
+    if (key === "password") {
+      newValue = await hash(rest[key]);
+    }
+    // Username
+    if (key === "username") {
+      entity.old_username = entity.username;
+    }
   }
 
   if (newValue !== undefined) {

@@ -10,6 +10,7 @@ import {
 import Logger from "./Logger";
 import { ServerStatus } from "../entity/ServerStatus";
 import { getObjectDifferences } from "./JsonUtils";
+import { countNewerVersions } from "../components/McVersionFetch";
 
 export const proxyStatus = {
   java: null,
@@ -323,7 +324,7 @@ async function pingProxyServers() {
   }
 }
 
-function updateStatusEmbed(servers: ServerStatus[]) {
+async function updateStatusEmbed(servers: ServerStatus[]) {
   Logger.info("Updating Server Status Embed");
 
   const nycServers = servers
@@ -336,6 +337,7 @@ function updateStatusEmbed(servers: ServerStatus[]) {
   let desc = "";
   for (const server of nycServers) {
     const version = server.version.name.split(" ")[1] || server.version.name;
+    const newerVersions = await countNewerVersions("Java", version);
     desc += `${
       server.online
         ? ":green_circle: "
@@ -343,7 +345,9 @@ function updateStatusEmbed(servers: ServerStatus[]) {
         ? ":yellow_circle: "
         : ":red_circle: "
     }**${nycServerMapping[server.id]}** ${
-      server.version.protocol > -1 ? `[${version}]` : ""
+      server.version.protocol > -1
+        ? `[${version}${newerVersions > 0 ? ` \`↑ ${newerVersions}\`` : ``}]`
+        : ""
     }\n`;
   }
 

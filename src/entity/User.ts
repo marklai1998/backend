@@ -7,7 +7,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { IsOptional, IsUUID } from "class-validator";
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from "class-validator";
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
@@ -20,7 +26,7 @@ export class User extends BaseEntity {
   @Column({ unique: true, nullable: true, length: 36 })
   @IsUUID("4", { message: "Invalid UUID" })
   @IsOptional()
-  uuid: string;
+  mc_uuid: string;
 
   @Column({ default: 0 })
   permission: number;
@@ -56,6 +62,14 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   last_online: Date;
 
+  @Column({ nullable: true, length: 16 })
+  @IsString({ message: "Old username must be a string" })
+  @MinLength(3, { message: "Old username cannot be shorter than 3 characters" })
+  @MaxLength(16, {
+    message: "Old username cannot be longer than 16 characters",
+  })
+  old_username: string;
+
   @Column("text")
   password: string;
 
@@ -79,7 +93,7 @@ export class User extends BaseEntity {
     return {
       uid: this.uid,
       username: this.username,
-      uuid: this.uuid,
+      mc_uuid: this.mc_uuid,
       permission: this.permission,
       rank: this.rank,
       discord: this.discord,
@@ -90,6 +104,7 @@ export class User extends BaseEntity {
       settings: hasPermission ? this.settings : undefined,
       online: this.online,
       last_online: this.last_online,
+      old_username: this.old_username,
       password: showPassword ? this.password : undefined,
       apikey:
         showAPIKey && hasPermission

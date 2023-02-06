@@ -12,6 +12,7 @@ import { Permissions } from "../../../routes";
 import { allowed } from "../../../middleware/auth";
 import { log } from "../../../entity/Log";
 import { sendDistrictChange2 } from "../../../utils/DiscordMessageSender";
+import { sendToRoom } from "../../../sockets/SocketManager";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -42,6 +43,8 @@ export const put = (req: Request, res: Response) => {
         return res.status(404).send({ error: "Block not found" });
       }
 
+      const district = dbCache.findOne("districts", { id: block.district });
+
       if (
         // @ts-ignore
         (req.user.permission || Permissions.default) <= Permissions.event &&
@@ -68,6 +71,22 @@ export const put = (req: Request, res: Response) => {
           newValue: newStatus,
         };
       }
+
+      sendToRoom("block_updates", "block_updates", {
+        user: {
+          id: req.user.uid,
+          username: req.user.username,
+        },
+        block: {
+          uid: block.uid,
+          district: {
+            id: district.id,
+            name: district.name,
+          },
+          id: block.id,
+        },
+        changedValues: ret.changedValues,
+      });
 
       // Logging
       for (const [type, data] of Object.entries(ret.changedValues)) {
