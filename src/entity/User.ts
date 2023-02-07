@@ -17,6 +17,7 @@ import {
 } from "class-validator";
 import { DEFAULT_SETTINGS, UserSetting } from "./UserSetting";
 import * as dbCache from "../utils/cache/DatabaseCache";
+import { parseToPrimitive } from "../utils/JsonUtils";
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
@@ -96,14 +97,6 @@ export class User extends BaseEntity {
     showPassword?: boolean;
     hasPermission?: boolean;
   } = {}): object {
-    function parseToPrimitive(value: any) {
-      try {
-        return JSON.parse(value);
-      } catch (e) {
-        return value;
-      }
-    }
-
     const userSettings = dbCache.find(UserSetting, { user: this });
 
     const settingsWithDefaults = [];

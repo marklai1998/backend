@@ -1,5 +1,13 @@
 import lodash = require("lodash");
 
+function parseToPrimitive(value: any) {
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return value;
+  }
+}
+
 function getObjectDifferences(obj1: any, obj2: any) {
   const diff = Object.keys(obj1).reduce((result, key) => {
     if (!obj2.hasOwnProperty(key)) {
@@ -77,6 +85,7 @@ function dynamicSort(property: string) {
 }
 
 export {
+  parseToPrimitive,
   getObjectDifferences,
   checkJsonKeys,
   updateJson,

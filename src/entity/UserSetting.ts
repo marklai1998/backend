@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { parseToPrimitive } from "../utils/JsonUtils";
 import { User } from "./User";
 
 @Entity({ name: "usersettings" })
@@ -22,14 +23,6 @@ export class UserSetting extends BaseEntity {
   value: string;
 
   toJson(): object {
-    function parseToPrimitive(value: any) {
-      try {
-        return JSON.parse(value);
-      } catch (e) {
-        return value;
-      }
-    }
-
     return {
       user: this.user.uid,
       key: this.key,
