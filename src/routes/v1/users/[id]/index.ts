@@ -1,10 +1,10 @@
-import * as dbCache from "../../../utils/cache/DatabaseCache";
+import * as dbCache from "../../../../utils/cache/DatabaseCache";
 
 import { Request, Response } from "express";
 
-import { Permissions } from "../../../routes";
-import { allowed } from "../../../middleware/auth";
-import { Block } from "../../../entity/Block";
+import { Permissions } from "../../../../routes";
+import { allowed } from "../../../../middleware/auth";
+import { Block } from "../../../../entity/Block";
 
 export const get = (req: Request, res: Response) => {
   allowed({
@@ -32,7 +32,11 @@ export const get = (req: Request, res: Response) => {
       });
 
       return res.status(200).send({
-        ...user.toJson(),
+        ...user.toJson({
+          hasPermission:
+            user.permission >= Permissions.moderator ||
+            user.uid === req.user.uid,
+        }),
         claims: {
           total: blocksOfUser.length,
           done: blocksOfUser.filter((b: Block) => b.status === 4).length,

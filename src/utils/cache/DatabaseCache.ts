@@ -8,6 +8,7 @@ import { Event } from "../../entity/events/Event";
 import { EventTeam } from "../../entity/events/EventTeam";
 import { Landmark } from "../../entity/Landmark";
 import { User } from "../../entity/User";
+import { UserSettings } from "../../entity/UserSettings";
 import { hash } from "../encryption/bcrypt";
 import Logger from "../Logger";
 
@@ -19,6 +20,7 @@ type DBCache = {
   adminsettings: AdminSetting[];
   events: Event[];
   eventteams: EventTeam[];
+  usersettings: UserSettings[];
 };
 
 const DatabaseCache: DBCache = {
@@ -29,6 +31,7 @@ const DatabaseCache: DBCache = {
   adminsettings: null,
   events: null,
   eventteams: null,
+  usersettings: null,
 };
 
 async function loadAll(): Promise<number> {
@@ -61,6 +64,8 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("events");
   } else if (updatedObject instanceof EventTeam) {
     reloadAll("eventteams");
+  } else if (updatedObject instanceof UserSettings) {
+    reloadAll("usersettings");
   }
 }
 async function reloadAll(type: string): Promise<void> {
@@ -86,6 +91,9 @@ async function reloadAll(type: string): Promise<void> {
       break;
     case "eventteams":
       DatabaseCache.eventteams = await EventTeam.find();
+      break;
+    case "usersettings":
+      DatabaseCache.usersettings = await UserSettings.find();
       break;
   }
 }
@@ -135,7 +143,10 @@ async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
 
   const updated = Object.assign(entity, rest);
 
-  const errors = await validate(updated, { skipMissingProperties: true });
+  const errors = await validate(updated, {
+    skipMissingProperties: true,
+    forbidUnknownValues: false,
+  });
   if (errors.length > 0) {
     return {
       error: Object.values(errors[0].constraints)[0],
@@ -190,7 +201,7 @@ function search(type: string, conditions: any, onlyOne: boolean) {
     let found = true;
     if (conditions) {
       for (const [key, value] of Object.entries(conditions)) {
-        if (element[key] != value) {
+        if (!_.isEqual(element[key], value)) {
           found = false;
           break;
         }

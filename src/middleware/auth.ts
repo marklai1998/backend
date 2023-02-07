@@ -105,13 +105,13 @@ function checkArgs(
   // Check required arguments
   if (required) {
     for (const [key, value] of Object.entries(required)) {
-      if (!body[key]) {
+      if (body[key] === undefined || body[key] === null) {
         res
           .status(400)
           .send({ error: `Required body key '${key}' is missing` });
         return;
       }
-      if (typeof body[key] !== value) {
+      if (value !== "any" && typeof body[key] !== value) {
         res
           .status(400)
           .send({ error: `The body key '${key}' must be of type '${value}'` });

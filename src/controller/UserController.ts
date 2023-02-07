@@ -178,7 +178,6 @@ export class UserController {
     user.about = "";
     user.picture = "";
     user.image = "";
-    user.settings = {};
     user.password = registration.password;
     user.apikey = generateUUID();
     Logger.info(
@@ -297,7 +296,6 @@ export class UserController {
       user.about = "";
       user.picture = "";
       user.image = "";
-      user.settings = {};
       user.password = registration.password;
       user.apikey = generateUUID();
       Logger.info(
@@ -344,7 +342,6 @@ export class UserController {
     user.image = "";
     user.online = false;
     user.last_online = new Date();
-    user.settings = {};
     user.password = await hash(ssoPw);
     user.apikey = generateUUID();
     Logger.info(

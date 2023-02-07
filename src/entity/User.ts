@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import {
@@ -14,6 +15,8 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
+import { DEFAULT_SETTINGS, UserSettings } from "./UserSettings";
+import * as dbCache from "../utils/cache/DatabaseCache";
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
@@ -53,8 +56,11 @@ export class User extends BaseEntity {
   })
   stats: string;
 
-  @Column("simple-json", { default: "{}" })
-  settings: {};
+  @OneToMany(
+    () => UserSettings,
+    (userSettings: UserSettings) => userSettings.user
+  )
+  settings: UserSettings[];
 
   @Column({ default: false })
   online: boolean;
@@ -90,6 +96,28 @@ export class User extends BaseEntity {
     showPassword?: boolean;
     hasPermission?: boolean;
   } = {}): object {
+    function parseToPrimitive(value: any) {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    }
+
+    const userSettings = dbCache.find("usersettings", { user: this });
+
+    const settingsWithDefaults = [];
+    for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+      settingsWithDefaults.push({
+        key,
+        value:
+          parseToPrimitive(
+            userSettings.find((setting: UserSettings) => setting.key === key)
+              ?.value
+          ) ?? value,
+      });
+    }
+
     return {
       uid: this.uid,
       username: this.username,
@@ -101,7 +129,7 @@ export class User extends BaseEntity {
       image: this.image,
       picture: this.picture,
       stats: JSON.parse(this.stats),
-      settings: hasPermission ? this.settings : undefined,
+      settings: hasPermission ? settingsWithDefaults : undefined,
       online: this.online,
       last_online: this.last_online,
       old_username: this.old_username,

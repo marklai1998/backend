@@ -149,7 +149,6 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
           username: "root",
           permission: 4,
           discord: "Root#1234",
-          settings: "{}",
           about:
             "The Root user of the Website, only for development use. Please always use your right user.",
           image:
