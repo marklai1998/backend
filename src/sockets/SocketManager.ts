@@ -31,7 +31,7 @@ function init(server: http.Server): void {
       if (err) {
         return;
       }
-      user = dbCache.findOne("users", { uid: auth.uid });
+      user = dbCache.findOne(User, { uid: auth.uid });
     });
 
     Logger.info(`[Socket] ${user.username || "User"} connected`);

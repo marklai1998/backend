@@ -3,6 +3,7 @@ import { allowed } from "../../../../middleware/auth";
 import * as dbCache from "../../../../utils/cache/DatabaseCache";
 import { Permissions } from "../../../../routes";
 import Logger from "../../../../utils/Logger";
+import { Event } from "../../../../entity/events/Event";
 
 export const get = (req: Request, res: Response) => {
   allowed({
@@ -10,7 +11,7 @@ export const get = (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const event = dbCache.findOne("events", { uuid: req.params.id });
+      const event = dbCache.findOne(Event, { uuid: req.params.id });
       if (!event) {
         return res.status(404).send({ error: "Event not found" });
       }
@@ -27,7 +28,7 @@ export const put = (req: Request, res: Response) => {
     res,
     callback: async () => {
       const uuid = req.params.id;
-      const event = dbCache.findOne("events", { uuid });
+      const event = dbCache.findOne(Event, { uuid });
       if (!event) {
         return res.status(404).send({ error: "Event not found" });
       }
@@ -48,7 +49,7 @@ export const del = (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const event = dbCache.findOne("events", { uuid: req.params.id });
+      const event = dbCache.findOne(Event, { uuid: req.params.id });
       if (!event) {
         return res.status(404).send({ error: "Event not found" });
       }

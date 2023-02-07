@@ -16,7 +16,7 @@ export const get = (req: Request, res: Response) => {
     callback: () => {
       return res.send(
         dbCache
-          .find("landmarks")
+          .find(Landmark)
           .map((landmark: Landmark) => landmark.toJson({ newVersion: true }))
       );
     },
@@ -37,7 +37,7 @@ export const post = (req: Request, res: Response) => {
 
       if (checkKeys) return res.status(400).send(checkKeys);
 
-      let landmark = dbCache.findOne("landmarks", { name: req.body.name });
+      let landmark = dbCache.findOne(Landmark, { name: req.body.name });
       if (landmark) {
         return res
           .status(400)

@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
-import {
-  DEFAULT_SETTINGS,
-  UserSettings,
-} from "../../../../entity/UserSettings";
+import { User } from "../../../../entity/User";
+import { DEFAULT_SETTINGS, UserSetting } from "../../../../entity/UserSetting";
 import { allowed } from "../../../../middleware/auth";
 import { Permissions } from "../../../../routes";
 import * as dbCache from "../../../../utils/cache/DatabaseCache";
@@ -18,7 +16,7 @@ export const post = (req: Request, res: Response) => {
     },
     callback: async () => {
       const id = parseInt(req.params.id);
-      const user = dbCache.findOne("users", { uid: id });
+      const user = dbCache.findOne(User, { uid: id });
 
       if (user.uid !== id && req.user.permission < Permissions.moderator) {
         return res.status(403).json({
@@ -30,7 +28,7 @@ export const post = (req: Request, res: Response) => {
         return res.status(400).send({ error: "Invalid key" });
       }
 
-      let setting = dbCache.findOne("usersettings", {
+      let setting = dbCache.findOne(UserSetting, {
         key: req.body.key,
         user: req.user,
       });
@@ -48,7 +46,7 @@ export const post = (req: Request, res: Response) => {
           res.send(ret);
         }
       } else {
-        setting = UserSettings.create({
+        setting = UserSetting.create({
           key: req.body.key,
           value: req.body.value.toString(),
           user,

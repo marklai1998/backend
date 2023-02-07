@@ -6,6 +6,7 @@ import Logger from "../utils/Logger";
 import { User } from "./User";
 import { log } from "./Log";
 import responses from "../responses";
+import { Block } from "./Block";
 
 @Entity({ name: "landmarks" })
 export class Landmark extends BaseEntity {
@@ -50,7 +51,7 @@ export class Landmark extends BaseEntity {
   location: number[];
 
   toJson({ newVersion = false }: { newVersion?: boolean } = {}): object {
-    const block = dbCache.findOne("blocks", { uid: this.blockID });
+    const block = dbCache.findOne(Block, { uid: this.blockID });
 
     if (newVersion) {
       return {

@@ -8,7 +8,7 @@ import { Event } from "../../entity/events/Event";
 import { EventTeam } from "../../entity/events/EventTeam";
 import { Landmark } from "../../entity/Landmark";
 import { User } from "../../entity/User";
-import { UserSettings } from "../../entity/UserSettings";
+import { UserSetting } from "../../entity/UserSetting";
 import { hash } from "../encryption/bcrypt";
 import Logger from "../Logger";
 
@@ -20,7 +20,7 @@ type DBCache = {
   adminsettings: AdminSetting[];
   events: Event[];
   eventteams: EventTeam[];
-  usersettings: UserSettings[];
+  usersettings: UserSetting[];
 };
 
 const DatabaseCache: DBCache = {
@@ -64,7 +64,7 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("events");
   } else if (updatedObject instanceof EventTeam) {
     reloadAll("eventteams");
-  } else if (updatedObject instanceof UserSettings) {
+  } else if (updatedObject instanceof UserSetting) {
     reloadAll("usersettings");
   }
 }
@@ -93,15 +93,21 @@ async function reloadAll(type: string): Promise<void> {
       DatabaseCache.eventteams = await EventTeam.find();
       break;
     case "usersettings":
-      DatabaseCache.usersettings = await UserSettings.find();
+      DatabaseCache.usersettings = await UserSetting.find();
       break;
   }
 }
 
-function findOne(type: string, conditions?: any) {
+function findOne<Type extends BaseEntity>(
+  type: { new (): Type },
+  conditions?: any
+): Type {
   return search(type, conditions, true);
 }
-function find(type: string, conditions?: any) {
+function find<Type extends BaseEntity>(
+  type: { new (): Type },
+  conditions?: any
+): Type[] {
   return search(type, conditions, false);
 }
 async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
@@ -195,9 +201,13 @@ async function updateExceptions(
   return newValue;
 }
 
-function search(type: string, conditions: any, onlyOne: boolean) {
+function search<Type extends BaseEntity>(
+  type: { new (): Type },
+  conditions: any,
+  onlyOne: boolean
+) {
   const res = [];
-  for (const element of DatabaseCache[type]) {
+  for (const element of DatabaseCache[type.name.toLowerCase() + "s"]) {
     let found = true;
     if (conditions) {
       for (const [key, value] of Object.entries(conditions)) {

@@ -8,6 +8,7 @@ import { allowed } from "../../../middleware/auth";
 import Logger from "../../../utils/Logger";
 import { validate } from "../../../utils/Validation";
 import { recalculateAll } from "../../../utils/ProgressCalculation";
+import { District } from "../../../entity/District";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -15,7 +16,7 @@ export const get = async (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const blocksRaw = dbCache.find("blocks");
+      const blocksRaw = dbCache.find(Block);
 
       const blocks = [];
       for (const block of blocksRaw) {
@@ -41,12 +42,12 @@ export const post = (req: Request, res: Response) => {
         return res.status(400).send({ error: "The district must be a number" });
       }
 
-      const district = dbCache.findOne("districts", { id: districtID });
+      const district = dbCache.findOne(District, { id: districtID });
       if (!district) {
         return res.status(404).send({ error: "District not found" });
       }
 
-      const blocks = dbCache.find("blocks", { district: districtID });
+      const blocks = dbCache.find(Block, { district: districtID });
 
       const block = new Block();
       block.id = Math.max(...blocks.map((block: Block) => block.id)) + 1;

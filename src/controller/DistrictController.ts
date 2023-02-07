@@ -99,7 +99,7 @@ export class DistrictController {
   }
 
   async getOne(request: Request, response: Response, next: NextFunction) {
-    const district = dbCache.findOne("districts", {
+    const district = dbCache.findOne(District, {
       name: request.params.name,
     });
 

@@ -83,7 +83,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
         route.route,
         async (req: Request, res: Response, next: Function) => {
           const time = new Date().getTime();
-          let user = dbCache.findOne("users", {
+          let user = dbCache.findOne(User, {
             apikey: req.body.key || req.query.key,
           });
           try {

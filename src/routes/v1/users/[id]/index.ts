@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import { Permissions } from "../../../../routes";
 import { allowed } from "../../../../middleware/auth";
 import { Block } from "../../../../entity/Block";
+import { User } from "../../../../entity/User";
 
 export const get = (req: Request, res: Response) => {
   allowed({
@@ -18,10 +19,10 @@ export const get = (req: Request, res: Response) => {
         return res.status(400).json({ error: "Invalid id" });
       }
 
-      const user = dbCache.findOne("users", { uid: id });
+      const user = dbCache.findOne(User, { uid: id });
 
       // Calculate Claim stats
-      const blocks = dbCache.find("blocks");
+      const blocks = dbCache.find(Block);
       const blocksOfUser = blocks.filter((b: Block) => {
         for (const builder of b.builder) {
           if (builder.toLowerCase() === user.username.toLowerCase()) {
@@ -68,7 +69,7 @@ export const put = (req: Request, res: Response) => {
           .json({ error: "You are not allowed to update other users" });
       }
 
-      const userToEdit = dbCache.findOne("users", { uid: id });
+      const userToEdit = dbCache.findOne(User, { uid: id });
 
       const ret = await dbCache.update(userToEdit, req.body);
 

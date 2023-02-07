@@ -4,6 +4,7 @@ import * as dbCache from "../../../utils/cache/DatabaseCache";
 import { Permissions } from "../../../routes";
 import { allowed } from "../../../middleware/auth";
 import Logger from "../../../utils/Logger";
+import { Landmark } from "../../../entity/Landmark";
 
 export const get = (req: Request, res: Response) => {
   allowed({
@@ -11,7 +12,7 @@ export const get = (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const landmark = dbCache.findOne("landmarks", { id: req.params.id });
+      const landmark = dbCache.findOne(Landmark, { id: req.params.id });
 
       if (!landmark) {
         return res.status(404).send({ error: "Landmark not found" });
@@ -28,7 +29,7 @@ export const put = (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const landmark = dbCache.findOne("landmarks", { id: req.params.id });
+      const landmark = dbCache.findOne(Landmark, { id: req.params.id });
 
       if (!landmark) {
         return res.status(404).send({ error: "Landmark not found" });
@@ -53,7 +54,7 @@ export const del = (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const landmark = dbCache.findOne("landmarks", { id: req.params.id });
+      const landmark = dbCache.findOne(Landmark, { id: req.params.id });
       if (!landmark) {
         return res.status(404).send({ error: "Landmark not found" });
       }

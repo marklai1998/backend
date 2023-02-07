@@ -89,7 +89,7 @@ export class Block extends BaseEntity {
       district: showDistrict
         ? {
             id: this.district,
-            name: dbCache.findOne("districts", { id: this.district }).name,
+            name: dbCache.findOne(District, { id: this.district }).name,
           }
         : undefined,
       status: this.status,
@@ -99,7 +99,7 @@ export class Block extends BaseEntity {
       completionDate: this.completionDate,
       landmarks: showLandmarks
         ? dbCache
-            .find("landmarks", { blockID: this.uid })
+            .find(Landmark, { blockID: this.uid })
             .map((landmark: Landmark) => landmark.toJson())
         : undefined,
       center: this.getLocationCenter(),

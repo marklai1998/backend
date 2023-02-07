@@ -13,7 +13,7 @@ export const get = (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const result = dbCache.find("districts");
+      const result = dbCache.find(District);
 
       const districts = [];
       for (const district of result) {
@@ -40,7 +40,7 @@ export const post = (req: Request, res: Response) => {
         return res.status(400).send({ error: "Specify a parent" });
       }
 
-      const parent = dbCache.findOne("districts", { id: req.body.parent });
+      const parent = dbCache.findOne(District, { id: req.body.parent });
       if (!parent) {
         return res.status(400).send({ error: "Parent District not found" });
       }

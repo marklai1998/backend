@@ -57,7 +57,7 @@ export class District extends BaseEntity {
   async toJson({
     onlyProgress = true,
     showDetails = true,
-  }: { onlyProgress?: boolean; showDetails?: boolean } = {}): Promise<object> {
+  }: { onlyProgress?: boolean; showDetails?: boolean } = {}): Promise<any> {
     let builders = undefined;
     let blocks = undefined;
 
@@ -113,7 +113,7 @@ export class District extends BaseEntity {
 
   getBlocks(): object[] {
     return dbCache
-      .find("blocks", { district: this.id })
+      .find(Block, { district: this.id })
       .map((block: Block) => block.toJson());
   }
 

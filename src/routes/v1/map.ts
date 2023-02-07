@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 
 import { Permissions } from "../../routes";
 import { allowed } from "../../middleware/auth";
+import { Block } from "../../entity/Block";
+import { District } from "../../entity/District";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -11,7 +13,7 @@ export const get = async (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const blocks = dbCache.find("blocks");
+      const blocks = dbCache.find(Block);
       if (!blocks) {
         return res.status(404).send({ error: "No blocks found" });
       }
@@ -40,7 +42,7 @@ export const get = async (req: Request, res: Response) => {
         area.push(area[0]);
         const b = { ...bl };
         b.area = undefined;
-        b.builder = bl.builder.join(",");
+        b.builder = bl.builder;
 
         result.push({
           type: "Feature",
@@ -60,7 +62,7 @@ export const get = async (req: Request, res: Response) => {
           center: req.query.district
             ? (
                 await dbCache
-                  .findOne("districts", { id: req.query.district })
+                  .findOne(District, { id: req.query.district })
                   .toJson()
               ).center
             : null,

@@ -264,7 +264,10 @@ export class BlockController {
       counter++;
     }
     if (values.builder !== undefined) {
-      await block.setBuilder(values.builder === "" ? [] : values.builder.split(","), user);
+      await block.setBuilder(
+        values.builder === "" ? [] : values.builder.split(","),
+        user
+      );
       counter++;
     }
     Logger.info(`Updating block ${block.uid} (${counter} columns updated)`);
@@ -354,14 +357,14 @@ export class BlockController {
 function getBlock(districtID: string | number, blockID: number) {
   const district =
     typeof districtID === "string"
-      ? dbCache.findOne("districts", { name: districtID })
-      : dbCache.findOne("districts", { id: districtID });
+      ? dbCache.findOne(District, { name: districtID })
+      : dbCache.findOne(District, { id: districtID });
 
   if (!district) {
     return null;
   }
 
-  const block = dbCache.findOne("blocks", {
+  const block = dbCache.findOne(Block, {
     id: blockID,
     district: district.id,
   });

@@ -15,7 +15,7 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
-import { DEFAULT_SETTINGS, UserSettings } from "./UserSettings";
+import { DEFAULT_SETTINGS, UserSetting } from "./UserSetting";
 import * as dbCache from "../utils/cache/DatabaseCache";
 
 @Entity({ name: "users" })
@@ -57,10 +57,10 @@ export class User extends BaseEntity {
   stats: string;
 
   @OneToMany(
-    () => UserSettings,
-    (userSettings: UserSettings) => userSettings.user
+    () => UserSetting,
+    (userSettings: UserSetting) => userSettings.user
   )
-  settings: UserSettings[];
+  settings: UserSetting[];
 
   @Column({ default: false })
   online: boolean;
@@ -104,7 +104,7 @@ export class User extends BaseEntity {
       }
     }
 
-    const userSettings = dbCache.find("usersettings", { user: this });
+    const userSettings = dbCache.find(UserSetting, { user: this });
 
     const settingsWithDefaults = [];
     for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
@@ -112,7 +112,7 @@ export class User extends BaseEntity {
         key,
         value:
           parseToPrimitive(
-            userSettings.find((setting: UserSettings) => setting.key === key)
+            userSettings.find((setting: UserSetting) => setting.key === key)
               ?.value
           ) ?? value,
       });

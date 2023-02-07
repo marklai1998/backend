@@ -8,7 +8,7 @@ import {
 import { User } from "./User";
 
 @Entity()
-export class UserSettings extends BaseEntity {
+export class UserSetting extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   uuid: string;
 

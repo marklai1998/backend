@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Block } from "../../../entity/Block";
 import { allowed } from "../../../middleware/auth";
 import { Permissions } from "../../../routes";
 
@@ -10,7 +11,7 @@ export const get = (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const blocksRaw = dbCache.find("blocks", { eventBlock: true });
+      const blocksRaw = dbCache.find(Block, { eventBlock: true });
 
       const blocks = [];
       for (const block of blocksRaw) {

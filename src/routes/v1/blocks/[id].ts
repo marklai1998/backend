@@ -1,6 +1,6 @@
 import * as dbCache from "../../../utils/cache/DatabaseCache";
 
-import { Block, setStatus, update } from "../../../entity/Block";
+import { Block, setStatus } from "../../../entity/Block";
 import { Request, Response } from "express";
 import {
   recalculateAll,
@@ -13,6 +13,7 @@ import { allowed } from "../../../middleware/auth";
 import { log } from "../../../entity/Log";
 import { sendDistrictChange2 } from "../../../utils/DiscordMessageSender";
 import { sendToRoom } from "../../../sockets/SocketManager";
+import { District } from "../../../entity/District";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -20,7 +21,7 @@ export const get = async (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const block = dbCache.findOne("blocks", { uid: req.params.id });
+      const block = dbCache.findOne(Block, { uid: req.params.id });
 
       if (!block) {
         return res.status(404).send({ error: "Block not found" });
@@ -38,12 +39,12 @@ export const put = (req: Request, res: Response) => {
     res,
     callback: async () => {
       const id = req.params.id;
-      const block = dbCache.findOne("blocks", { uid: id });
+      const block = dbCache.findOne(Block, { uid: id });
       if (!block) {
         return res.status(404).send({ error: "Block not found" });
       }
 
-      const district = dbCache.findOne("districts", { id: block.district });
+      const district = dbCache.findOne(District, { id: block.district });
 
       if (
         // @ts-ignore
@@ -125,7 +126,7 @@ export const del = (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const block = dbCache.findOne("blocks", { uid: req.params.id });
+      const block = dbCache.findOne(Block, { uid: req.params.id });
       if (!block) {
         return res.status(404).send({ error: "Block not found" });
       }

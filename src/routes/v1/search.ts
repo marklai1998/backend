@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import { Block } from "../../entity/Block";
+import { District } from "../../entity/District";
 import { allowed } from "../../middleware/auth";
 import { Permissions } from "../../routes";
 import * as dbCache from "../../utils/cache/DatabaseCache";
@@ -23,7 +25,7 @@ export const get = (req: Request, res: Response) => {
         // Latitude Longitude
         const point = data.split(",").map((d: string) => parseFloat(d));
 
-        const districts = dbCache.find("districts");
+        const districts = dbCache.find(District);
         for (const district of districts) {
           const areaD = JSON.parse(district.area);
 
@@ -31,7 +33,7 @@ export const get = (req: Request, res: Response) => {
 
           if (insidePolygon(point, areaD)) {
             // District found
-            const blocks = dbCache.find("blocks", { district: district.id });
+            const blocks = dbCache.find(Block, { district: district.id });
 
             for (const block of blocks) {
               const areaB = JSON.parse(block.area);

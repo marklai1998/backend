@@ -16,7 +16,7 @@ export const get = (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const users = dbCache.find("users");
+      const users = dbCache.find(User);
 
       return res.send(
         users.map((user: User) =>
@@ -42,7 +42,7 @@ export const post = (req: Request, res: Response) => {
           .send({ error: "Specify Username, Discord and password" });
       }
 
-      if (dbCache.findOne("users", { username: req.body.username })) {
+      if (dbCache.findOne(User, { username: req.body.username })) {
         return res.status(400).send({
           error:
             "A user with this username already exists. Try to login instead or select another one!",

@@ -12,7 +12,7 @@ export const get = (req: Request, res: Response) => {
     req,
     res,
     callback: () => {
-      const events = dbCache.find("events");
+      const events = dbCache.find(Event);
       return res.send(events);
     },
   });

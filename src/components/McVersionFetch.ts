@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AdminSetting } from "../entity/AdminSetting";
 import * as dbCache from "../utils/cache/DatabaseCache";
 
 const cheerio = require("cheerio");
@@ -55,7 +56,7 @@ async function scrapeData(): Promise<void> {
 
 function checkForNewMinecraftVersions() {
   scrapeData().then(() => {
-    const currentVersions = dbCache.findOne("adminsettings", {
+    const currentVersions = dbCache.findOne(AdminSetting, {
       key: "newest_versions",
     });
 

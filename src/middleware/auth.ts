@@ -55,7 +55,7 @@ async function auth(req: Request, res: Response, next: NextFunction) {
       req.user = {};
       return next();
     }
-    const user = dbCache.findOne("users", { uid: auth.uid });
+    const user = dbCache.findOne(User, { uid: auth.uid });
 
     req.user = user;
     return next();

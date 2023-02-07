@@ -57,7 +57,7 @@ export class UserController {
       });
     }
 
-    if (dbCache.findOne("users", { username: request.body.username })) {
+    if (dbCache.findOne(User, { username: request.body.username })) {
       return responses.error({
         message:
           "A user with this username already exists. Try to login instead!",
@@ -265,7 +265,7 @@ export class UserController {
         code: 400,
       });
     }
-    const reviewer = dbCache.findOne("users", {
+    const reviewer = dbCache.findOne(User, {
       apikey: request.body.key || request.query.key,
     });
     if (!request.body.id && !(reviewer?.permission >= Permissions.moderator)) {
@@ -397,8 +397,8 @@ export class UserController {
   }
 
   async getAll(request: Request, response: Response, next: NextFunction) {
-    const userRaw = dbCache.find("users");
-    const requester = dbCache.findOne("users", {
+    const userRaw = dbCache.find(User);
+    const requester = dbCache.findOne(User, {
       apikey: request.body.key || request.query.key,
     });
 
@@ -414,9 +414,9 @@ export class UserController {
 
   async getOne(request: Request, response: Response, next: NextFunction) {
     const user =
-      dbCache.findOne("users", { uid: request.params.user }) ||
-      dbCache.findOne("users", { username: request.params.user });
-    const requester = dbCache.findOne("users", {
+      dbCache.findOne(User, { uid: request.params.user }) ||
+      dbCache.findOne(User, { username: request.params.user });
+    const requester = dbCache.findOne(User, {
       apikey: request.body.key || request.query.key,
     });
 
@@ -438,8 +438,8 @@ export class UserController {
     }
 
     const key = request.body.key || request.query.key;
-    const requester = dbCache.findOne("users", { apikey: key });
-    const user = dbCache.findOne("users", { uid: request.body.uid });
+    const requester = dbCache.findOne(User, { apikey: key });
+    const user = dbCache.findOne(User, { uid: request.body.uid });
 
     if (
       requester.permission < Permissions.admin &&

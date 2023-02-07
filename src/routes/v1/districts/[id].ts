@@ -5,6 +5,8 @@ import { Request, Response } from "express";
 import Logger from "../../../utils/Logger";
 import { Permissions } from "../../../routes";
 import { allowed } from "../../../middleware/auth";
+import { District } from "../../../entity/District";
+import { Block } from "../../../entity/Block";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -12,7 +14,7 @@ export const get = async (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
-      const district = dbCache.findOne("districts", { id: req.params.id });
+      const district = dbCache.findOne(District, { id: req.params.id });
 
       if (!district) {
         return res.status(404).send({ error: "No district found" });
@@ -30,7 +32,7 @@ export const put = (req: Request, res: Response) => {
     callback: async () => {
       const id = req.params.id;
 
-      const district = dbCache.findOne("districts", { id: id });
+      const district = dbCache.findOne(District, { id: id });
       if (!district) {
         return res.status(404).send({ error: "District not found" });
       }
@@ -62,12 +64,12 @@ export const del = async (req: Request, res: Response) => {
           .status(400)
           .send({ error: "You cannot delete initial district" });
       }
-      const district = dbCache.findOne("districts", { id: req.params.id });
+      const district = dbCache.findOne(District, { id: req.params.id });
       if (!district) {
         return res.status(404).send({ error: "District not found" });
       }
 
-      const blocks = dbCache.find("blocks", { district: req.params.id });
+      const blocks = dbCache.find(Block, { district: req.params.id });
       if (blocks.length > 0) {
         return res
           .status(400)

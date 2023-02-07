@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 
 import * as dbCache from "../utils/cache/DatabaseCache";
+import { User } from "./User";
 
 @Entity({ name: "maps" })
 export class Map extends BaseEntity {
@@ -69,7 +70,7 @@ export class Map extends BaseEntity {
       id: this.id,
       uuid: this.uuid,
       name: this.name,
-      owner: dbCache.findOne("users", { uid: this.owner }).toJson(),
+      owner: dbCache.findOne(User, { uid: this.owner }).toJson(),
       users: showDetails ? this.users : undefined,
       elements: showDetails ? this.elements : undefined,
       settings: this.settings,
