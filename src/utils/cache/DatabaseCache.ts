@@ -211,7 +211,12 @@ function search<Type extends BaseEntity>(
     let found = true;
     if (conditions) {
       for (const [key, value] of Object.entries(conditions)) {
-        if (!_.isEqual(element[key], value)) {
+        if (typeof element[key] === "object" && typeof value === "object") {
+          if (!_.isEqual(element[key], value)) {
+            found = false;
+            break;
+          }
+        } else if (element[key] != value) {
           found = false;
           break;
         }
