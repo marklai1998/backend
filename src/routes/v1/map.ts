@@ -2,10 +2,10 @@ import * as dbCache from "../../utils/cache/DatabaseCache";
 
 import { Request, Response } from "express";
 
-import { Permissions } from "../../routes";
-import { allowed } from "../../middleware/auth";
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
+import { Permissions } from "../../routes";
+import { allowed } from "../../middleware/auth";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -40,9 +40,9 @@ export const get = async (req: Request, res: Response) => {
         //if (bl.uid >= parseInt(req.query.max.toString() || "100")) continue;
         const area = JSON.parse(bl.area).map((a: number[]) => [a[1], a[0]]);
         area.push(area[0]);
-        const b = { ...bl };
+        const b: any = { ...bl };
         b.area = undefined;
-        b.builder = bl.builder;
+        b.builder = bl.builder.join(",");
 
         result.push({
           type: "Feature",
