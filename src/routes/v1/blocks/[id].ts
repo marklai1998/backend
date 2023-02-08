@@ -73,21 +73,23 @@ export const put = (req: Request, res: Response) => {
         };
       }
 
-      sendToRoom("block_updates", "block_updates", {
-        user: {
-          id: req.user.uid,
-          username: req.user.username,
-        },
-        block: {
-          uid: block.uid,
-          district: {
-            id: district.id,
-            name: district.name,
+      if (Object.keys(ret.changedValues).length > 0) {
+        sendToRoom("block_updates", "block_updates", {
+          user: {
+            id: req.user.uid,
+            username: req.user.username,
           },
-          id: block.id,
-        },
-        changedValues: ret.changedValues,
-      });
+          block: {
+            uid: block.uid,
+            district: {
+              id: district.id,
+              name: district.name,
+            },
+            id: block.id,
+          },
+          changedValues: ret.changedValues,
+        });
+      }
 
       // Logging
       for (const [type, data] of Object.entries(ret.changedValues)) {
