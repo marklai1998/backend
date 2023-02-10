@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 
 import { Block } from "../../entity/Block";
 import { District } from "../../entity/District";
+import { Landmark } from "../../entity/Landmark";
 import { Permissions } from "../../routes";
 import { allowed } from "../../middleware/auth";
 
@@ -13,11 +14,46 @@ export const get = async (req: Request, res: Response) => {
     req,
     res,
     callback: async () => {
+      const result = [];
+      if (req.query.landmarks) {
+        const landmarks = dbCache.find(Landmark);
+        if (!landmarks) {
+          return res.status(404).send({ error: "No blocks found" });
+        }
+        for (const landmark of landmarks) {
+          result.push({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [landmark.location[1], landmark.location[0]],
+            },
+            properties: {
+              ...landmark,
+              status: !landmark.enabled
+                ? 0
+                : landmark.done
+                ? 4
+                : landmark.requests != "[]"
+                ? landmark.builder != "[]"
+                  ? 3
+                  : 2
+                : 1,
+            },
+            id: landmark.id,
+          });
+        }
+        return res.json({
+          forceNoFormat: true,
+          data: {
+            type: "FeatureCollection",
+            features: result,
+          },
+        });
+      }
       const blocks = dbCache.find(Block);
       if (!blocks) {
         return res.status(404).send({ error: "No blocks found" });
       }
-      const result = [];
 
       for (const bl of blocks) {
         if (
