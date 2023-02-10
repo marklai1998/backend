@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, UserSetting } from "../../../../entity/UserSetting";
 import { allowed } from "../../../../middleware/auth";
 import { Permissions } from "../../../../routes";
 import * as dbCache from "../../../../utils/cache/DatabaseCache";
+import { parseToPrimitive } from "../../../../utils/JsonUtils";
 
 export const post = (req: Request, res: Response) => {
   allowed({
@@ -30,17 +31,19 @@ export const post = (req: Request, res: Response) => {
 
       let setting = dbCache.findOne(UserSetting, {
         key: req.body.key,
-        user: req.user,
+        user,
       });
 
+      const parsedValue = parseToPrimitive(req.body.value);
+
       if (setting) {
-        if (DEFAULT_SETTINGS[req.body.key] == req.body.value) {
+        if (DEFAULT_SETTINGS[req.body.key] === parsedValue) {
           await setting.remove();
           res.send(setting.toJson());
         } else {
           const ret = await dbCache.update(setting, {
             key: req.body.key,
-            value: req.body.value.toString(),
+            value: parsedValue.toString(),
             user,
           });
           res.send(ret);
@@ -48,7 +51,7 @@ export const post = (req: Request, res: Response) => {
       } else {
         setting = UserSetting.create({
           key: req.body.key,
-          value: req.body.value.toString(),
+          value: parsedValue.toString(),
           user,
         });
 
