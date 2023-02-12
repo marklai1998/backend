@@ -14,6 +14,7 @@ import { log } from "../../../entity/Log";
 import { sendDistrictChange2 } from "../../../utils/DiscordMessageSender";
 import { sendToRoom } from "../../../sockets/SocketManager";
 import { District } from "../../../entity/District";
+import { Landmark } from "../../../entity/Landmark";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -71,6 +72,18 @@ export const put = (req: Request, res: Response) => {
           oldValue: oldStatus,
           newValue: newStatus,
         };
+
+        // Complete landmarks if block is done
+        if (newStatus === 4) {
+          const landmarkSaves = [];
+          for (const landmark of dbCache.find(Landmark, {
+            blockID: block.uid,
+          })) {
+            landmark.done = true;
+            landmarkSaves.push(landmark.save());
+          }
+          await Promise.allSettled(landmarkSaves);
+        }
       }
 
       if (Object.keys(ret.changedValues).length > 0) {
