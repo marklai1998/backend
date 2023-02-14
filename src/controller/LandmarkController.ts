@@ -39,12 +39,12 @@ export class LandmarkController {
       });
     }
 
+    const locSplit = request.body.location.split(", ");
+
     landmark = new Landmark();
     landmark.name = request.body.name;
     landmark.blockID = block.uid;
-    // landmark.district = request.body.district;
-    // landmark.block = request.body.blockID;
-    landmark.location = request.body.location;
+    landmark.location = [locSplit[0], locSplit[1]];
     Logger.info(`Creating landmark ${landmark.name}`);
 
     return responses.validate(landmark, "Landmark created", {
