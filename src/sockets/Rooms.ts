@@ -1,6 +1,7 @@
 import { Permissions } from "../routes";
 import { User } from "../entity/User";
 import { sendToRoom } from "./SocketManager";
+import * as dbCache from "../utils/cache/DatabaseCache";
 
 const cache = require("../cache");
 
@@ -40,14 +41,24 @@ const Rooms: Room[] = [
         },
       },
       {
-        name: "join",
+        name: "playerJoin",
         callback: (msg: any) => {
+          const joinedPlayer = JSON.parse(msg);
+          const user = dbCache.findOne(User, { mc_uuid: joinedPlayer.uuid });
+
+          dbCache.update(user, { online: true });
+
           sendToRoom("playerdata", "player_join", msg);
         },
       },
       {
-        name: "leave",
+        name: "playerLeave",
         callback: (msg: any) => {
+          const joinedPlayer = JSON.parse(msg);
+          const user = dbCache.findOne(User, { mc_uuid: joinedPlayer.uuid });
+
+          dbCache.update(user, { online: false });
+
           sendToRoom("playerdata", "player_leave", msg);
         },
       },
