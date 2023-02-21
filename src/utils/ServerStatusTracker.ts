@@ -355,7 +355,7 @@ async function updateStatusEmbed(servers: ServerStatus[]) {
   if (proxyStatus.bedrock) {
     const newerVersions = await countNewerVersions(
       "Bedrock",
-      proxyStatus.bedrock.version?.name
+      `v${proxyStatus.bedrock.version?.name}`
     );
 
     desc += `${
