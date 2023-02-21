@@ -40,7 +40,7 @@ const TIMEOUT = 20000;
 export async function pingNetworkServers() {
   if (currentlyUpdating) return;
 
-  pingProxyServers();
+  let serverStatusChanged = await pingProxyServers();
 
   currentlyUpdating = true;
   const time = new Date().getTime();
@@ -97,7 +97,6 @@ export async function pingNetworkServers() {
 
       // Update server status
       const savesNew = [];
-      let serverStatusChanged = false;
       for (let i = 0; i < serverNames.length; i++) {
         const res = responses[i];
         const oldValue = servers.find(
@@ -226,7 +225,7 @@ export async function pingNetworkServers() {
     }
   );
 }
-async function pingProxyServers() {
+async function pingProxyServers(): Promise<boolean> {
   const requests = [
     minecraftUtil.status("buildtheearth.net", 25565, {
       timeout: TIMEOUT,
@@ -242,8 +241,13 @@ async function pingProxyServers() {
   const java = responses[0] as any;
   const bedrock = responses[1] as any;
 
+  let updated = false;
+
   // Java Proxy
   if (java.status === "rejected") {
+    if (!proxyStatus.java || proxyStatus.java.online) {
+      updated = true;
+    }
     proxyStatus.java = {
       online: false,
       last_updated: new Date(),
@@ -266,6 +270,10 @@ async function pingProxyServers() {
       }
     }
     groups["other"] = Math.max(java.value.players.online - counter, 0);
+
+    if (!proxyStatus.java || !proxyStatus.java.online) {
+      updated = true;
+    }
 
     proxyStatus.java = {
       online: true,
@@ -322,6 +330,8 @@ async function pingProxyServers() {
       last_updated: new Date(),
     };
   }
+
+  return updated;
 }
 
 async function updateStatusEmbed(servers: ServerStatus[]) {
@@ -335,6 +345,31 @@ async function updateStatusEmbed(servers: ServerStatus[]) {
       return indexA - indexB;
     });
   let desc = "";
+
+  // Proxies
+  if (proxyStatus.java) {
+    desc += `${
+      proxyStatus.java.online ? ":green_circle: " : ":red_circle: "
+    }**Java Proxy**\n`;
+  }
+  if (proxyStatus.bedrock) {
+    const newerVersions = await countNewerVersions(
+      "Bedrock",
+      proxyStatus.bedrock.version?.name
+    );
+
+    desc += `${
+      proxyStatus.bedrock.online ? ":green_circle: " : ":red_circle: "
+    }**Bedrock Proxy** ${
+      proxyStatus.bedrock.version?.protocol
+        ? `[${proxyStatus.bedrock.version?.name}${
+            newerVersions > 0 ? ` \`↑ ${newerVersions}\`` : ""
+          }]`
+        : ""
+    }\n`;
+  }
+
+  // NYC Servers
   for (const server of nycServers) {
     const version = server.version.name.split(" ")[1] || server.version.name;
     const newerVersions = await countNewerVersions("Java", version);
