@@ -54,6 +54,13 @@ function init(server: http.Server): void {
       }
     });
 
+    // Teleport Player
+    socket.on("teleport", (msg: any) => {
+      console.log(msg);
+
+      sendToRoom("nyc_server", "playerTeleport", msg);
+    });
+
     // Disconnect
     socket.on("disconnect", () => {
       cache.set("connected_clients", io.engine.clientsCount);
