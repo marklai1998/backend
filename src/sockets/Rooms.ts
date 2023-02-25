@@ -46,7 +46,9 @@ const Rooms: Room[] = [
           const joinedPlayer = JSON.parse(msg);
           const user = dbCache.findOne(User, { mc_uuid: joinedPlayer.uuid });
 
-          dbCache.update(user, { online: true });
+          if (user) {
+            dbCache.update(user, { online: true });
+          }
 
           sendToRoom("playerdata", "player_join", msg);
         },
@@ -57,7 +59,9 @@ const Rooms: Room[] = [
           const joinedPlayer = JSON.parse(msg);
           const user = dbCache.findOne(User, { mc_uuid: joinedPlayer.uuid });
 
-          dbCache.update(user, { online: false });
+          if (user) {
+            dbCache.update(user, { online: false });
+          }
 
           sendToRoom("playerdata", "player_leave", msg);
         },
