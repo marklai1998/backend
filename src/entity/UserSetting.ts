@@ -5,8 +5,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { parseToPrimitive } from "../utils/JsonUtils";
+
 import { User } from "./User";
+import { parseToPrimitive } from "../utils/JsonUtils";
 
 @Entity({ name: "usersettings" })
 export class UserSetting extends BaseEntity {
@@ -33,5 +34,6 @@ export class UserSetting extends BaseEntity {
 
 export const DEFAULT_SETTINGS = {
   MINECRAFT_DISTRICT_BAR: true,
+  MINECRAFT_MAP_VISIBLE: true,
   MINECRAFT_DEBUG_MODE: false,
 };
