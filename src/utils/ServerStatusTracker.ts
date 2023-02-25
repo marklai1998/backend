@@ -314,11 +314,21 @@ async function pingProxyServers(): Promise<boolean> {
 
   // Bedrock Proxy
   if (bedrock.status === "rejected") {
+    if (!proxyStatus.bedrock || proxyStatus.bedrock.online) {
+      updated = true;
+    }
     proxyStatus.bedrock = {
       online: false,
       last_updated: new Date(),
     };
   } else {
+    if (
+      !proxyStatus.bedrock ||
+      !proxyStatus.bedrock.online ||
+      proxyStatus.bedrock?.version.name !== bedrock.value?.version.name
+    ) {
+      updated = true;
+    }
     proxyStatus.bedrock = {
       online: true,
       ip: "bedrock.buildtheearth.net:19132",
