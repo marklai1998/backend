@@ -187,6 +187,11 @@ export class Landmark extends BaseEntity {
             newValue: null,
           });
         }
+      } else if (
+        key.toLowerCase() === "location" &&
+        typeof value === "string"
+      ) {
+        this.location = value.split(",").map((e) => parseFloat(e));
       } else if (key.toLowerCase() !== "id" && this[key] !== undefined) {
         this[key] = value;
       } else {
