@@ -57,12 +57,7 @@ function init(server: http.Server): void {
     // Teleport Player
     socket.on("teleport", (msg: any) => {
       console.log(msg);
-      const user = dbCache.findOne(User, { uid: msg.user });
-      if (!user?.mc_uuid) return;
-      sendToRoom("nyc_server", "playerTeleport", {
-        coordinates: msg.coordinates,
-        user: user.mc_uuid,
-      });
+      sendToRoom("nyc_server", "playerTeleport", msg);
     });
 
     // Disconnect
