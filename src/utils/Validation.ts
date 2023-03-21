@@ -19,7 +19,10 @@ export async function validate(
     onSuccess?: Function;
   }
 ) {
-  const errors = await val(object, { skipMissingProperties: true });
+  const errors = await val(object, {
+    skipMissingProperties: true,
+    forbidUnknownValues: false,
+  });
 
   if (errors.length > 0) {
     return res.status(400).send({
@@ -37,12 +40,21 @@ export async function validate(
     dbCache.reload(object);
   }
 
-  return res.send({
-    message: successMessage,
-    data: successData
+  let data = {};
+  if (Array.isArray(successData)) {
+    for (const d of successData) {
+      data[d] = newObject[d];
+    }
+  } else {
+    data = successData
       ? successData
       : newObject["toJson"]
       ? newObject["toJson"]()
-      : newObject,
+      : newObject;
+  }
+
+  return res.send({
+    message: successMessage,
+    data,
   });
 }

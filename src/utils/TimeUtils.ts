@@ -12,6 +12,7 @@ import {
   DATABASE_NAMES,
 } from "./DatabaseConnector";
 import { checkForNewMinecraftVersions } from "../components/McVersionFetch";
+import { Verification } from "../entity/Verification";
 
 const cache = require("../cache");
 
@@ -169,6 +170,18 @@ export function startIntervals() {
 
   // Check if new minecraft version has released
   executeEveryXMinutesStartingNow(checkForNewMinecraftVersions, 60);
+
+  // Cancel all inactive account linking processes
+  executeEveryXMinutesStartingNow(async () => {
+    const verifications = await Verification.find();
+    for (const verification of verifications) {
+      const TIME_LIMIT = 1000 * 60 * 10;
+
+      if (verification.createdAt.getTime() < Date.now() - TIME_LIMIT) {
+        verification.remove();
+      }
+    }
+  }, 10);
 }
 
 function trackPlayerCount() {
