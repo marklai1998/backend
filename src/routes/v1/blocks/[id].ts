@@ -15,6 +15,8 @@ import { sendDistrictChange2 } from "../../../utils/DiscordMessageSender";
 import { sendToRoom } from "../../../sockets/SocketManager";
 import { District } from "../../../entity/District";
 import { Landmark } from "../../../entity/Landmark";
+import { Claim } from "../../../entity/Claim";
+import { User } from "../../../entity/User";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -63,6 +65,55 @@ export const put = (req: Request, res: Response) => {
 
       if (ret.error) {
         return res.status(400).send({ error: ret.error });
+      }
+
+      // Update Claims
+      if (req.body.builder) {
+        const claims = dbCache
+          .find(Claim)
+          .filter((claim) => claim.block.uid === block.uid);
+
+        const operations = [];
+
+        // Remove
+        for (const claim of claims) {
+          if (
+            !req.body.builder.some(
+              (id: number | string) =>
+                id ===
+                  claim.user?.[typeof id === "number" ? "uid" : "username"] ||
+                id === claim.special
+            )
+          ) {
+            operations.push(Claim.remove(claim));
+          }
+        }
+        // Add
+        for (const builderID of req.body.builder) {
+          if (
+            !claims.some(
+              (claim: Claim) =>
+                builderID ===
+                  claim.user?.[
+                    typeof builderID === "number" ? "uid" : "username"
+                  ] || builderID === claim.special
+            )
+          ) {
+            const user = dbCache.findOne(User, {
+              [typeof builderID === "number" ? "uid" : "username"]: builderID,
+            });
+            const claim = Claim.create({
+              block,
+              user: user || null,
+              special: !user ? builderID : null,
+            });
+            operations.push(claim.save());
+          }
+        }
+        if (operations.length > 0) {
+          await Promise.allSettled(operations);
+          dbCache.reload("claims");
+        }
       }
 
       // Update Status

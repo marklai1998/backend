@@ -29,6 +29,7 @@ import { User } from "./User";
 import { log } from "./Log";
 import responses from "../responses";
 import _ = require("lodash");
+import { Claim } from "./Claim";
 
 @Entity({ name: "blocks" })
 export class Block extends BaseEntity {
@@ -181,6 +182,51 @@ export class Block extends BaseEntity {
 
     this.builder = builder;
     const oldStatus = await setStatus(this);
+
+    const claims = dbCache
+      .find(Claim)
+      .filter((claim) => claim.block.uid === this.uid);
+
+    const operations = [];
+
+    // Remove
+    for (const claim of claims) {
+      if (
+        !builder.some(
+          (id: number | string) =>
+            id === claim.user?.[typeof id === "number" ? "uid" : "username"] ||
+            id === claim.special
+        )
+      ) {
+        operations.push(Claim.remove(claim));
+      }
+    }
+    // Add
+    for (const builderID of builder) {
+      if (
+        !claims.some(
+          (claim: Claim) =>
+            builderID ===
+              claim.user?.[
+                typeof builderID === "number" ? "uid" : "username"
+              ] || builderID === claim.special
+        )
+      ) {
+        const user = dbCache.findOne(User, {
+          [typeof builderID === "number" ? "uid" : "username"]: builderID,
+        });
+        const claim = Claim.create({
+          block: this,
+          user: user || null,
+          special: !user ? builderID : null,
+        });
+        operations.push(claim.save());
+      }
+    }
+    if (operations.length > 0) {
+      await Promise.allSettled(operations);
+      dbCache.reload("claims");
+    }
 
     return await update({
       block: this,

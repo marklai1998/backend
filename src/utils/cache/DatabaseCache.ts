@@ -3,6 +3,7 @@ import _ = require("lodash");
 import { BaseEntity } from "typeorm";
 import { AdminSetting } from "../../entity/AdminSetting";
 import { Block } from "../../entity/Block";
+import { Claim } from "../../entity/Claim";
 import { District } from "../../entity/District";
 import { Event } from "../../entity/events/Event";
 import { EventTeam } from "../../entity/events/EventTeam";
@@ -16,6 +17,7 @@ type DBCache = {
   users: User[];
   districts: District[];
   blocks: Block[];
+  claims: Claim[];
   landmarks: Landmark[];
   adminsettings: AdminSetting[];
   events: Event[];
@@ -27,6 +29,7 @@ const DatabaseCache: DBCache = {
   users: null,
   districts: null,
   blocks: null,
+  claims: null,
   landmarks: null,
   adminsettings: null,
   events: null,
@@ -56,6 +59,8 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("districts");
   } else if (updatedObject instanceof Block) {
     reloadAll("blocks");
+  } else if (updatedObject instanceof Claim) {
+    reloadAll("claims");
   } else if (updatedObject instanceof Landmark) {
     reloadAll("landmarks");
   } else if (updatedObject instanceof AdminSetting) {
@@ -79,6 +84,9 @@ async function reloadAll(type: string): Promise<void> {
       break;
     case "blocks":
       DatabaseCache.blocks = await Block.find();
+      break;
+    case "claims":
+      DatabaseCache.claims = await Claim.find();
       break;
     case "landmarks":
       DatabaseCache.landmarks = await Landmark.find();
