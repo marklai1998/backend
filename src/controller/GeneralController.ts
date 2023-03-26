@@ -357,7 +357,9 @@ export class GeneralController {
   async redirect(request: Request, respone: Response, next: NextFunction) {
     const links = await AdminSetting.findOneBy({ key: "links" });
     // @ts-ignore
-    const link = links.toJson().value.filter(
+    const link = links
+      .toJson()
+      .value.filter(
         (l) => l.short.toLowerCase() === request.params.link.toLowerCase()
       );
     if (link[0]) {

@@ -24,9 +24,13 @@ export async function createMissingProjectEntries() {
   );
 
   for (let i = 0; i < missingDays; i++) {
-    Logger.info(`Creating missing project entry for ${new Date(
-      new Date(lastEntry.date).getTime() + 86400000 * (i + 1)
-    ).toISOString().split("T")[0]}`);
+    Logger.info(
+      `Creating missing project entry for ${
+        new Date(new Date(lastEntry.date).getTime() + 86400000 * (i + 1))
+          .toISOString()
+          .split("T")[0]
+      }`
+    );
     const count = new ProjectCount();
     count.date = new Date(
       new Date(lastEntry.date).getTime() + 86400000 * (i + 1)

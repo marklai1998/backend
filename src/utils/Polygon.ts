@@ -1,22 +1,29 @@
+export function insidePolygon(
+  p: any[],
+  polygon: any[],
+  start?: number,
+  end?: number
+) {
+  var intersections = 0;
 
-export function insidePolygon(p:any[], polygon:any[], start?:number, end?:number) {
-    var intersections = 0;
+  var prev = polygon[polygon.length - 1];
+  for (const next of polygon) {
+    if (
+      (prev[1] <= p[1] && p[1] < next[1]) ||
+      (prev[1] >= p[1] && p[1] > next[1])
+    ) {
+      var dy = next[1] - prev[1];
+      var dx = next[0] - prev[0];
+      var x = ((p[1] - prev[1]) / dy) * dx + prev[0];
 
-    var prev = polygon[polygon.length - 1];
-    for(const next of polygon) { 
-        if((prev[1] <= p[1] && p[1] < next[1]) || (prev[1] >= p[1] && p[1] > next[1])) {
-            var dy = next[1] - prev[1];
-            var dx = next[0] - prev[0];
-            var x = (p[1] - prev[1]) / dy * dx + prev[0];
-
-            if (x > p[0]) {
-                intersections++;
-            }
-        }
-        prev = next;
+      if (x > p[0]) {
+        intersections++;
+      }
     }
-    return intersections % 2 == 1;
-    /* var inside = false;
+    prev = next;
+  }
+  return intersections % 2 == 1;
+  /* var inside = false;
     if (start === undefined) start = 0;
     if (end === undefined) end = vs.length;
     var len = (end-start)/2;
@@ -28,4 +35,4 @@ export function insidePolygon(p:any[], polygon:any[], start?:number, end?:number
         if (intersect) inside = !inside;
     }
     return inside;*/
-};
+}
