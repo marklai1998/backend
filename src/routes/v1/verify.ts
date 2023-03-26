@@ -52,36 +52,25 @@ export const put = (req: Request, res: Response) => {
     permission: Permissions.admin,
     req,
     res,
-    requiredArgs: { user: "number", code: "string", uuid: "string" },
+    requiredArgs: { code: "string", uuid: "string" },
     callback: async () => {
-      const { user: uid, code, uuid } = req.body;
-      const user = dbCache.findOne(User, { uid });
-
-      if (!user) {
-        return res.status(404).send({ error: "User not found" });
-      }
-
-      const verification = await Verification.findOneBy({ user: { uid } });
+      const { code, uuid } = req.body;
+      const verification = await Verification.findOneBy({ code });
 
       if (!verification) {
-        return res
-          .status(404)
-          .send({ error: "You don't have an ongoing verification" });
-      }
-
-      if (verification.code !== code) {
         return res
           .status(400)
           .send({ error: "The verification code is invalid" });
       }
 
+      const user = dbCache.findOne(User, { uid: verification.user.uid });
       user.mc_uuid = uuid;
 
       await validate(res, user, {
         successMessage:
           "Successfully linked your Minecraft Account with the Progress Website",
         successData: {
-          uid,
+          uid: user.uid,
           mc_uuid: uuid,
         },
         updateCache: true,
