@@ -23,6 +23,6 @@ export class Claim extends BaseEntity {
   @Column({ nullable: true })
   special: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ nullable: true })
   claimDate: Date;
 }
