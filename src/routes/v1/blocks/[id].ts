@@ -90,6 +90,7 @@ export const put = (req: Request, res: Response) => {
         }
         // Add
         for (const builderID of req.body.builder) {
+          if (builderID === "") continue;
           if (
             !claims.some(
               (claim: Claim) =>
