@@ -3,10 +3,11 @@ import http = require("http");
 import Logger from "../utils/Logger";
 import { Motd_Broadcast } from "./broadcasts/Motd_Broadcast";
 import { Broadcast } from "./broadcasts/Broadcast";
-import { joinRoom } from "./Rooms";
 import jwt, { AUTH_SECRET } from "../utils/encryption/jwt";
 import * as dbCache from "../utils/cache/DatabaseCache";
 import { User } from "../entity/User";
+import { SocketEvents } from "./Events";
+import { Permissions } from "../routes";
 
 const cache = require("../cache");
 
@@ -38,27 +39,17 @@ function init(server: http.Server): void {
 
     cache.set("connected_clients", io.engine.clientsCount);
 
-    // Join Room
-    socket.on("join", (msg: any) => {
-      const json = typeof msg === "string" ? JSON.parse(msg) : msg;
-      const roomName = json.data?.room;
-      if (roomName) {
-        joinRoom(socket, roomName, msg.apikey);
-      }
-    });
-    // Leave Room
-    socket.on("leave", (msg: any) => {
-      const roomName = msg.data?.room;
-      if (roomName) {
-        socket.leave(roomName);
-      }
-    });
+    // Send join messages
+    socket.emit("motd", cache.get("current_motd"));
 
-    // Teleport Player
-    socket.on("teleport", (msg: any) => {
-      console.log(msg);
-      sendToRoom("nyc_server", "playerTeleport", msg);
-    });
+    // Custom Events
+    for (const event of SocketEvents) {
+      socket.on(event.name, (msg: any) => {
+        if ((user.permission || Permissions.default) >= event.permission) {
+          event.callback(msg);
+        }
+      });
+    }
 
     // Disconnect
     socket.on("disconnect", () => {

@@ -1,4 +1,4 @@
-import { sendToRoom } from "../SocketManager";
+import { broadcast } from "../SocketManager";
 
 export abstract class Broadcast {
   constructor() {
@@ -8,7 +8,7 @@ export abstract class Broadcast {
   private start() {
     setInterval(() => {
       this.onMessageSend();
-      sendToRoom("motd", this.eventName(), this.message());
+      broadcast(this.eventName(), this.message());
     }, this.interval() * 1000);
   }
 
