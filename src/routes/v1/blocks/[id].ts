@@ -12,7 +12,7 @@ import { Permissions } from "../../../routes";
 import { allowed } from "../../../middleware/auth";
 import { log } from "../../../entity/Log";
 import { sendDistrictChange2 } from "../../../utils/DiscordMessageSender";
-import { sendToRoom } from "../../../sockets/SocketManager";
+import { broadcast, sendToRoom } from "../../../sockets/SocketManager";
 import { District } from "../../../entity/District";
 import { Landmark } from "../../../entity/Landmark";
 import { Claim } from "../../../entity/Claim";
@@ -139,10 +139,14 @@ export const put = (req: Request, res: Response) => {
       }
 
       if (Object.keys(ret.changedValues).length > 0) {
-        sendToRoom("block_updates", "block_updates", {
+        const user =
+          req.user.uid === 1
+            ? dbCache.findOne(User, { uid: req.body.editor })
+            : req.user;
+        broadcast("block_updates", {
           user: {
-            id: req.user.uid,
-            username: req.user.username,
+            id: user.uid,
+            username: user.username,
           },
           block: {
             uid: block.uid,
