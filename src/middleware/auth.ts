@@ -7,7 +7,11 @@ import responses from "../responses";
 import { User } from "../entity/User";
 
 export async function loginUser(username: string, password: string) {
-  const user = await User.findOneBy({ username: username });
+  let user = await User.findOneBy({ username: username });
+  let old = false;
+
+  if (!user) {
+    user = await User.findOneBy({ old_username: username });
 
   if (!user) {
     return responses.error({
@@ -15,8 +19,17 @@ export async function loginUser(username: string, password: string) {
       code: 401,
     });
   }
+    old = true;
+  }
 
   if (await check(password, user.password)) {
+    if (old) {
+      return responses.error({
+        message:
+          "It looks like your username has changed. Try your new Minecraft username!",
+        code: 401,
+      });
+    }
     return responses.success({
       message: "Login successful",
       code: 200,
