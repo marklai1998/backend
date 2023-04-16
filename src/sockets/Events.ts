@@ -1,6 +1,8 @@
-import { Permissions } from "../routes";
-import { broadcast, sendToRoom } from "./SocketManager";
 import * as dbCache from "../utils/cache/DatabaseCache";
+
+import { broadcast, sendToRoom } from "./SocketManager";
+
+import { Permissions } from "../routes";
 import { User } from "../entity/User";
 
 interface SocketEvent {
@@ -14,7 +16,7 @@ export const SocketEvents: SocketEvent[] = [
     name: "teleport",
     permission: Permissions.default,
     callback(msg) {
-      sendToRoom("nyc_server", "playerTeleport", msg);
+      broadcast("playerTeleport", msg);
     },
   },
   {
