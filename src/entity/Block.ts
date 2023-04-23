@@ -96,7 +96,7 @@ export class Block extends BaseEntity {
       status: this.status,
       progress: this.progress,
       details: this.details,
-      builders: this.builder,
+      builders: this.getBuilders(),
       completionDate: this.completionDate,
       landmarks: showLandmarks
         ? dbCache
@@ -312,6 +312,12 @@ export class Block extends BaseEntity {
 
     this.area = JSON.stringify(coordsArray);
     return responses.validate(this, "Location removed");
+  }
+
+  getBuilders() {
+    return dbCache
+      .find(Claim, { block: this })
+      .map((claim) => claim.user.username);
   }
 
   getLocationCenter() {
