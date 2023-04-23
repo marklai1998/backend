@@ -50,9 +50,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
-    app.use("/v1/", auth);
-    app.use("/v1/", (req, res, next) => {
-      // Logger (TODO: enable for all routes if other routes are deleted)
+    app.use("/", (req, res, next) => {
       Logger.http(
         // @ts-ignore
         `${req.method} ${req.path}${req.user ? ` (${req.user.username})` : ""}`
@@ -73,64 +71,64 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
 
     sockets.init(httpServer);
 
-    Logger.debug("Loaded middleware");
+    Logger.debug("Loaded middlewares");
     process.on("uncaughtException", (error) => handleException(error));
 
     // register express routes from defined application routes
     Logger.debug("Registering routes...");
-    Routes.forEach((route) => {
-      (app as any)[route.method](
-        route.route,
-        async (req: Request, res: Response, next: Function) => {
-          const time = new Date().getTime();
-          let user = dbCache.findOne(User, {
-            apikey: req.body.key || req.query.key,
-          });
-          try {
-            cache.inc("total_requests");
-            Logger.http(
-              `${req.method} ${req.path}${user ? ` (${user.username})` : ""}`
-            );
-            if (route.permission > 0) {
-              if (user === undefined) {
-                handleResponse(
-                  responses.error({
-                    message: "Invalid or missing API-Key",
-                    code: 401,
-                  }),
-                  req,
-                  res
-                );
-                Logger.info("Requested with invalid API-Key");
-                return;
-              }
-              if (user.permission < route.permission) {
-                handleResponse(
-                  responses.error({
-                    message: "No Permission",
-                    code: 403,
-                  }),
-                  req,
-                  res
-                );
-                Logger.info("Requested without Permission");
-                return;
-              }
-            }
-            const result = new (route.controller as any)()[route.action](
-              req,
-              res,
-              next
-            );
-            handleResponse(result, req, res, time);
-            cache.inc("successful_requests");
-          } catch (err) {
-            cache.inc("errors");
-            Logger.error(err);
-          }
-        }
-      );
-    });
+    // Routes.forEach((route) => {
+    //   (app as any)[route.method](
+    //     route.route,
+    //     async (req: Request, res: Response, next: Function) => {
+    //       const time = new Date().getTime();
+    //       let user = dbCache.findOne(User, {
+    //         apikey: req.body.key || req.query.key,
+    //       });
+    //       try {
+    //         cache.inc("total_requests");
+    //         Logger.http(
+    //           `${req.method} ${req.path}${user ? ` (${user.username})` : ""}`
+    //         );
+    //         if (route.permission > 0) {
+    //           if (user === undefined) {
+    //             handleResponse(
+    //               responses.error({
+    //                 message: "Invalid or missing API-Key",
+    //                 code: 401,
+    //               }),
+    //               req,
+    //               res
+    //             );
+    //             Logger.info("Requested with invalid API-Key");
+    //             return;
+    //           }
+    //           if (user.permission < route.permission) {
+    //             handleResponse(
+    //               responses.error({
+    //                 message: "No Permission",
+    //                 code: 403,
+    //               }),
+    //               req,
+    //               res
+    //             );
+    //             Logger.info("Requested without Permission");
+    //             return;
+    //           }
+    //         }
+    //         const result = new (route.controller as any)()[route.action](
+    //           req,
+    //           res,
+    //           next
+    //         );
+    //         handleResponse(result, req, res, time);
+    //         cache.inc("successful_requests");
+    //       } catch (err) {
+    //         cache.inc("errors");
+    //         Logger.error(err);
+    //       }
+    //     }
+    //   );
+    // });
     app.get("*", (req: Request, res: Response) => {
       handleResponse(
         responses.error({ message: `Cannot GET ${req.path}`, code: 404 }),
