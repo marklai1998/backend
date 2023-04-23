@@ -315,9 +315,14 @@ export class Block extends BaseEntity {
   }
 
   getBuilders() {
-    return dbCache
-      .find(Claim, { block: this })
-      .map((claim) => claim.user?.username || claim.special);
+    const claims = dbCache.find(Claim, { block: this });
+    const builders = [];
+
+    for (let i = 0; i < claims.length; i++) {
+      const claim = claims[i];
+      builders.push(claim.user?.username || claim.special);
+    }
+    return builders;
   }
 
   getLocationCenter() {
