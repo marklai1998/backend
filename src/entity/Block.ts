@@ -317,7 +317,7 @@ export class Block extends BaseEntity {
   getBuilders() {
     return dbCache
       .find(Claim, { block: this })
-      .map((claim) => claim.user.username);
+      .map((claim) => claim.user?.username || claim.special);
   }
 
   getLocationCenter() {
