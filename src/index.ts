@@ -50,6 +50,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
+    app.use("/v1/", auth);
     app.use("/", (req, res, next) => {
       Logger.http(
         // @ts-ignore
