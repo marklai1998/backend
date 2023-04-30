@@ -24,6 +24,9 @@ import response from "./middleware/response";
 import responses from "./responses";
 import { v4 as uuidv4 } from "uuid";
 
+import { initJobs } from "./utils/scheduling/CronManager";
+import { trackRequestStatistics } from "./utils/StatisticsManager";
+
 // Increase EventEmitter limit
 require("events").EventEmitter.prototype._maxListeners = 20;
 
@@ -50,6 +53,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
     app.use(bodyParser.json());
     app.use(helmet());
     app.use(cors());
+    app.use(trackRequestStatistics);
     app.use("/v1/", auth);
     app.use("/", (req, res, next) => {
       Logger.http(
@@ -176,6 +180,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
     if (productionMode) {
       Logger.info("Running with Intervalls");
       date.startIntervals();
+      initJobs();
     } else {
       Logger.info("Running without Intervalls");
     }
