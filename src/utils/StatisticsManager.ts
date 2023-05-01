@@ -8,8 +8,10 @@ export const trackRequestStatistics = (
   next: NextFunction
 ) => {
   res.on("finish", async () => {
+    const ip = req.header("x-forwarded-for") || req.socket.remoteAddress;
     const request = ApiRequest.create({
       timestamp: new Date(),
+      ip: Array.isArray(ip) ? ip[0] : ip,
       statusCode: res.statusCode,
       method: req.method,
       path: req.path,
