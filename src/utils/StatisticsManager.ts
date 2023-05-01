@@ -15,6 +15,7 @@ export const trackRequestStatistics = (
       statusCode: res.statusCode,
       method: req.method,
       path: req.path,
+      url: req.url,
     });
     request.save();
 

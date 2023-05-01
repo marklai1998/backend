@@ -16,4 +16,7 @@ export class Request extends BaseEntity {
 
   @Column()
   path: string;
+
+  @Column()
+  url: string;
 }
