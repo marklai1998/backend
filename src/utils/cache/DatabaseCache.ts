@@ -120,7 +120,7 @@ function find<Type extends BaseEntity>(
 }
 async function update(entity: BaseEntity, updates: any, toJsonParams?: any) {
   const { id, uid, uuid, status, ...rest } = updates;
-  const changedValues = {};
+  const changedValues: any = {};
 
   const addChange = (key: string, oldValue: any, newValue: any) => {
     changedValues[key] = {
