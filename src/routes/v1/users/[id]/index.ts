@@ -96,7 +96,7 @@ export const put = (req: Request, res: Response) => {
                   "https://cdn.discordapp.com/attachments/519576567718871053/1035577973467779223/BTE_NYC_Logo.png",
               },
               thumbnail: {
-                url: "https://mc-heads.net/avatar" + userToEdit.username,
+                url: "https://mc-heads.net/avatar/" + userToEdit.username,
               },
               fields: [
                 {
