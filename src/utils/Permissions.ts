@@ -21,3 +21,26 @@ export function mcRankToPermission(rank: string): number {
       return Permissions.default;
   }
 }
+
+export function mcRankToColor(rank: string): string {
+  switch (rank) {
+    case "Owner":
+      return "#AA0000";
+    case "Administrator":
+      return "#FF5555";
+    case "Moderator":
+      return "#00AAAA";
+    case "Developer":
+      return "#55FFFF";
+    case "Supporter":
+      return "#5555FF";
+    case "Architect":
+      return "#0000AA";
+    case "Communication":
+      return "#AA00AA";
+    case "Premium":
+      return "#FFAA00";
+    default:
+      return "#55FF55";
+  }
+}

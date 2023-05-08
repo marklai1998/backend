@@ -6,6 +6,8 @@ import { Permissions } from "../../../../routes";
 import { allowed } from "../../../../middleware/auth";
 import { Block } from "../../../../entity/Block";
 import { User } from "../../../../entity/User";
+import { sendWebhook } from "../../../../utils/DiscordMessageSender";
+import { mcRankToColor } from "../../../../utils/Permissions";
 
 export const get = (req: Request, res: Response) => {
   allowed({
@@ -70,8 +72,48 @@ export const put = (req: Request, res: Response) => {
       }
 
       const userToEdit = dbCache.findOne(User, { uid: id });
+      const oldRank = userToEdit.rank;
 
       const ret = await dbCache.update(userToEdit, req.body);
+
+      if (ret.error) {
+        return res.status(400).send(ret);
+      }
+
+      // Update rank log
+      if (req.body.rank && ret.changedValues?.rank) {
+        sendWebhook("user_log", {
+          content: "",
+          embeds: [
+            {
+              title: "User Rank Updated",
+              description: "",
+              color: mcRankToColor(userToEdit.rank),
+              timestamp: new Date().toISOString(),
+              footer: {
+                text: "BTE NewYorkCity",
+                icon_url:
+                  "https://cdn.discordapp.com/attachments/519576567718871053/1035577973467779223/BTE_NYC_Logo.png",
+              },
+              thumbnail: {
+                url: "https://mc-heads.net/avatar" + userToEdit.username,
+              },
+              fields: [
+                {
+                  name: "Username",
+                  value: userToEdit.username,
+                  inline: true,
+                },
+                {
+                  name: "Rank",
+                  value: `${oldRank} → ${userToEdit.rank}`,
+                  inline: true,
+                },
+              ],
+            },
+          ],
+        });
+      }
 
       return res.status(200).send(ret);
     },
