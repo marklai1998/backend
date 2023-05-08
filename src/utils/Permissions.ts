@@ -22,25 +22,25 @@ export function mcRankToPermission(rank: string): number {
   }
 }
 
-export function mcRankToColor(rank: string): string {
+export function mcRankToColor(rank: string): number {
   switch (rank) {
     case "Owner":
-      return "#AA0000";
+      return 0xaa0000;
     case "Administrator":
-      return "#FF5555";
+      return 0xff5555;
     case "Moderator":
-      return "#00AAAA";
+      return 0x00aaaa;
     case "Developer":
-      return "#55FFFF";
+      return 0x55ffff;
     case "Supporter":
-      return "#5555FF";
+      return 0x5555ff;
     case "Architect":
-      return "#0000AA";
+      return 0x0000aa;
     case "Communication":
-      return "#AA00AA";
+      return 0xaa00aa;
     case "Premium":
-      return "#FFAA00";
+      return 0xffaa00;
     default:
-      return "#55FF55";
+      return 0x55ff55;
   }
 }
