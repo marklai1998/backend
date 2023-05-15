@@ -48,7 +48,7 @@ export const SocketEvents: SocketEvent[] = [
       const user = dbCache.findOne(User, { mc_uuid: leavedPlayer.uuid });
 
       if (user) {
-        dbCache.update(user, { online: false });
+        dbCache.update(user, { online: false, last_online: new Date() });
       }
 
       broadcast("player_leave", msg);
