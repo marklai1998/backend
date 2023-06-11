@@ -4,7 +4,11 @@ import * as dbCache from "../utils/cache/DatabaseCache";
 
 const cheerio = require("cheerio");
 
-const url = "https://minecraft.fandom.com/wiki/Protocol_version";
+const URL_JAVA =
+  "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
+const URL_BEDROCK = "https://minecraft.fandom.com/wiki/Protocol_version";
+const URL_PAPER = "https://api.papermc.io/v2/projects/paper";
+const URL_WATERFALL = "https://api.papermc.io/v2/projects/waterfall";
 
 interface Version {
   name: string;
@@ -12,31 +16,30 @@ interface Version {
   type: "Snapshot" | "Release";
 }
 
-let versions_java: Version[] = [];
 let versions_bedrock: Version[] = [];
 
-async function scrapeData(): Promise<void> {
-  const { data } = await axios.get(url);
+let javaLastest: { release?: string; snapshot?: string } = {};
+let javaVersions = [];
+
+export async function fetchMinecraftVersions(): Promise<void> {
+  const { data } = await axios.get(URL_JAVA);
+  javaLastest = data.latest;
+  javaVersions = data.versions;
+}
+
+async function fetchBedrockVersions(): Promise<void> {
+  const { data } = await axios.get(URL_BEDROCK);
 
   const $ = cheerio.load(data);
   const tables = $("table > tbody > tr > td");
 
-  versions_java = [];
   versions_bedrock = [];
   for (let i = 0; i < tables.length; i++) {
     const e = $(tables[i]).text();
 
     if (!e.includes(" ")) continue;
 
-    if (e.startsWith("Java Edition")) {
-      const version = e.replace("Java Edition ", "");
-      const protocol = $(tables[i + 1]).text();
-      versions_java.push({
-        name: version,
-        protocol,
-        type: protocol.includes("x") ? "Snapshot" : "Release",
-      });
-    } else if (e.startsWith("Bedrock Edition")) {
+    if (e.startsWith("Bedrock Edition")) {
       const version = e.replace("Bedrock Edition ", "");
       let protocol = $(tables[i + 1]).text();
 
@@ -54,18 +57,18 @@ async function scrapeData(): Promise<void> {
   }
 }
 
-function checkForNewMinecraftVersions() {
-  scrapeData().then(() => {
+async function checkForNewMinecraftVersions() {
+  await fetchMinecraftVersions();
+  fetchBedrockVersions().then(() => {
     const currentVersions = dbCache.findOne(AdminSetting, {
       key: "newest_versions",
     });
 
     const versions = JSON.parse(currentVersions.value);
 
-    const newestJava = versions_java.filter((v) => v.type === "Release")[0];
-    if (versions.java !== newestJava.name) {
+    if (versions.java !== javaLastest.release) {
       // New Java Version
-      versions.java = newestJava.name;
+      versions.java = javaLastest.release;
     }
 
     const newestBedrock = versions_bedrock.filter(
@@ -85,13 +88,16 @@ async function countNewerVersions(
   type: string,
   version: string
 ): Promise<number> {
-  if (versions_java.length === 0 || versions_bedrock.length === 0) {
-    await scrapeData();
+  if (javaVersions.length === 0) {
+    await fetchMinecraftVersions();
+  }
+  if (versions_bedrock.length === 0) {
+    await fetchBedrockVersions();
   }
   if (type === "Java") {
-    return versions_java
-      .filter((v) => v.type === "Release")
-      .findIndex((v) => v.name === version);
+    return javaVersions
+      .filter((v) => v.type === "release")
+      .findIndex((v) => v.id === version);
   } else if (type === "Bedrock") {
     return versions_bedrock
       .filter((v) => v.type === "Release")
@@ -100,4 +106,4 @@ async function countNewerVersions(
   return -1;
 }
 
-export { scrapeData, checkForNewMinecraftVersions, countNewerVersions };
+export { checkForNewMinecraftVersions, countNewerVersions };
