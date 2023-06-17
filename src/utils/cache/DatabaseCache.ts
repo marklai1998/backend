@@ -12,6 +12,7 @@ import { User } from "../../entity/User";
 import { UserSetting } from "../../entity/UserSetting";
 import { hash } from "../encryption/bcrypt";
 import Logger from "../Logger";
+import { Banner } from "../../entity/Banner";
 
 type DBCache = {
   users: User[];
@@ -23,6 +24,7 @@ type DBCache = {
   events: Event[];
   eventteams: EventTeam[];
   usersettings: UserSetting[];
+  banners: Banner[];
 };
 
 const DatabaseCache: DBCache = {
@@ -35,6 +37,7 @@ const DatabaseCache: DBCache = {
   events: null,
   eventteams: null,
   usersettings: null,
+  banners: null,
 };
 
 async function loadAll(): Promise<number> {
@@ -71,6 +74,8 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("eventteams");
   } else if (updatedObject instanceof UserSetting) {
     reloadAll("usersettings");
+  } else if (updatedObject instanceof Banner) {
+    reloadAll("banners");
   }
 }
 async function reloadAll(type: string): Promise<void> {
@@ -102,6 +107,9 @@ async function reloadAll(type: string): Promise<void> {
       break;
     case "usersettings":
       DatabaseCache.usersettings = await UserSetting.find();
+      break;
+    case "banners":
+      DatabaseCache.banners = await Banner.find();
       break;
   }
 }
