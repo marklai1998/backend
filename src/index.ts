@@ -63,7 +63,7 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
       next();
     });
     app.use("/v1/", response); // Format Response, TODO: enable for all routes if frontend is updated
-    app.use("/", router());
+    app.use("/", await router());
 
     createRouter(app);
 
