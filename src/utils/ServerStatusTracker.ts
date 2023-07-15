@@ -12,6 +12,9 @@ import { ServerStatus } from "../entity/ServerStatus";
 import { getObjectDifferences } from "./JsonUtils";
 import { countNewerVersions } from "../components/McVersionFetch";
 
+import * as dbCache from "../utils/cache/DatabaseCache";
+import { AdminSetting } from "../entity/AdminSetting";
+
 export const proxyStatus = {
   java: null,
   bedrock: null,
@@ -347,8 +350,14 @@ async function pingProxyServers(): Promise<boolean> {
 async function updateStatusEmbed(servers: ServerStatus[]) {
   Logger.info("Updating Server Status Embed");
 
+  const serversToDisplay = JSON.parse(
+    dbCache.findOne(AdminSetting, {
+      key: "status_embed_servers",
+    }).value
+  );
+
   const nycServers = servers
-    .filter((s: ServerStatus) => Object.keys(nycServerMapping).includes(s.id))
+    .filter((s: ServerStatus) => serversToDisplay.includes(s.id))
     .sort((s1: ServerStatus, s2: ServerStatus) => {
       const indexA = Object.keys(nycServerMapping).indexOf(s1.id);
       const indexB = Object.keys(nycServerMapping).indexOf(s2.id);

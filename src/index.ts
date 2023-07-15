@@ -11,10 +11,7 @@ import { Colors, sendWebhook } from "./utils/DiscordMessageSender";
 import { Request, Response } from "express";
 import createRouter, { router } from "express-file-routing";
 
-import { AdminSetting } from "./entity/AdminSetting";
-import { AdminSettings } from "./adminsettings";
 import Logger from "./utils/Logger";
-import { Routes } from "./routes";
 import { User } from "./entity/User";
 import auth from "./middleware/auth";
 import { connectToDatabases } from "./utils/DatabaseConnector";
@@ -165,18 +162,6 @@ Logger.debug(`Connecting to ${localDatabase ? "local" : "main"} database...`);
       Logger.debug("Created root user");
     }
 
-    // Set default admin settings
-    let settings = await AdminSetting.find();
-    AdminSettings.forEach(async (setting) => {
-      if (!settings.some((e) => e.key === setting.key)) {
-        Logger.debug(`Creating default setting ${setting.key}`);
-        const adminSetting = new AdminSetting();
-        adminSetting.key = setting.key;
-        adminSetting.value = JSON.stringify(setting.value);
-        adminSetting.permission = setting.permission;
-        await adminSetting.save();
-      }
-    });
     if (productionMode) {
       Logger.info("Running with Intervalls");
       date.startIntervals();
