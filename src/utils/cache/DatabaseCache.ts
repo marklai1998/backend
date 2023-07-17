@@ -1,18 +1,20 @@
-import { validate } from "class-validator";
-import _ = require("lodash");
-import { BaseEntity } from "typeorm";
 import { AdminSetting } from "../../entity/AdminSetting";
+import { Banner } from "../../entity/Banner";
+import { BaseEntity } from "typeorm";
 import { Block } from "../../entity/Block";
 import { Claim } from "../../entity/Claim";
 import { District } from "../../entity/District";
 import { Event } from "../../entity/events/Event";
 import { EventTeam } from "../../entity/events/EventTeam";
 import { Landmark } from "../../entity/Landmark";
+import Logger from "../Logger";
+import { ProjectCount } from "../../entity/ProjectCount";
 import { User } from "../../entity/User";
 import { UserSetting } from "../../entity/UserSetting";
 import { hash } from "../encryption/bcrypt";
-import Logger from "../Logger";
-import { Banner } from "../../entity/Banner";
+import { validate } from "class-validator";
+
+import _ = require("lodash");
 
 type DBCache = {
   users: User[];
@@ -25,6 +27,7 @@ type DBCache = {
   eventteams: EventTeam[];
   usersettings: UserSetting[];
   banners: Banner[];
+  projectcounts: ProjectCount[];
 };
 
 const DatabaseCache: DBCache = {
@@ -38,6 +41,7 @@ const DatabaseCache: DBCache = {
   eventteams: null,
   usersettings: null,
   banners: null,
+  projectcounts: null,
 };
 
 async function loadAll(): Promise<number> {
@@ -76,6 +80,8 @@ async function reload(updatedObject: BaseEntity | string): Promise<void> {
     reloadAll("usersettings");
   } else if (updatedObject instanceof Banner) {
     reloadAll("banners");
+  } else if (updatedObject instanceof ProjectCount) {
+    reloadAll("projectcounts");
   }
 }
 async function reloadAll(type: string): Promise<void> {
@@ -110,6 +116,9 @@ async function reloadAll(type: string): Promise<void> {
       break;
     case "banners":
       DatabaseCache.banners = await Banner.find();
+      break;
+    case "projectcounts":
+      DatabaseCache.projectcounts = await ProjectCount.find();
       break;
   }
 }
