@@ -6,6 +6,15 @@ export const Permissions = {
   admin: 4,
 };
 
+export function permissionToName(permission: number) {
+  for (let key in Permissions) {
+    if (Permissions[key] === permission) {
+      return key;
+    }
+  }
+  return "default";
+}
+
 export function mcRankToPermission(rank: string): number {
   switch (rank) {
     case "Owner":

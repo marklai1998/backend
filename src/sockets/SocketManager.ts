@@ -8,6 +8,8 @@ import * as dbCache from "../utils/cache/DatabaseCache";
 import { User } from "../entity/User";
 import { SocketEvents } from "./Events";
 import { Permissions } from "../routes";
+import { AdminPanel_Broadcast } from "./broadcasts/AdminPanel_Broadcast";
+import { permissionToName } from "../utils/Permissions";
 
 const cache = require("../cache");
 
@@ -35,6 +37,8 @@ function init(server: http.Server): void {
       user = dbCache.findOne(User, { uid: auth.uid });
     });
 
+    socket.join(permissionToName(user?.permission || 0));
+
     Logger.info(`[Socket] ${user.username || "User"} connected`);
 
     cache.set("connected_clients", io.engine.clientsCount);
@@ -60,6 +64,7 @@ function init(server: http.Server): void {
 }
 function startSchedulers(): void {
   Broadcasts.push(new Motd_Broadcast());
+  Broadcasts.push(new AdminPanel_Broadcast());
 }
 
 // -----===== Emit functions =====-----
