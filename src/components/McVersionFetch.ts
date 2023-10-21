@@ -22,9 +22,11 @@ let javaLastest: { release?: string; snapshot?: string } = {};
 let javaVersions = [];
 
 export async function fetchMinecraftVersions(): Promise<void> {
-  const { data } = await axios.get(URL_JAVA);
-  javaLastest = data.latest;
-  javaVersions = data.versions;
+  try {
+    const { data } = await axios.get(URL_JAVA);
+    javaLastest = data.latest;
+    javaVersions = data.versions;
+  } catch (err) {}
 }
 
 async function fetchBedrockVersions(): Promise<void> {
