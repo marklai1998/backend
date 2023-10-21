@@ -6,7 +6,7 @@ const cheerio = require("cheerio");
 
 const URL_JAVA =
   "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
-const URL_BEDROCK = "https://minecraft.fandom.com/wiki/Protocol_version";
+const URL_BEDROCK = "https://minecraft.wiki/w/Protocol_version";
 const URL_PAPER = "https://api.papermc.io/v2/projects/paper";
 const URL_WATERFALL = "https://api.papermc.io/v2/projects/waterfall";
 
