@@ -74,7 +74,7 @@ export class Block extends BaseEntity {
   @Column("text", { default: "[]" })
   area: string;
 
-  @Column()
+  @Column({ default: false })
   eventBlock: boolean;
 
   @Column("text")
