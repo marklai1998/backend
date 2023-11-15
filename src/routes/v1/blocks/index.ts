@@ -1,14 +1,14 @@
+import * as dbCache from "../../../utils/cache/DatabaseCache";
+
 import { Request, Response } from "express";
 
 import { Block } from "../../../entity/Block";
-
-import * as dbCache from "../../../utils/cache/DatabaseCache";
-import { Permissions } from "../../../routes";
-import { allowed } from "../../../middleware/auth";
-import Logger from "../../../utils/Logger";
-import { validate } from "../../../utils/Validation";
-import { recalculateAll } from "../../../utils/ProgressCalculation";
 import { District } from "../../../entity/District";
+import { allowed } from "../../../middleware/auth";
+import { Permissions } from "../../../routes";
+import Logger from "../../../utils/Logger";
+import { recalculateAll } from "../../../utils/ProgressCalculation";
+import { validate } from "../../../utils/Validation";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -34,6 +34,7 @@ export const post = (req: Request, res: Response) => {
     res,
     callback: async () => {
       const districtID = req.body.district;
+      const area = req.body.area;
 
       if (!districtID) {
         return res.status(400).send({ error: "Specify a district" });
@@ -52,6 +53,9 @@ export const post = (req: Request, res: Response) => {
       const block = new Block();
       block.id = Math.max(...blocks.map((block: Block) => block.id)) + 1;
       block.district = district.id;
+      block.eventBlock = false;
+      block.area = JSON.stringify(area[0].map((a:any) => [a[1], a[0]]));
+      block.comment = "";
 
       return validate(res, block, {
         successMessage: "Block created successfully",
