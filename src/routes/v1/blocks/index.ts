@@ -51,10 +51,12 @@ export const post = (req: Request, res: Response) => {
       const blocks = dbCache.find(Block, { district: districtID });
 
       const block = new Block();
-      block.id = Math.max(...blocks.map((block: Block) => block.id)) + 1;
+      block.id = !blocks.length
+        ? 1
+        : Math.max(...blocks.map((block: Block) => block.id)) + 1;
       block.district = district.id;
       block.eventBlock = false;
-      block.area = JSON.stringify(area[0].map((a:any) => [a[1], a[0]]));
+      block.area = JSON.stringify(area[0].map((a: any) => [a[1], a[0]]));
       block.comment = "";
 
       return validate(res, block, {
