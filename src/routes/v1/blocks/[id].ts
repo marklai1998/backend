@@ -138,11 +138,12 @@ export const put = (req: Request, res: Response) => {
         }
       }
 
+      const user =
+        req.user.uid === 1
+          ? dbCache.findOne(User, { uid: req.body.editor })
+          : req.user;
+
       if (Object.keys(ret.changedValues).length > 0) {
-        const user =
-          req.user.uid === 1
-            ? dbCache.findOne(User, { uid: req.body.editor })
-            : req.user;
         broadcast("block_updates", {
           user: {
             id: user.uid,
@@ -164,8 +165,7 @@ export const put = (req: Request, res: Response) => {
       for (const [type, data] of Object.entries(ret.changedValues)) {
         if (["progress", "details", "builder"].includes(type.toLowerCase())) {
           log({
-            //@ts-ignore
-            user: req.user,
+            user,
             type: `BLOCK_${type.toUpperCase()}`,
             edited: parseInt(id),
             oldValue: data["oldValue"],
@@ -177,7 +177,6 @@ export const put = (req: Request, res: Response) => {
       sendDistrictChange2({
         block,
         changedValues: ret.changedValues,
-        // @ts-ignore
         user: req.user,
       });
 
