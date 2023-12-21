@@ -1,3 +1,7 @@
+import turf = require("@turf/turf");
+import * as dbCache from "./cache/DatabaseCache";
+import { Block } from "../entity/Block";
+
 export function insidePolygon(
   p: any[],
   polygon: any[],
@@ -35,4 +39,20 @@ export function insidePolygon(
         if (intersect) inside = !inside;
     }
     return inside;*/
+}
+
+export function calculateUnionPolygonForDistrict(districtId: number) {
+  const polygons = dbCache
+    .find(Block, { district: districtId })
+    .map((block) => [...JSON.parse(block.area), JSON.parse(block.area)[0]]);
+
+  let union = [polygons[0]];
+  for (let i = 1; i < polygons.length; i++) {
+    const unionPolygon = turf.polygon(union);
+    const polygon = turf.polygon([polygons[i]]);
+    union = turf.union(turf.featureCollection([unionPolygon, polygon])).geometry
+      .coordinates;
+  }
+
+  return union[0];
 }
