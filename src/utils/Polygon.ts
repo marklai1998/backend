@@ -44,14 +44,32 @@ export function insidePolygon(
 export function calculateUnionPolygonForDistrict(districtId: number) {
   const polygons = dbCache
     .find(Block, { district: districtId })
-    .map((block) => [...JSON.parse(block.area), JSON.parse(block.area)[0]]);
+    .map((block) => {
+      const coords = [...JSON.parse(block.area)];
+
+      if (
+        coords[0][0] !== coords.at(-1)[0] ||
+        coords[0][1] !== coords.at(-1)[1]
+      ) {
+        coords.push(JSON.parse(block.area)[0]);
+      }
+
+      return coords;
+    });
 
   let union = [polygons[0]];
   for (let i = 1; i < polygons.length; i++) {
     const unionPolygon = turf.polygon(union);
     const polygon = turf.polygon([polygons[i]]);
-    union = turf.union(turf.featureCollection([unionPolygon, polygon])).geometry
-      .coordinates;
+    const turfUnion = turf.union(
+      turf.featureCollection([unionPolygon, polygon])
+    );
+
+    if (turfUnion.geometry.type === "MultiPolygon") {
+      union = turfUnion.geometry.coordinates[0];
+    } else {
+      union = turfUnion.geometry.coordinates;
+    }
   }
 
   return union[0];
