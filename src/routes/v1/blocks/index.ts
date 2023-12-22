@@ -43,6 +43,11 @@ export const post = (req: Request, res: Response) => {
       if (typeof districtID !== "number") {
         return res.status(400).send({ error: "The district must be a number" });
       }
+      if (area[0].length < 3) {
+        return res
+          .status(400)
+          .send({ error: "The area needs to have at least 3 points" });
+      }
 
       const district = dbCache.findOne(District, { id: districtID });
       if (!district) {

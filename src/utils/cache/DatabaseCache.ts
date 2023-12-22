@@ -57,31 +57,31 @@ async function loadAll(): Promise<number> {
 }
 async function reload(updatedObject: BaseEntity | string): Promise<void> {
   if (typeof updatedObject === "string") {
-    reloadAll(updatedObject);
+    await reloadAll(updatedObject);
     return;
   }
   if (updatedObject instanceof User) {
-    reloadAll("users");
+    await reloadAll("users");
   } else if (updatedObject instanceof District) {
-    reloadAll("districts");
+    await reloadAll("districts");
   } else if (updatedObject instanceof Block) {
-    reloadAll("blocks");
+    await reloadAll("blocks");
   } else if (updatedObject instanceof Claim) {
-    reloadAll("claims");
+    await reloadAll("claims");
   } else if (updatedObject instanceof Landmark) {
-    reloadAll("landmarks");
+    await reloadAll("landmarks");
   } else if (updatedObject instanceof AdminSetting) {
-    reloadAll("adminsettings");
+    await reloadAll("adminsettings");
   } else if (updatedObject instanceof Event) {
-    reloadAll("events");
+    await reloadAll("events");
   } else if (updatedObject instanceof EventTeam) {
-    reloadAll("eventteams");
+    await reloadAll("eventteams");
   } else if (updatedObject instanceof UserSetting) {
-    reloadAll("usersettings");
+    await reloadAll("usersettings");
   } else if (updatedObject instanceof Banner) {
-    reloadAll("banners");
+    await reloadAll("banners");
   } else if (updatedObject instanceof ProjectCount) {
-    reloadAll("projectcounts");
+    await reloadAll("projectcounts");
   }
 }
 async function reloadAll(type: string): Promise<void> {
