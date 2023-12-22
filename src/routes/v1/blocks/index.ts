@@ -69,7 +69,8 @@ export const post = (req: Request, res: Response) => {
           Logger.info(
             `Created block #${block.uid} (${district.name} #${block.id})`
           );
-
+        },
+        onCacheReload: () => {
           // Recalculate district area
           const union = calculateUnionPolygonForDistrict(district.id);
           if (typeof union !== "number") {
