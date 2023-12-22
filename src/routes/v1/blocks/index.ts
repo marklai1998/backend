@@ -60,12 +60,6 @@ export const post = (req: Request, res: Response) => {
       block.area = JSON.stringify(area[0].map((a: any) => [a[1], a[0]]));
       block.comment = "";
 
-      // Recalculate district area
-      const union = calculateUnionPolygonForDistrict(district.id);
-      if (typeof union !== "number") {
-        dbCache.update(district, { area: JSON.stringify(union) });
-      }
-
       return validate(res, block, {
         successMessage: "Block created successfully",
         successData: block,
@@ -75,6 +69,12 @@ export const post = (req: Request, res: Response) => {
           Logger.info(
             `Created block #${block.uid} (${district.name} #${block.id})`
           );
+
+          // Recalculate district area
+          const union = calculateUnionPolygonForDistrict(district.id);
+          if (typeof union !== "number") {
+            dbCache.update(district, { area: JSON.stringify(union) });
+          }
         },
       });
     },
