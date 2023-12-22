@@ -9,6 +9,7 @@ import { Permissions } from "../../../routes";
 import Logger from "../../../utils/Logger";
 import { recalculateAll } from "../../../utils/ProgressCalculation";
 import { validate } from "../../../utils/Validation";
+import { calculateUnionPolygonForDistrict } from "../../../utils/Polygon";
 
 export const get = async (req: Request, res: Response) => {
   allowed({
@@ -58,6 +59,12 @@ export const post = (req: Request, res: Response) => {
       block.eventBlock = false;
       block.area = JSON.stringify(area[0].map((a: any) => [a[1], a[0]]));
       block.comment = "";
+
+      // Recalculate district area
+      const union = calculateUnionPolygonForDistrict(district.id);
+      if (typeof union !== "number") {
+        dbCache.update(district, { area: union });
+      }
 
       return validate(res, block, {
         successMessage: "Block created successfully",

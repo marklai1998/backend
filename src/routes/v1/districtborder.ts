@@ -29,6 +29,12 @@ export const post = async (req: Request, res: Response) => {
 
       const union = calculateUnionPolygonForDistrict(district.id);
 
+      if (typeof union === "number") {
+        return res.status(500).send({
+          error: `An error occurred for block #${union}`,
+        });
+      }
+
       const ret = await dbCache.update(district, { area: union });
 
       if (ret.error) {

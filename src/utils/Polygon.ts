@@ -1,6 +1,7 @@
 import turf = require("@turf/turf");
 import * as dbCache from "./cache/DatabaseCache";
 import { Block } from "../entity/Block";
+import Logger from "./Logger";
 
 export function insidePolygon(
   p: any[],
@@ -59,16 +60,21 @@ export function calculateUnionPolygonForDistrict(districtId: number) {
 
   let union = [polygons[0]];
   for (let i = 1; i < polygons.length; i++) {
-    const unionPolygon = turf.polygon(union);
-    const polygon = turf.polygon([polygons[i]]);
-    const turfUnion = turf.union(
-      turf.featureCollection([unionPolygon, polygon])
-    );
+    try {
+      const unionPolygon = turf.polygon(union);
+      const polygon = turf.polygon([polygons[i]]);
+      const turfUnion = turf.union(
+        turf.featureCollection([unionPolygon, polygon])
+      );
 
-    if (turfUnion.geometry.type === "MultiPolygon") {
-      union = turfUnion.geometry.coordinates[0];
-    } else {
-      union = turfUnion.geometry.coordinates;
+      if (turfUnion.geometry.type === "MultiPolygon") {
+        union = turfUnion.geometry.coordinates[0];
+      } else {
+        union = turfUnion.geometry.coordinates;
+      }
+    } catch (err) {
+      Logger.error(err);
+      return i;
     }
   }
 
