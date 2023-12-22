@@ -63,7 +63,7 @@ export const post = (req: Request, res: Response) => {
       // Recalculate district area
       const union = calculateUnionPolygonForDistrict(district.id);
       if (typeof union !== "number") {
-        dbCache.update(district, { area: union });
+        dbCache.update(district, { area: JSON.stringify(union) });
       }
 
       return validate(res, block, {
