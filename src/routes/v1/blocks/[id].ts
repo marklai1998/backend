@@ -37,7 +37,7 @@ export const get = async (req: Request, res: Response) => {
 
 export const put = (req: Request, res: Response) => {
   allowed({
-    permission: Permissions.event,
+    permission: Permissions.builder,
     req,
     res,
     callback: async () => {
