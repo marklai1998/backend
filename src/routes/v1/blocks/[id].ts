@@ -4,7 +4,9 @@ import { Block, setStatus } from "../../../entity/Block";
 import { Request, Response } from "express";
 import {
   recalculateAll,
+  recalculateDistrictBlocksDoneLeft,
   recalculateDistrictProgress,
+  recalculateDistrictStatus,
 } from "../../../utils/ProgressCalculation";
 
 import Logger from "../../../utils/Logger";
@@ -183,6 +185,10 @@ export const put = (req: Request, res: Response) => {
       // Update districts
       if (ret.changedValues["progress"]) {
         recalculateDistrictProgress(block.district);
+      }
+      if (ret.changedValues["status"]) {
+        recalculateDistrictStatus(block.district);
+        recalculateDistrictBlocksDoneLeft(block.district);
       }
 
       return res.send(ret);
