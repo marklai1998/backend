@@ -140,10 +140,15 @@ export const put = (req: Request, res: Response) => {
         }
       }
 
-      const user =
+      let user =
         req.user.uid === 1
           ? dbCache.findOne(User, { uid: req.body.editor })
           : req.user;
+
+      if (!user) {
+        // Temp hotfix if editor is not provided
+        user = req.user;
+      }
 
       if (Object.keys(ret.changedValues).length > 0) {
         broadcast("block_updates", {
