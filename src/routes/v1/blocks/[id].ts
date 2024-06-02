@@ -116,6 +116,7 @@ export const put = (req: Request, res: Response) => {
         if (operations.length > 0) {
           await Promise.allSettled(operations);
           dbCache.reload("claims");
+          dbCache.reload("blocks");
         }
       }
 
